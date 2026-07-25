@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+#
+# Pre-push gate: runs local validation before allowing a push, now that cloud
+# CI is manual-only. Activated per-clone by scripts/dev/install-git-hooks.sh
+# (which sets core.hooksPath -> .githooks). Bypass in a pinch with --no-verify.
+#
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+
+# Skip delete-only pushes (nothing new to validate).
+have_updates=0
+while read -r _ local_sha _ _; do
+  if [ -n "${local_sha:-}" ] && [ "$local_sha" != "0000000000000000000000000000000000000000" ]; then
+    have_updates=1
+  fi
+done
+[ "$have_updates" -eq 0 ] && exit 0
+
+echo "pre-push: running local validation (scripts/dev/validate.sh)..."
+if ! "$repo_root/scripts/dev/validate.sh"; then
+  echo "pre-push: validation failed — push aborted. Bypass with 'git push --no-verify'." >&2
+  exit 1
+fi

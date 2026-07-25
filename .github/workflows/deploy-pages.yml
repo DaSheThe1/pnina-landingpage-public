@@ -1,0 +1,102 @@
+name: Deploy to GitHub Pages
+
+# Builds the Hebrew landing page as a static export and publishes it to GitHub
+# Pages. Cloudflare sits in front for DNS/TLS and serves /api/contact via a
+# Worker (see worker/), so the static site needs no server of its own.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Required by actions/deploy-pages: write Pages + OIDC token for the deployment.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deploy at a time; newer pushes supersede in-flight ones.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      STATIC_EXPORT: "true"
+      # Must match public/CNAME and the Pages custom domain, or canonical tags,
+      # sitemap and OG URLs point at the wrong host.
+      NEXT_PUBLIC_SITE_URL: https://pnina.trickticmedia.com
+      # PUBLIC base URL of the R2 media bucket ("pnina-website"), inlined at
+      # build time. Each clip's filename lives in videos[].remote in
+      # src/content/media.ts, so this one value covers all of them.
+      #
+      # ⚠️ The bucket's PUBLIC read URL — the r2.dev development URL or a custom
+      # domain — NOT the *.r2.cloudflarestorage.com S3 API endpoint, which needs
+      # signed requests and returns 401 to a browser.
+      #
+      # Blank ships the bundled public/video copies instead (~11MB), which works
+      # but is served by Pages rather than a media origin.
+      NEXT_PUBLIC_MEDIA_BASE_URL: "https://media.trickticmedia.com"
+      # Per-clip overrides. Only for a video that must come from somewhere other
+      # than the bucket above; normally all three stay blank.
+      NEXT_PUBLIC_HERO_VIDEO_URL: ""
+      NEXT_PUBLIC_THANK_YOU_VIDEO_URL: ""
+      NEXT_PUBLIC_ABOUT_VIDEO_URL: ""
+      # Analytics ids/URLs — all PUBLIC by design (they ship to the browser), so
+      # it is safe to set them here. All OPTIONAL: a blank tracker no-ops.
+      #
+      # ⚠️ Never add a session-replay or form-capture tracker to this site. Its
+      # visitors are women seeking help after a sexual assault; recording what
+      # they read or type would be a serious breach of their privacy.
+      NEXT_PUBLIC_GA_ID: ""
+      # Set this to your Umami instance's tracker URL, e.g.
+      # https://analytics.yourdomain.com/script.js — Umami needs BOTH this and
+      # the website id below to load.
+      NEXT_PUBLIC_UMAMI_SCRIPT_URL: ""
+      NEXT_PUBLIC_UMAMI_WEBSITE_ID: ""
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v5
+        with:
+          version: 11.5.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Static export can't compile the POST handler in /api/contact or the
+      # force-dynamic /api/health route. The Cloudflare Worker serves
+      # /api/contact in production; this only edits the CI checkout.
+      - name: Drop server-only API routes
+        run: rm -rf src/app/api
+
+      # Build, then hoist out/he/* to the root so Hebrew is served at / on the
+      # static host (next-intl's locale-prefix middleware doesn't run on Pages).
+      - name: Build static export
+        run: pnpm exec next build && node scripts/flatten-locale-export.mjs
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

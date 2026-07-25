@@ -1,0 +1,876 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ───────────────────────────────────────────────────────────
+   פנינה פאף — ליווי אישי | plum · teal · gold system
+
+   The palette is built on a real complementary pair, not a single hue tinted
+   five ways. Plum-fuchsia (hue ≈ 332°) is the brand; deep teal (hue ≈ 176°)
+   sits almost exactly opposite it on the wheel and carries every "you are
+   safe here" signal — ticks, reassurance chips, confirmations. Warm gold
+   (hue ≈ 42°) is the third leg: a metal, used only for highlights, the free-
+   session badge and the price. Because plum and teal are complements, putting
+   them side by side is what makes the page read as *designed* rather than as
+   one colour smeared across a beige canvas.
+
+   Ratio discipline — roughly 60 / 30 / 10:
+     60%  blush-paper canvas + white cards
+     30%  plum (headings, CTAs, brand furniture)
+     10%  teal + gold, and never both in the same component.
+
+   Contrast discipline (the audience reads on phones, often quickly):
+   - `--brand` (#c24a85) is DECORATIVE ONLY — hairlines, washes, rings, fills.
+     It does NOT pass AA as text on the canvas. Never use it for type.
+   - `--brand-accent` (#a32d6b) is the PLUM FOR TEXT — 6.3:1 on the canvas.
+   - `--brand-deep` (#8a1f58) is the FILLED-CTA background — 12.8:1, white ink.
+   Same split for teal (`--teal` decorative / `--teal-deep` 5.0:1 for text) and
+   for gold (`--gold` decorative / `--gold-deep` 5.4:1 for text). Gold at its
+   decorative value on a light canvas is roughly 2:1 — it is a highlight, never
+   a label.
+   ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* Light-only design. Declare it so form controls, scrollbars and the default
+     canvas all render light, and so no engine tries to re-dark the page. */
+  color-scheme: light;
+
+  /* Surfaces — blush paper canvas; cards rise toward pure white.
+     `--canvas` is the real, solid base colour painted on <html>. `--background`
+     is intentionally TRANSPARENT: every `bg-background` section becomes a
+     window onto the site-wide drifting colour field (SiteBackground) behind the
+     whole site. Use `--canvas` (or `bg-canvas`) wherever a solid opaque fill is
+     genuinely needed (the sticky header backdrop, scrollbars, dialogs). */
+  --canvas: #fdf5ea;
+  --background: transparent;
+  --surface-1: #ffffff;
+  --surface-2: #fbeee4;
+  --surface-3: #f6ded0;
+
+  /* Ink — deep aubergine, never pure black (pure black on blush glares). The
+     ink is tinted toward the brand hue so type and brand feel related. */
+  --foreground: #26141f;
+  --foreground-soft: #4a2e3e;
+  --muted-foreground: #6e5261;
+  /* The lightest ink in the ladder. It was #9a8290, which is 3.25:1 on the
+     cream canvas — a WCAG AA failure at the 12px it is actually used at (footer
+     labels, the copyright line, legal-page meta). Darkened to clear 4.5:1 with
+     margin while staying visibly lighter than --muted-foreground, so the
+     hierarchy is intact. Do not lighten it again without re-checking: this site
+     has to be able to claim AA (ת"י 5568) on its accessibility statement. */
+  --subtle-foreground: #7a6671; /* 4.9:1 on --canvas */
+
+  /* Brand — plum-fuchsia. See the contrast note above before using these. */
+  --brand: #c24a85;
+  --brand-accent: #a32d6b;
+  --brand-deep: #8a1f58;
+  --brand-hover: #74184a;
+  --brand-soft: #f7d6e6;
+  --brand-wash: #fdeef5;
+
+  /* Complement — deep teal, directly opposite the brand. This is the colour of
+     reassurance on this site: ticks, "no obligation" chips, success states. */
+  --teal: #1b9b90;
+  --teal-deep: #0f6e66;
+  --teal-soft: #d4efec;
+
+  /* Metal — warm gold. Highlights and the price only; never body text. */
+  --gold: #e0a93f;
+  --gold-deep: #8a5d0c;
+  --gold-soft: #fbecc9;
+
+  /* Mapped shadcn-style tokens */
+  --card: #ffffff;
+  --card-foreground: #26141f;
+  --popover: #ffffff;
+  --popover-foreground: #26141f;
+  /* Primary = aubergine ink (default buttons are dark with blush label). The
+     plum CTA uses --brand-deep; both put near-white ink on top. */
+  --primary: #26141f;
+  --primary-foreground: #fff8f5;
+  --secondary: rgba(38, 20, 31, 0.05);
+  --secondary-foreground: #26141f;
+  --muted: #fbeee4;
+  --accent: #a32d6b;
+  --accent-foreground: #ffffff;
+  --destructive: #b3261e;
+  --success: #0f6e66;
+
+  --border: rgba(38, 20, 31, 0.12);
+  --border-subtle: rgba(38, 20, 31, 0.07);
+  --input: rgba(38, 20, 31, 0.2);
+  --ring: #a32d6b;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-foreground: var(--foreground);
+  --color-foreground-soft: var(--foreground-soft);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-subtle-foreground: var(--subtle-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+
+  --color-brand: var(--brand);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-wash: var(--brand-wash);
+  --color-teal: var(--teal);
+  --color-teal-deep: var(--teal-deep);
+  --color-teal-soft: var(--teal-soft);
+  --color-gold: var(--gold);
+  --color-gold-deep: var(--gold-deep);
+  --color-gold-soft: var(--gold-soft);
+
+  --color-border: var(--border);
+  --color-border-subtle: var(--border-subtle);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 12px);
+
+  --font-sans: var(--font-sans-hebrew);
+  --font-display: var(--font-display);
+
+  /* Animations. Everything here is slow on purpose — see the design brief. */
+  --animate-marquee: marquee 48s linear infinite;
+  --animate-marquee-slow: marquee 72s linear infinite;
+  --animate-float: float 9s ease-in-out infinite;
+  --animate-aurora: aurora 24s ease-in-out infinite alternate;
+  --animate-glow-pulse: glow-pulse 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 3.2s linear infinite;
+  --animate-spin-slow: spin 30s linear infinite;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* The solid base canvas. Everything above it (body, sections) is
+       transparent, so the SiteBackground colour field shows through. */
+    background-color: var(--canvas);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--brand-soft);
+    color: var(--foreground);
+  }
+
+  /* Display headlines wear Suez One — a heavy Hebrew slab-serif with real
+     presence. Body, labels and card titles (h3+) stay on Heebo, a Hebrew-native
+     sans with a full weight range. Suez One ships ONE weight (400) and is
+     already heavy by design, so never set a font-weight on it: asking for 600
+     or 700 makes the browser synthesise a smeared faux-bold. The previous pair
+     (Frank Ruhl Libre at weight 500) is what made every heading read thin and
+     templated. */
+  h1,
+  h2 {
+    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+  }
+
+  /* Themed scrollbar — quiet, ink-on-paper */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--surface-2);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(38, 20, 31, 0.18);
+    border-radius: 9999px;
+    border: 2px solid var(--surface-2);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(163, 45, 107, 0.5);
+  }
+}
+
+/* ─────────────────────────  Keyframes  ───────────────────────── */
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes aurora {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate3d(2%, -2%, 0) scale(1.04);
+    opacity: 0.75;
+  }
+}
+
+@keyframes glow-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulse-step {
+  0%,
+  100% {
+    border-color: rgba(38, 20, 31, 0.1);
+    background: rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    border-color: rgba(194, 74, 133, 0.55);
+    background: var(--brand-wash);
+  }
+}
+
+@keyframes text-shine {
+  to {
+    background-position: -200% center;
+  }
+}
+
+/* The struck price's X "stamps" in once when it scrolls into view (see
+   PriceCrossout). */
+@keyframes price-x-stamp {
+  from {
+    opacity: 0;
+    transform: scale(1.3) rotate(-4deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Slow zoom in / zoom out on the struck prices and on the "ללא עלות" payoff.
+   Requested by the client. Kept slow (3.4s) and shallow (≤ 7%) so it reads as
+   the number breathing rather than as a flashing discount badge, and it stops
+   completely under prefers-reduced-motion via the global block at the bottom of
+   this file. */
+@keyframes price-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.07);
+  }
+}
+
+/* The free-session card's halo, easing in and out. */
+@keyframes glow-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.28),
+      0 18px 60px -30px rgba(138, 31, 88, 0.35);
+  }
+  50% {
+    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.55),
+      0 26px 80px -26px rgba(138, 31, 88, 0.5);
+  }
+}
+
+@keyframes beam-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(1turn);
+  }
+}
+
+@keyframes rise {
+  0% {
+    transform: translateY(0);
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-220px);
+    opacity: 0;
+  }
+}
+
+/* ──────────────  Site-wide drifting colour field  ──────────────
+   One fixed layer behind the whole site (see SiteBackground). Very slow, very
+   faint rose/sage washes over the paper canvas — closer to watercolour bleed
+   than to a gradient mesh. Scrolling lifts it a touch via the JS-written
+   `--bg-scroll` (0 → 1). If you can clearly "see" this layer, it is too strong. */
+
+@keyframes bg-drift-1 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(5%, 3%, 0) scale(1.1);
+  }
+  100% {
+    transform: translate3d(-2%, 5%, 0) scale(1.03);
+  }
+}
+
+@keyframes bg-drift-2 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1.04);
+  }
+  50% {
+    transform: translate3d(-5%, -4%, 0) scale(0.96);
+  }
+  100% {
+    transform: translate3d(3%, -2%, 0) scale(1.06);
+  }
+}
+
+@keyframes bg-drift-3 {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(4%, -5%, 0) scale(1.12);
+  }
+  100% {
+    transform: translate3d(-4%, 2%, 0) scale(0.98);
+  }
+}
+
+.site-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Scrolling warms the field very slightly, so the page feels alive without
+   ever calling attention to itself.
+
+   This re-evaluates a `filter` on a fixed, full-viewport layer on EVERY scroll
+   frame. Weaker mobile GPUs can't keep that whole-screen filter repaint in sync
+   with the page: sibling layers get dropped mid-scroll and the field itself
+   tiles into vertical banding streaks. So the scroll-reactive filter is gated
+   to wider (typically pointer-fine) screens; phones keep a static, correctly
+   rendered field. Do not remove this media query. */
+@media (min-width: 768px) {
+  .site-bg {
+    filter: saturate(calc(1 + var(--bg-scroll, 0) * 0.22));
+    transition: filter 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+.site-bg__inner {
+  position: absolute;
+  inset: -12%;
+  /* Subtle parallax — the field rises slightly faster than the page. */
+  transform: translate3d(0, calc(var(--bg-scroll, 0) * -44px), 0);
+  transition: transform 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+.site-bg__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(80px);
+  opacity: 0.85;
+  will-change: transform;
+}
+
+/* Plum — top, anchoring the palette to the hero. */
+.site-bg__blob--1 {
+  top: -14%;
+  left: -6%;
+  width: 46rem;
+  height: 46rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(194, 74, 133, 0.2),
+    transparent 68%
+  );
+  animation: bg-drift-1 34s ease-in-out infinite alternate;
+}
+
+/* Gold — top-right. The warm metal, opposite corner from the teal. */
+.site-bg__blob--2 {
+  top: -8%;
+  right: -10%;
+  width: 40rem;
+  height: 40rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(224, 169, 63, 0.18),
+    transparent 68%
+  );
+  animation: bg-drift-2 42s ease-in-out infinite alternate;
+}
+
+/* Teal — lower right, where the eye lands mid-scroll. This is the blob that
+   makes the field read as a complementary scheme rather than a pink wash: it
+   is the only cool mass on the page, so it has to survive. */
+.site-bg__blob--3 {
+  bottom: 2%;
+  right: 4%;
+  width: 44rem;
+  height: 44rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(27, 155, 144, 0.16),
+    transparent 70%
+  );
+  animation: bg-drift-3 38s ease-in-out infinite alternate;
+}
+
+/* Blush — lower left, balancing the teal. */
+.site-bg__blob--4 {
+  bottom: -10%;
+  left: 2%;
+  width: 38rem;
+  height: 38rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(194, 74, 133, 0.14),
+    transparent 70%
+  );
+  animation: bg-drift-1 46s ease-in-out infinite alternate-reverse;
+}
+
+/* Soft blush wash — large and central, knits the others together. */
+.site-bg__blob--5 {
+  top: 30%;
+  left: 32%;
+  width: 52rem;
+  height: 52rem;
+  background: radial-gradient(
+    circle at center,
+    rgba(251, 238, 228, 0.8),
+    transparent 72%
+  );
+  animation: bg-drift-2 52s ease-in-out infinite alternate;
+}
+
+/* Inverse vignette — the page is brightest where the content sits and settles
+   into a faint warm shade at the very edges, like light falling on paper. On a
+   light canvas a darkening vignette would read as dirt, so this stays subtle. */
+.site-bg__vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+      130% 100% at 50% -10%,
+      rgba(255, 255, 255, 0.85) 30%,
+      transparent 70%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent 74%,
+      rgba(246, 222, 208, 0.4) 100%
+    );
+}
+
+/* Ultra-fine grain — gives the flat cream a printed, tactile quality. Multiply
+   (not overlay) is what reads as paper fibre on a light surface. Near-invisible
+   by design; if you can see individual speckles, drop the opacity. */
+.site-bg__noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+/* ─────────────────────────  Utilities  ───────────────────────── */
+
+@layer utilities {
+  /* Scroll reveal — toggled by the Reveal component. `will-change` is scoped to
+     ONLY the pending (not-yet-revealed) state: once the one-shot fade-in is
+     done we drop it back to `auto` so the element is no longer pinned as its
+     own compositor layer. Leaving `will-change` on permanently made every
+     revealed element a standing GPU layer; on mobile GPUs those layer tiles get
+     evicted during scroll and, with nothing invalidating them, never re-raster,
+     so content blanks out and stays blank. Do not move it to the base rule. */
+  [data-reveal] {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal]:not(.is-visible) {
+    will-change: opacity, transform;
+  }
+  [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+    will-change: auto;
+  }
+
+  .bg-dot {
+    background-image: radial-gradient(
+      rgba(38, 20, 31, 0.07) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+
+  /* Radial fade mask for backdrops */
+  .mask-fade {
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      #000 40%,
+      transparent 100%
+    );
+    mask-image: radial-gradient(
+      ellipse 80% 60% at 50% 0%,
+      #000 40%,
+      transparent 100%
+    );
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+  }
+
+  /* Opt an element into the display serif (see the h1/h2 base rule). */
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
+
+  /* Gradient headline text — charcoal ink sinking into muted rose. Both ends
+     are AA-legible on the canvas, so the headline stays readable if the
+     gradient fails to paint. */
+  .text-gradient {
+    background: linear-gradient(
+      170deg,
+      var(--foreground) 0%,
+      #7b2a58 62%,
+      var(--brand-accent) 120%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-brand {
+    background: linear-gradient(
+      90deg,
+      var(--brand-accent),
+      var(--brand),
+      var(--brand-accent)
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* A very slow warm sweep for a single hero word. Deliberately low-contrast
+     between stops so it reads as light moving over ink, not as a neon effect. */
+  .text-shimmer {
+    background: linear-gradient(
+      100deg,
+      var(--foreground) 18%,
+      #8a2f60 42%,
+      var(--brand-accent) 54%,
+      var(--foreground) 80%
+    );
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: text-shine 11s linear infinite;
+  }
+
+  /* The struck-price X stamps in on scroll (see PriceCrossout). Renders fully
+     visible without the class, so no-JS is fine. Reduced motion drops it. */
+  .price-x-stamp {
+    transform-origin: center;
+    animation: price-x-stamp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* Continuous zoom in / zoom out on a price. Applied to a WRAPPER, never to
+     the element that also carries a hover transform — otherwise the two
+     `transform`s overwrite each other and the hover tilt silently dies. */
+  .price-breathe {
+    transform-origin: center;
+    animation: price-breathe 3.4s ease-in-out infinite;
+  }
+
+  /* Staggered so the two struck tiers don't pulse in lockstep. */
+  .price-breathe-delay {
+    animation-delay: 1.1s;
+  }
+
+  .glow-breathe {
+    animation: glow-breathe 5s ease-in-out infinite;
+  }
+
+  /* Rotating gradient border (beam) — rose over paper, kept faint. */
+  .beam {
+    position: relative;
+    isolation: isolate;
+  }
+  .beam::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 180%;
+    aspect-ratio: 1;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(
+      from 0deg,
+      transparent 0 58%,
+      rgba(194, 74, 133, 0.55) 74%,
+      rgba(224, 169, 63, 0.4) 84%,
+      transparent 92%
+    );
+    animation: beam-spin 12s linear infinite;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  /* Translucent card — white frost over the paper canvas */
+  .glass {
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(38, 20, 31, 0.08);
+    backdrop-filter: blur(10px);
+  }
+
+  /* Hairline gradient top-border accent */
+  .hairline-top {
+    position: relative;
+  }
+  .hairline-top::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(194, 74, 133, 0.7),
+      transparent
+    );
+  }
+
+  /* Gradient ring border */
+  .ring-shine {
+    position: relative;
+  }
+  .ring-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      120deg,
+      rgba(38, 20, 31, 0.1),
+      rgba(194, 74, 133, 0.45),
+      rgba(38, 20, 31, 0.04)
+    );
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+
+  /* Brand emphasis ring. On a light canvas "glow" is the wrong metaphor —
+     this is a soft rose halo + lift instead of a light bloom. */
+  .glow-brand {
+    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.35),
+      0 10px 34px -12px rgba(138, 31, 88, 0.28);
+  }
+
+  /* Card elevation — light needs real, soft shadows to separate layers, where
+     dark could get away with a 1px inset highlight. Two stops: a tight contact
+     shadow plus a wide soft one. */
+  .shadow-card {
+    box-shadow: 0 1px 2px 0 rgba(38, 20, 31, 0.04),
+      0 14px 36px -18px rgba(38, 20, 31, 0.16);
+  }
+
+  /* Marquee fade edges */
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 12%,
+      #000 88%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      #000 12%,
+      #000 88%,
+      transparent
+    );
+  }
+
+  .anim-shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(38, 20, 31, 0.03) 0%,
+      rgba(38, 20, 31, 0.07) 50%,
+      rgba(38, 20, 31, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3.2s linear infinite;
+  }
+
+  /* ── CTA sheen ── A diagonal light sweep across the filled (dark/rose) CTAs
+     on hover/focus. Baked into the `brand` button variant (see button.tsx).
+     Only ever used on dark fills — a white sweep over a light surface is
+     invisible. */
+  .btn-sheen {
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 28%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 72%
+    );
+    transform: translateX(-130%);
+    transition: transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+  }
+  .btn-sheen:hover::after,
+  .btn-sheen:focus-visible::after {
+    transform: translateX(130%);
+  }
+
+  /* ── Page transition ── Enter animation replayed on every route change (the
+     PageTransition wrapper re-keys its subtree by pathname). A gentle fade with
+     a micro-rise; reduced motion disables it via the global block below. */
+  .page-enter {
+    animation: page-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ────────────────  Fullscreen video  ────────────────
+   Deliberately NOT solved here. A `video:fullscreen { object-fit: contain }`
+   rule in this file is silently dropped from the compiled stylesheet by the
+   Tailwind v4 / Lightning CSS pipeline — it never reaches the browser, so the
+   inline `object-cover` keeps applying in fullscreen and the 9:16 clip zooms
+   until only a band of it is visible.
+
+   The letterboxing is done in JS instead: see
+   `useFullscreenLetterbox` in src/lib/use-fullscreen-letterbox.ts. Do not
+   "simplify" it back into CSS without checking the built CSS for the rule. */
+
+/* ─────────────────────────  RTL  ───────────────────────── */
+
+/* Inline directional icons (the arrow / send glyphs next to button and link
+   labels) point toward the reading direction, so mirror them in RTL. The
+   testimonial carousel opts out by forcing dir="ltr" locally, so its controls
+   are unaffected. */
+[dir="rtl"] [data-icon="inline-end"],
+[dir="rtl"] [data-icon="inline-start"] {
+  transform: scaleX(-1);
+}
+
+/* ────────────────  Reduced motion  ────────────────
+   Honoured without exceptions. Everything decorative on this site is allowed to
+   stop: there is no animation here that carries meaning, and an audience that
+   may include people with trauma-related vestibular or anxiety symptoms is
+   exactly who this media query exists for. Do not add `!important` escapes. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-reveal] {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
