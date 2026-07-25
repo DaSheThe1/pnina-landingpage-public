@@ -5,6 +5,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 see `AGENTS.md` for the bump rules.
 
+## [0.3.4] - 2026-07-26
+
+### Changed
+- The price zoom runs at **2s** instead of 3.4s, and the two struck prices and
+  the free headline now pulse **in sync**. They were offset by 1.1s to avoid a
+  metronome effect; reading down the funnel that offset just looked like a
+  glitch. Depth is unchanged at 7%, and it still stops dead under
+  `prefers-reduced-motion`.
+
+## [0.3.3] - 2026-07-26
+
+### Fixed
+- **Four of the six WhatsApp buttons opened an empty chat.** Only the floating
+  button and the footer link pre-filled the opening message; the header tile, the
+  mobile menu row, the button beside her photo on the home page and the one on
+  /about all linked at the bare `wa.me` number. Whether a woman arrived in
+  WhatsApp with "היי, הגעתי דרך האתר..." already typed depended on which button
+  she happened to press — and on this site that line is what saves her from
+  having to compose an opening sentence about why she is writing.
+
+### Changed
+- All six now go through one `<WhatsAppLink>` (`src/components/ui/`), which
+  builds the href via `whatsappHref()` in `src/lib/whatsapp.ts`. The text is a
+  single key, `whatsapp.message` in `messages/he.json`: change it there and every
+  button follows. A per-button override exists if one ever needs its own line.
+- The message namespace was `floatingWhatsapp`, which read as if it belonged to
+  that one button. It is `whatsapp` now.
+- Two e2e tests assert that every `wa.me` link on every page — including the
+  mobile menu row, which only renders below `lg` — carries `?text=`.
+
 ## [0.3.2] - 2026-07-26
 
 The videos move to the CDN, and the site goes public.

@@ -7,17 +7,13 @@ import { BrandMark } from "@/components/ui/brand-mark";
 import { LeadButton } from "@/components/lead/lead-button";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { Link } from "@/i18n/navigation";
 
 export function SiteFooter() {
   const t = useTranslations("footer");
   const tNav = useTranslations("nav");
-  const tWa = useTranslations("floatingWhatsapp");
   const year = new Date().getFullYear();
-  // WhatsApp deep link with a ready-to-send Hebrew message.
-  const whatsappHref = `${siteConfig.whatsappUrl}?text=${encodeURIComponent(
-    tWa("message")
-  )}`;
 
   return (
     <footer className="relative overflow-hidden border-t border-foreground/[0.08] bg-background">
@@ -85,17 +81,12 @@ export function SiteFooter() {
                   low vision, and a straight AA failure on link text. The tile
                   behind the glyph still carries the brand colour; the type is a
                   darkened green that clears 4.5:1 and still reads as WhatsApp. */}
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex w-fit items-center gap-2.5 text-[#1c7a3f] transition-colors hover:text-[#155c30]"
-              >
+              <WhatsAppLink className="group inline-flex w-fit items-center gap-2.5 text-[#1c7a3f] transition-colors hover:text-[#155c30]">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#25d366]/12 text-[#1c7a3f] transition-colors group-hover:bg-[#25d366]/20">
                   <WhatsAppIcon className="h-4 w-4" />
                 </span>
                 {t("whatsapp")}
-              </a>
+              </WhatsAppLink>
               {siteConfig.profiles.instagram ? (
                 <a
                   href={siteConfig.profiles.instagram}

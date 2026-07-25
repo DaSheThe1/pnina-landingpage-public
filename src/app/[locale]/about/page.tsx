@@ -25,6 +25,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/ui/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { MessageVideo } from "@/components/ui/message-video";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { PortraitFrame } from "@/components/ui/portrait-frame";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { media, videoSrc, videos } from "@/content/media";
@@ -69,7 +70,6 @@ export default async function AboutPage({
   const tNav = await getTranslations({ locale: locale as "he" | "en", namespace: "nav" });
   const tCommon = await getTranslations({ locale: locale as "he" | "en", namespace: "common" });
   const tFooter = await getTranslations({ locale: locale as "he" | "en", namespace: "footer" });
-  const tWa = await getTranslations({ locale: locale as "he" | "en", namespace: "floatingWhatsapp" });
   const tVideo = await getTranslations({ locale: locale as "he" | "en", namespace: "pages.about.video" });
   const quickFacts = t.raw("quickFacts") as string[];
   const story = t.raw("story") as string[];
@@ -170,11 +170,7 @@ export default async function AboutPage({
                   {tCommon("bookAuditPrimary")}
                   <ArrowRight data-icon="inline-end" />
                 </Link>
-                <a
-                  href={siteConfig.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={tWa("aria")}
+                <WhatsAppLink
                   className={cn(
                     buttonVariants({ variant: "outline" }),
                     "h-11 rounded-lg px-5 text-[15px]"
@@ -182,7 +178,7 @@ export default async function AboutPage({
                 >
                   <WhatsAppIcon className="h-4.5 w-4.5 shrink-0 text-[#25d366]" />
                   {tFooter("whatsapp")}
-                </a>
+                </WhatsAppLink>
                 <a
                   href={`tel:${siteConfig.phoneE164}`}
                   className={cn(

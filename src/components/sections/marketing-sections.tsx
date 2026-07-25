@@ -18,6 +18,7 @@ import { PriceCrossout } from "@/components/sections/price-crossout";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { PortraitFrame } from "@/components/ui/portrait-frame";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { hasMedia, media } from "@/content/media";
 import { Reveal } from "@/components/ui/reveal";
 import { services as serviceConfig } from "@/content/services";
@@ -494,15 +495,12 @@ function StruckTier({
   note,
   tip,
   vat,
-  stagger = false,
 }: {
   label: string;
   price: string;
   note: string;
   tip: string;
   vat?: string;
-  /** Offsets the breathe cycle so stacked tiers don't pulse in lockstep. */
-  stagger?: boolean;
 }) {
   return (
     <div className="w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-1/80 px-6 py-5 text-center shadow-card backdrop-blur-sm">
@@ -511,12 +509,7 @@ function StruckTier({
         {/* The zoom lives on this wrapper, not on the price button itself —
             the button already owns a `transform` for its hover tilt, and two
             transforms on one element silently overwrite each other. */}
-        <span
-          className={cn(
-            "inline-block price-breathe",
-            stagger && "price-breathe-delay"
-          )}
-        >
+        <span className="inline-block price-breathe">
           <PriceCrossout price={price} tip={tip} />
         </span>
         {vat ? (
@@ -575,7 +568,6 @@ export function OffersSection() {
               vat={f.anchorVat}
               tip={f.midTip}
               note={f.midNote}
-              stagger
             />
 
             <ChevronsDown
@@ -683,7 +675,6 @@ export function WhySection() {
 /** Who she is: her photograph, her story, and the two ways to reach her. */
 export function FounderTeaser() {
   const t = useTranslations("founder");
-  const tWa = useTranslations("floatingWhatsapp");
   const tFooter = useTranslations("footer");
   const founderName = founderDisplayName();
   const chips = t.raw("chips") as string[];
@@ -787,11 +778,7 @@ export function FounderTeaser() {
                   {t("more", { founder: founderName })}
                   <ArrowUpRight data-icon="inline-end" />
                 </Link>
-                <a
-                  href={siteConfig.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={tWa("aria")}
+                <WhatsAppLink
                   className={cn(
                     buttonVariants({ variant: "ghost" }),
                     "h-10 rounded-lg px-4"
@@ -799,7 +786,7 @@ export function FounderTeaser() {
                 >
                   <WhatsAppIcon className="h-4.5 w-4.5 shrink-0 text-[#25d366]" />
                   {tFooter("whatsapp")}
-                </a>
+                </WhatsAppLink>
                 <a
                   href={`tel:${siteConfig.phoneE164}`}
                   className={cn(

@@ -77,3 +77,40 @@ test("the real contact details are published in the footer", async ({
     footer.getByRole("link", { name: /peninapearl23@gmail\.com/ })
   ).toBeVisible();
 });
+
+/**
+ * Every WhatsApp button must open a chat with the opening line already typed.
+ *
+ * Four of the six used to link at `siteConfig.whatsappUrl` directly, so whether
+ * a visitor landed in WhatsApp with a message ready depended on which button she
+ * pressed. That matters more here than on a normal site: the pre-filled line is
+ * what saves a woman from having to compose an opening sentence about why she is
+ * writing. They all go through `WhatsAppLink` now, and this keeps it that way.
+ */
+test("every WhatsApp link carries the pre-filled message", async ({ page }) => {
+  for (const path of ["/", "/about", "/lectures", "/contact", "/thank-you"]) {
+    await page.goto(path);
+    const hrefs = await page
+      .locator('a[href*="wa.me"]')
+      .evaluateAll((nodes) =>
+        nodes.map((n) => (n as HTMLAnchorElement).href)
+      );
+    expect(hrefs.length, `no WhatsApp link found on ${path}`).toBeGreaterThan(0);
+    expect(
+      hrefs.filter((h) => !h.includes("?text=")),
+      `WhatsApp links opening an empty chat on ${path}`
+    ).toEqual([]);
+  }
+});
+
+test("the mobile menu's WhatsApp row carries it too", async ({ page }) => {
+  // Only rendered below lg, so the desktop sweep above cannot see it.
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  await page.locator("header button[aria-expanded]").click();
+  const row = page
+    .locator("header")
+    .locator('a[href*="wa.me"]')
+    .filter({ hasText: "וואטסאפ" });
+  await expect(row).toHaveAttribute("href", /\?text=/);
+});

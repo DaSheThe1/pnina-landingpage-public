@@ -8,6 +8,7 @@ import { LeadButton } from "@/components/lead/lead-button";
 import { BrandMark } from "@/components/ui/brand-mark";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { mainNavigation } from "@/config/navigation";
 import { siteConfig } from "@/config/site";
 import { Link, usePathname } from "@/i18n/navigation";
@@ -87,15 +88,12 @@ export function SiteHeader() {
               <InstagramIcon className="h-4.5 w-4.5" />
             </a>
           ) : null}
-          <a
-            href={siteConfig.whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={t("whatsapp")}
+          <WhatsAppLink
+            label={t("whatsapp")}
             className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 text-[#34d36f] transition-colors hover:border-[#25d366]/50 hover:bg-[#25d366]/15"
           >
             <WhatsAppIcon className="h-4.5 w-4.5" />
-          </a>
+          </WhatsAppLink>
           <LeadButton
             variant="brand"
             size="sm"
@@ -151,16 +149,13 @@ export function SiteHeader() {
             <ArrowRight data-icon="inline-end" />
           </LeadButton>
           <div className="flex gap-2">
-            <a
-              href={siteConfig.whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <WhatsAppLink
               onClick={() => setOpen(false)}
               className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 px-4 text-sm font-medium text-[#34d36f] transition-colors hover:bg-[#25d366]/15"
             >
               <WhatsAppIcon className="h-4.5 w-4.5" />
               {t("whatsapp")}
-            </a>
+            </WhatsAppLink>
             {siteConfig.profiles.instagram ? (
               <a
                 href={siteConfig.profiles.instagram}

@@ -36,6 +36,7 @@ finished with placeholders, so content can arrive in any order.
 | `pages.thankYou` | `/thank-you` |
 | `pages.privacy`, `pages.terms`, `pages.accessibility` | the legal pages |
 | `nav`, `header`, `footer`, `common` | global chrome |
+| `whatsapp` | the opening line every WhatsApp button pre-fills, in ONE place. Every button on the site renders `<WhatsAppLink>`, so editing `whatsapp.message` changes all six. Never link a bare `wa.me` URL — it opens an empty chat and makes the visitor find her own opening words |
 | `og` | the social share card |
 
 Strings still containing the word `PLACEHOLDER` are ones we invented as scaffolding
@@ -66,7 +67,7 @@ than a broken image, so nothing looks unfinished. Details and naming:
 | `media.lecturesPortrait` | ideally her speaking to a room — this is what sells talks |
 | `gallery` | optional photo gallery; empty = the section removes itself |
 | `testimonialShots` | testimonial screenshots — policy applies |
-| `videos.hero`, `videos.thankYou` | local video files (production uses the CDN) |
+| `videos.hero`, `videos.thankYou`, `videos.about` | each clip's local file and its filename in the R2 bucket. Read them through `videoSrc(key)`, never `videos[key].src` |
 
 ## 5. Look and feel
 

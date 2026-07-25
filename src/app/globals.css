@@ -308,9 +308,10 @@
   }
 }
 
-/* Slow zoom in / zoom out on the struck prices and on the "ללא עלות" payoff.
-   Requested by the client. Kept slow (3.4s) and shallow (≤ 7%) so it reads as
-   the number breathing rather than as a flashing discount badge, and it stops
+/* Zoom in / zoom out on the struck prices and on the "בלי עלות" payoff.
+   Requested by the client, who then asked for it faster: 3.4s read as barely
+   moving. At 2s the pulse is legible as a pulse. Depth stays shallow (≤ 7%) so
+   it is the number breathing rather than a flashing discount badge, and it stops
    completely under prefers-reduced-motion via the global block at the bottom of
    this file. */
 @keyframes price-breathe {
@@ -657,14 +658,14 @@
   /* Continuous zoom in / zoom out on a price. Applied to a WRAPPER, never to
      the element that also carries a hover transform — otherwise the two
      `transform`s overwrite each other and the hover tilt silently dies. */
+  /* No per-element animation-delay anywhere: the prices are deliberately in
+     lockstep. They were staggered by 1.1s to avoid a metronome effect, but
+     reading down the funnel the offset just looked like a glitch. Every element
+     carrying this class starts its animation in the same frame, so they stay in
+     phase for the life of the page. */
   .price-breathe {
     transform-origin: center;
-    animation: price-breathe 3.4s ease-in-out infinite;
-  }
-
-  /* Staggered so the two struck tiers don't pulse in lockstep. */
-  .price-breathe-delay {
-    animation-delay: 1.1s;
+    animation: price-breathe 2s ease-in-out infinite;
   }
 
   .glow-breathe {
