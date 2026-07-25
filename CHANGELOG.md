@@ -19,6 +19,19 @@ The videos move to the CDN, and the site goes public.
   permanent history is not worth carrying. It also cuts the deployed artifact
   from 17 MB to 6 MB.
 
+### Deployment
+- **The site is live at https://pnina.trickticmedia.com.** First publish of the
+  public mirror; Pages enabled with GitHub Actions as its source, custom domain
+  set, certificate issued, HTTPS enforced. The hero video plays from R2 on the
+  live page (`readyState: 4`, 720×1280) and no request on the page 4xxs.
+- The Worker was redeployed so production validates phone numbers the same way
+  the site does. It had been running the pre-0.3.0 length check.
+- **Outstanding: the DNS record is still DNS-only (grey cloud), so the lead form
+  does not work yet.** A Worker route only fires on proxied traffic, so
+  `POST /api/contact` is answered by Pages with a 405. Grey was required for
+  GitHub to issue the certificate; that is done, so the record can be flipped to
+  proxied now. See the runbook in `docs/07-deployment-target.md`.
+
 ## [0.3.1] - 2026-07-25
 
 The site can now honestly claim WCAG 2.1 AA, which its accessibility statement
