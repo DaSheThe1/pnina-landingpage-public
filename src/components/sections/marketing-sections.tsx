@@ -221,19 +221,19 @@ const STEP_TINTS = {
   plum: {
     panel: "from-brand-wash via-surface-2 to-brand-soft/70",
     numeral: "text-brand/30",
-    icon: "border-brand/30 bg-white/85 text-brand-accent",
+    icon: "border-brand/30 bg-surface-1/85 text-brand-accent",
     rule: "bg-brand/45",
   },
   teal: {
     panel: "from-teal-soft/70 via-surface-1 to-teal-soft",
     numeral: "text-teal/35",
-    icon: "border-teal/30 bg-white/85 text-teal-deep",
+    icon: "border-teal/30 bg-surface-1/85 text-teal-deep",
     rule: "bg-teal/45",
   },
   gold: {
     panel: "from-gold-soft/80 via-surface-1 to-gold-soft",
     numeral: "text-gold/45",
-    icon: "border-gold/40 bg-white/85 text-gold-deep",
+    icon: "border-gold/40 bg-surface-1/85 text-gold-deep",
     rule: "bg-gold/55",
   },
 } as const;
@@ -293,7 +293,7 @@ export function ProcessSection() {
                 as="li"
                 className="h-full"
               >
-                <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1/80 shadow-card backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_28px_60px_-32px_rgba(38,20,31,0.45)]">
+                <article className="group flex h-full flex-col overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1/80 shadow-card backdrop-blur-sm transition-shadow duration-300 hover:shadow-[0_28px_60px_-32px_var(--shadow-strong)]">
                   {/* Image band. 4:3 rather than the square the rows used — in a
                       ~17rem column a square photo is half the card. */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-surface-2">

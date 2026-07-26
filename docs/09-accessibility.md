@@ -27,6 +27,13 @@ require a business website serving the Israeli public to be accessible and to
 - Colour tokens split by role so text never lands on a failing contrast: `--brand`
   is decorative only, `--brand-accent` is the AA-safe rose for type. See the
   header of `src/app/globals.css`.
+- The site follows the reader's **dark-mode preference** automatically
+  (`prefers-color-scheme`), with no in-page toggle to find. The same role split
+  holds in dark — every ink token was re-picked against the dark canvas and the
+  measured ratios are listed in the DARK block at the bottom of `globals.css`;
+  the AA floor is `--subtle-foreground` at 5.7:1. Reading a page like this one at
+  night, on a phone, is a normal way to arrive here, so this is an accessibility
+  feature and not a styling one.
 - Alt text required on every image via the `media.ts` registry.
 - Form fields have real `<label>`s, and errors are associated and announced.
 - Focus-visible rings on all interactive elements.
@@ -38,7 +45,8 @@ require a business website serving the Israeli public to be accessible and to
 - [ ] Screen-reader pass in Hebrew (NVDA or VoiceOver), checking heading order
       and that the dialog announces itself.
 - [ ] Automated audit (axe / Lighthouse) on every route.
-- [ ] Contrast re-check against the final palette, especially the rose on sand.
+- [ ] Contrast re-check against the final palette, especially the rose on sand —
+      **in both schemes**.
 - [ ] Zoom to 200% without horizontal scrolling.
 - [ ] Then write the real conformance level and date into
       `pages.accessibility.sections`, and name an accessibility contact.

@@ -137,7 +137,7 @@ export function MessageVideo({
         className="pointer-events-none absolute -inset-x-6 -top-8 bottom-0 rounded-[3rem] bg-brand/18 blur-[80px] sm:-inset-x-14"
       />
 
-      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_rgba(38,20,31,0.5)]">
+      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_var(--shadow-strong)]">
         <div className="relative aspect-[9/16] overflow-hidden rounded-[1.6rem] bg-foreground">
           {src ? (
             <video
@@ -160,7 +160,7 @@ export function MessageVideo({
 
           {!ready ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1">
-              <span className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-brand/25 bg-white/70 text-brand-accent">
+              <span className="relative flex h-20 w-20 items-center justify-center rounded-2xl border border-brand/25 bg-surface-1/70 text-brand-accent">
                 {src ? (
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-2xl bg-brand-accent/20" />
                 ) : null}

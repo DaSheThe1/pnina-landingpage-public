@@ -47,17 +47,22 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-// This is an intentionally light-only ("plum · teal · gold") design. Declare the
-// light scheme to the UA so form controls and scrollbars render light and no
-// engine tries to re-dark the page.
+// The "plum · teal · gold" design ships in both schemes and follows the reader's
+// OS/browser preference — there is no in-page toggle. Declaring both tells the
+// UA it may render form controls and scrollbars either way, and the two
+// `themeColor` entries keep the mobile browser chrome matching `--canvas` in
+// each scheme (see the DARK block at the bottom of globals.css).
 //
 // Note we do NOT set `darkreader-lock` here (the template did). Locking out a
 // user's own reading-comfort extension is the wrong trade on this site — brand
 // fidelity is worth less than someone being able to read the page the way they
 // need to. See AGENTS.md.
 export const viewport: Viewport = {
-  colorScheme: "light",
-  themeColor: "#fdf5ea",
+  colorScheme: "light dark",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#fdf5ea" },
+    { media: "(prefers-color-scheme: dark)", color: "#170b12" },
+  ],
 };
 
 // Per-locale root metadata. Hebrew (default) lives under /he and English under

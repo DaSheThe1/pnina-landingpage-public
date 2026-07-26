@@ -27,12 +27,24 @@
    for gold (`--gold` decorative / `--gold-deep` 5.4:1 for text). Gold at its
    decorative value on a light canvas is roughly 2:1 — it is a highlight, never
    a label.
+
+   DARK MODE lives in ONE place: the `@media (prefers-color-scheme: dark)` block
+   at the very bottom of this file. It re-points the same tokens at a deep
+   aubergine canvas — it does not introduce a second set of names. If you add a
+   colour here, add its dark value there, and read the note at the top of that
+   block first: several tokens invert their role (the "-soft"/"-wash" tints go
+   from pale backgrounds to deep ones; `--teal-deep`/`--gold-deep` are the
+   READABLE ends of their ladders, so on dark they become the LIGHT values).
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Light-only design. Declare it so form controls, scrollbars and the default
-     canvas all render light, and so no engine tries to re-dark the page. */
-  color-scheme: light;
+  /* Both schemes are supported, so let the UA pick form controls, scrollbars
+     and the default canvas to match. The page itself follows the OS/browser
+     preference via the dark block at the bottom of this file — there is no
+     in-page toggle, deliberately: a woman reading this on a phone in a dark
+     room should not have to find a switch, and a toggle would have to persist a
+     choice about this site in her browser storage. */
+  color-scheme: light dark;
 
   /* Surfaces — blush paper canvas; cards rise toward pure white.
      `--canvas` is the real, solid base colour painted on <html>. `--background`
@@ -66,6 +78,17 @@
   --brand-hover: #74184a;
   --brand-soft: #f7d6e6;
   --brand-wash: #fdeef5;
+  /* The label that sits ON a filled plum CTA. Its own token (not
+     `--primary-foreground`) because the two diverge in dark mode: the default
+     button inverts to a light pill with dark ink, while the plum CTA keeps its
+     dark plum fill and near-white label in BOTH schemes. Identical to
+     `--primary-foreground` here, so light mode is unaffected. */
+  --brand-ink: #fff8f5;
+  /* The filled CTA's hover fill. Same value as `--brand-hover` in light mode —
+     it is a separate token only because `--brand-hover` is also the hover
+     colour for plum LINK TEXT, and that one has to go light in dark mode while
+     a fill carrying a near-white label has to stay dark. */
+  --brand-cta-hover: #74184a;
 
   /* Complement — deep teal, directly opposite the brand. This is the colour of
      reassurance on this site: ticks, "no obligation" chips, success states. */
@@ -100,6 +123,17 @@
   --input: rgba(38, 20, 31, 0.2);
   --ring: #a32d6b;
   --radius: 0.75rem;
+
+  /* The colour of a heavy drop shadow (the video frames, the hover lift on
+     cards). On paper a shadow is tinted ink; on a dark canvas ink-coloured
+     shadows are invisible, so dark swaps in real black. */
+  --shadow-strong: rgba(38, 20, 31, 0.5);
+
+  /* WhatsApp's brand green (#25d366) is ~2:1 on this canvas — fine as a fill,
+     unreadable as type. This is the readable green for WhatsApp LABELS in each
+     scheme; the #25d366 fills themselves stay literal. */
+  --whatsapp-ink: #1c7a3f;
+  --whatsapp-ink-hover: #155c30;
 }
 
 @theme inline {
@@ -133,6 +167,10 @@
   --color-brand-hover: var(--brand-hover);
   --color-brand-soft: var(--brand-soft);
   --color-brand-wash: var(--brand-wash);
+  --color-brand-ink: var(--brand-ink);
+  --color-brand-cta-hover: var(--brand-cta-hover);
+  --color-whatsapp-ink: var(--whatsapp-ink);
+  --color-whatsapp-ink-hover: var(--whatsapp-ink-hover);
   --color-teal: var(--teal);
   --color-teal-deep: var(--teal-deep);
   --color-teal-soft: var(--teal-soft);
@@ -854,6 +892,270 @@
 [dir="rtl"] [data-icon="inline-end"],
 [dir="rtl"] [data-icon="inline-start"] {
   transform: scaleX(-1);
+}
+
+/* ══════════════════════════  DARK  ══════════════════════════
+   The same page after dark, not a different design. Everything below re-points
+   the tokens declared at the top of this file; no component knows dark mode
+   exists, and nothing here is behind a class or a toggle — it follows the
+   reader's OS/browser preference and nothing else.
+
+   The canvas is a deep aubergine (#170b12), not black: it is the light
+   canvas's ink, and the same plum · teal · gold triad still sits on it. Pure
+   black would make the plum read as neon.
+
+   Three rules govern how the ladders flip, and getting them wrong is what
+   makes a dark theme look broken:
+
+   1. The READABLE end of each colour ladder swaps sides. On paper the readable
+      plum/teal/gold are the DARK values (`--brand-accent`, `--teal-deep`,
+      `--gold-deep`); on this canvas they must be the LIGHT ones. The token
+      NAMES do not change — `--teal-deep` still means "the teal you may set
+      type in", it is just light now. Do not "fix" the names.
+   2. The tints (`--*-soft`, `--*-wash`) are backgrounds that carry ink on top.
+      Pale on paper, deep here — same contrast job, opposite direction.
+   3. Anything that has WHITE ink baked into a component stays dark here.
+      `--brand-deep` (the filled plum badges and the CTA fill) is therefore
+      roughly as dark as it is in light mode, so `text-white` keeps working
+      without a single component-level `dark:` variant.
+
+   Contrast on the dark canvas (all measured against #170b12):
+     --foreground #fbeaf2 ......... 17.9:1
+     --muted-foreground #bda2b1 .... 8.2:1
+     --subtle-foreground #9d8593 ... 5.7:1   (the floor — do not darken)
+     --brand-accent #f0a6c9 ....... 10.1:1
+     --teal-deep #6fdccf .......... 12.0:1
+     --gold-deep #f0ce85 .......... 12.4:1
+   Filled surfaces: white on --brand-deep #a8336d is 6.3:1; dark ink
+   (--primary-foreground) on --primary #f3e3ec is 15.6:1.
+   ═══════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Surfaces — deep aubergine paper. `--background` stays transparent for
+       exactly the same reason it is transparent in light mode: every section is
+       a window onto the SiteBackground field. `--canvas` is the solid base. */
+    --canvas: #170b12;
+    --surface-1: #26151f;
+    --surface-2: #1f1018;
+    --surface-3: #33202c;
+
+    /* Ink — warm near-white, tinted toward the brand hue like its light-mode
+       counterpart. Never pure white: #ffffff on this canvas glares. */
+    --foreground: #fbeaf2;
+    --foreground-soft: #e0c8d5;
+    --muted-foreground: #bda2b1;
+    /* Same AA floor as light mode, from the other side. Do not darken. */
+    --subtle-foreground: #9d8593; /* 5.7:1 on --canvas */
+
+    /* Brand. `--brand` is unchanged: it is the CTA fill and every decorative
+       wash, and at #c24a85 it already clears 4.5:1 against white ink while
+       sitting 4.1:1 clear of this canvas — so the primary CTA is deliberately
+       identical in both schemes. `--brand-accent` is the one that inverts,
+       because it is the plum you set TYPE in. */
+    --brand: #c24a85;
+    --brand-accent: #f0a6c9;
+    --brand-deep: #a8336d;
+    --brand-hover: #f9cfe1;
+    --brand-soft: #4a1c31;
+    --brand-wash: #2a1120;
+    --brand-ink: #fff8f5;
+    --brand-cta-hover: #a8336d;
+
+    /* Complement — teal. `--teal-deep` is the readable one, so it goes light. */
+    --teal: #2fb9ac;
+    --teal-deep: #6fdccf;
+    --teal-soft: #10403b;
+
+    /* Metal — gold. Same split: `--gold` decorative, `--gold-deep` readable. */
+    --gold: #e0a93f;
+    --gold-deep: #f0ce85;
+    --gold-soft: #3a2b12;
+
+    --card: #26151f;
+    --card-foreground: #fbeaf2;
+    --popover: #26151f;
+    --popover-foreground: #fbeaf2;
+    /* Primary fully inverts — the default button becomes a light pill with
+       dark ink. The plum CTA does NOT follow it; it wears `--brand-ink`. */
+    --primary: #f3e3ec;
+    --primary-foreground: #1c0d15;
+    --secondary: rgba(251, 234, 242, 0.07);
+    --secondary-foreground: #fbeaf2;
+    --muted: #241521;
+    --accent: #a8336d;
+    --accent-foreground: #fff8f5;
+    --destructive: #ff9d93;
+    --success: #6fdccf;
+
+    --border: rgba(251, 234, 242, 0.14);
+    --border-subtle: rgba(251, 234, 242, 0.07);
+    --input: rgba(251, 234, 242, 0.22);
+    --ring: #f0a6c9;
+
+    /* Ink-tinted shadows vanish on a dark canvas; only real black separates. */
+    --shadow-strong: rgba(0, 0, 0, 0.72);
+
+    --whatsapp-ink: #5fe08c;
+    --whatsapp-ink-hover: #8bebae;
+  }
+
+  /* ── The drifting colour field ──
+     Same five blobs, same drift. Over near-black the washes need more alpha to
+     survive at all, and blob 5 — the pale cream mass that knits the others
+     together on paper — becomes a warm lift instead of a bright one. If you can
+     clearly "see" this layer, it is still too strong. */
+  .site-bg__blob--1 {
+    background: radial-gradient(
+      circle at center,
+      rgba(194, 74, 133, 0.2),
+      transparent 68%
+    );
+  }
+  .site-bg__blob--2 {
+    background: radial-gradient(
+      circle at center,
+      rgba(224, 169, 63, 0.12),
+      transparent 68%
+    );
+  }
+  .site-bg__blob--3 {
+    background: radial-gradient(
+      circle at center,
+      rgba(27, 155, 144, 0.17),
+      transparent 70%
+    );
+  }
+  .site-bg__blob--4 {
+    background: radial-gradient(
+      circle at center,
+      rgba(194, 74, 133, 0.13),
+      transparent 70%
+    );
+  }
+  .site-bg__blob--5 {
+    background: radial-gradient(
+      circle at center,
+      rgba(58, 30, 45, 0.9),
+      transparent 72%
+    );
+  }
+
+  /* The light-mode vignette pools WHITE light on the centre. Here that would
+     grey the whole page out, so the top pool becomes a faint plum bloom and the
+     bottom settles into black — the same "light falling on a surface" idea,
+     read from the dark side. */
+  .site-bg__vignette {
+    background: radial-gradient(
+        130% 100% at 50% -10%,
+        rgba(194, 74, 133, 0.07) 30%,
+        transparent 70%
+      ),
+      linear-gradient(
+        to bottom,
+        transparent 0%,
+        transparent 70%,
+        rgba(0, 0, 0, 0.45) 100%
+      );
+  }
+
+  /* `multiply` is what reads as paper fibre on a light surface; on a dark one it
+     multiplies toward black and disappears. `overlay` keeps the grain. */
+  .site-bg__noise {
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+  }
+}
+
+@layer base {
+  @media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-thumb {
+      background: rgba(251, 234, 242, 0.16);
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(240, 166, 201, 0.45);
+    }
+  }
+}
+
+/* These live in the utilities layer, exactly like the rules they override, so
+   that a `hover:shadow-[…]` utility on the same element still wins. Moving them
+   out of the layer would silently kill every hover shadow in dark mode. */
+@layer utilities {
+  @media (prefers-color-scheme: dark) {
+    .bg-dot {
+      background-image: radial-gradient(
+        rgba(251, 234, 242, 0.08) 1px,
+        transparent 1px
+      );
+    }
+
+    /* The headline gradient runs ink → plum. Both ends still have to be legible
+       on their own, so on dark it runs near-white → light plum. */
+    .text-gradient {
+      background: linear-gradient(
+        170deg,
+        var(--foreground) 0%,
+        #e79ec0 62%,
+        var(--brand-accent) 120%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .text-shimmer {
+      background: linear-gradient(
+        100deg,
+        var(--foreground) 18%,
+        #dd93b6 42%,
+        var(--brand-accent) 54%,
+        var(--foreground) 80%
+      );
+      background-size: 220% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    /* Frost, from the dark side. */
+    .glass {
+      background: rgba(38, 21, 31, 0.72);
+      border: 1px solid rgba(251, 234, 242, 0.1);
+    }
+
+    .ring-shine::after {
+      background: linear-gradient(
+        120deg,
+        rgba(251, 234, 242, 0.1),
+        rgba(240, 166, 201, 0.4),
+        rgba(251, 234, 242, 0.04)
+      );
+    }
+
+    /* On paper, layers separate with a soft shadow. On a dark canvas a shadow
+       has nothing to darken, so a card is lifted by a hairline of light at its
+       edge PLUS a deep black pool for depth. */
+    .shadow-card {
+      box-shadow: 0 0 0 1px rgba(251, 234, 242, 0.05),
+        0 14px 36px -18px rgba(0, 0, 0, 0.8);
+    }
+
+    .glow-brand {
+      box-shadow: 0 0 0 1px rgba(240, 166, 201, 0.4),
+        0 10px 34px -12px rgba(194, 74, 133, 0.5);
+    }
+
+    .anim-shimmer {
+      background: linear-gradient(
+        90deg,
+        rgba(251, 234, 242, 0.04) 0%,
+        rgba(251, 234, 242, 0.09) 50%,
+        rgba(251, 234, 242, 0.04) 100%
+      );
+      background-size: 200% 100%;
+    }
+  }
 }
 
 /* ────────────────  Reduced motion  ────────────────

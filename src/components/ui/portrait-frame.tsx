@@ -47,7 +47,7 @@ export function PortraitFrame({
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1">
           <span
             aria-hidden
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-brand/25 bg-white/70 font-display text-xl text-brand-accent"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-brand/25 bg-surface-1/70 font-display text-xl text-brand-accent"
           >
             {siteConfig.monogram}
           </span>

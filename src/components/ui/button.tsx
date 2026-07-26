@@ -9,11 +9,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/85",
-        // The gold hero/CTA action. Lively: a polished-metal sheen sweeps across
-        // on hover/focus (.btn-sheen), it lifts slightly, and its gold glow
-        // deepens. Black ink (text-primary-foreground) on gold for max contrast.
+        // The plum hero/CTA action. Lively: a sheen sweeps across on hover/focus
+        // (.btn-sheen), it lifts slightly, and its glow deepens into gold.
+        //
+        // It wears `--brand` / `--brand-ink` / `--brand-cta-hover` rather than
+        // the primary pair on purpose: this button is deliberately IDENTICAL in
+        // light and dark (near-white label on plum, 4.6:1), while `--primary`
+        // inverts to a light pill with dark ink and `--brand-hover` — a TEXT
+        // colour — goes light. All three tokens hold the button's ORIGINAL
+        // light-mode values, so nothing about it changed on the light canvas.
         brand:
-          "btn-sheen bg-brand text-primary-foreground font-semibold shadow-[0_0_0_1px_rgba(194,74,133,0.45),0_8px_30px_-8px_rgba(194,74,133,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-hover hover:shadow-[0_0_0_1px_rgba(224,169,63,0.6),0_14px_44px_-8px_rgba(194,74,133,0.85)]",
+          "btn-sheen bg-brand text-brand-ink font-semibold shadow-[0_0_0_1px_rgba(194,74,133,0.45),0_8px_30px_-8px_rgba(194,74,133,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-cta-hover hover:shadow-[0_0_0_1px_rgba(224,169,63,0.6),0_14px_44px_-8px_rgba(194,74,133,0.85)]",
         outline:
           "border-foreground/15 bg-foreground/[0.02] text-foreground-soft hover:bg-foreground/[0.06] hover:text-foreground hover:border-foreground/25 aria-expanded:bg-foreground/[0.06]",
         secondary:

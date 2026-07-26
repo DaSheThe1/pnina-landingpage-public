@@ -81,7 +81,7 @@ export function HeroVideo() {
         className="pointer-events-none absolute -inset-x-12 top-1/3 bottom-0 rounded-[3rem] bg-teal/15 blur-[80px]"
       />
 
-      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_rgba(38,20,31,0.5)]">
+      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_var(--shadow-strong)]">
         <div className="relative aspect-[9/16] overflow-hidden rounded-[1.6rem] bg-foreground">
           {/* The branded poster panel sits underneath and shows whenever no
               video can play: no video supplied yet, a slow connection, or a
@@ -138,7 +138,7 @@ function HeroPoster() {
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1 px-6 text-center">
       <span
         aria-hidden
-        className="flex h-16 w-16 items-center justify-center rounded-full border border-brand/30 bg-white/70 font-display text-2xl text-brand-accent shadow-card"
+        className="flex h-16 w-16 items-center justify-center rounded-full border border-brand/30 bg-surface-1/70 font-display text-2xl text-brand-accent shadow-card"
       >
         {siteConfig.monogram}
       </span>

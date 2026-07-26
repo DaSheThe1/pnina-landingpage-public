@@ -79,10 +79,12 @@ export function SiteFooter() {
               {/* WhatsApp's brand green (#25d366, and the lighter #34d36f this
                   used) is 1.8:1 on the cream canvas — invisible to anyone with
                   low vision, and a straight AA failure on link text. The tile
-                  behind the glyph still carries the brand colour; the type is a
-                  darkened green that clears 4.5:1 and still reads as WhatsApp. */}
-              <WhatsAppLink className="group inline-flex w-fit items-center gap-2.5 text-[#1c7a3f] transition-colors hover:text-[#155c30]">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#25d366]/12 text-[#1c7a3f] transition-colors group-hover:bg-[#25d366]/20">
+                  behind the glyph still carries the brand colour; the type is
+                  `--whatsapp-ink`, which clears 4.5:1 in BOTH schemes (a
+                  darkened green on paper, a lightened one on the dark canvas)
+                  and still reads as WhatsApp. */}
+              <WhatsAppLink className="group inline-flex w-fit items-center gap-2.5 text-whatsapp-ink transition-colors hover:text-whatsapp-ink-hover">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#25d366]/12 text-whatsapp-ink transition-colors group-hover:bg-[#25d366]/20">
                   <WhatsAppIcon className="h-4 w-4" />
                 </span>
                 {t("whatsapp")}

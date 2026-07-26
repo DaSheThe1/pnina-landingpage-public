@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 This project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html);
 see `AGENTS.md` for the bump rules.
 
+## [0.4.0] - 2026-07-26
+
+### Added
+- **A dark version of the site, for visitors whose device is set to dark.**
+  The site is still the light, cream-and-plum site it has always been — that has
+  not changed, and it is what almost everyone will see. But a phone set to dark
+  mode used to be handed a page that insisted it was light-only, and either the
+  browser or a dark-mode extension would then try to darken it on its own and
+  make parts of it hard to read. Now the site has a proper dark version of its
+  own to hand over: a deep aubergine background instead of cream, with the same
+  plum, teal and gold on top. Same layout, same words, same funnel.
+
+  Every text colour was re-picked and re-measured against the dark background,
+  so the site can still claim AA (ת"י 5568) either way. It switches by itself
+  and there is no button to press.
+
+  Nothing about the light site changed — same colours, same buttons, same hover
+  behaviour, to the pixel.
+
 ## [0.3.4] - 2026-07-26
 
 ### Changed
