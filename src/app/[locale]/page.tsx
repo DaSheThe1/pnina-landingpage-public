@@ -29,8 +29,8 @@ import { sectionIds } from "@/config/navigation";
  * Order is deliberate and reads as an argument, not a feature list:
  *   hero            — what this is, and that the introductory call costs nothing
  *   founder         — who she is, and that she has been where the reader is
- *   audience        — "למי הליווי מתאים", where the reader finds herself (#audience)
  *   process         — what happens step by step, so nothing is a surprise (#process)
+ *   audience        — "למי הליווי מתאים", where the reader finds herself (#audience)
  *   offer           — what the call is worth, that it is free, and the two tracks
  *   moments         — what she has watched become possible
  *   testimonials    — the messages women actually sent her (#testimonials)

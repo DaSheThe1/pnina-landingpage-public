@@ -64,6 +64,33 @@ const STATIONS = 4;
  *  (fractional scroll offsets, mobile URL-bar resizes), small enough that
  *  scrolling inward hands the story back to the snap within a few pixels. */
 const SNAP_EDGE = 12;
+/** How fast a frame has to travel, in px, before it counts as a flick rather
+ *  than a nudge. A mouse-wheel notch is a single-frame impulse and is excluded by
+ *  the "was it already travelling" test instead; a touch or trackpad fling moves
+ *  40-76px per frame at 60fps, and far more when the page is janking. */
+const FLING_SPEED = 20;
+/** A gesture is still in flight this long after the last frame that moved. Long,
+ *  because at 4-8fps the browser commits the scroll on alternate ticks and two
+ *  frames of one flick can be half a second apart. */
+const GESTURE_MS = 700;
+/** …and the page counts as settled this long after it stops, which is what
+ *  re-opens the end stations so nothing traps. Short, because it is only there
+ *  to protect the browser's own snap-back animation from being cancelled. */
+const MOTION_MS = 250;
+/** The entry lock lets go once nothing has needed correcting for this long. */
+const LOCK_QUIET_MS = 250;
+/** How many frames of travel AHEAD of itself a sustained fling arms the snap,
+ *  and the hard cap on that, as a fraction of the viewport. The cap is what
+ *  keeps the reach from ever becoming a pull: a quarter of a screen means the
+ *  section is already most of the way onto it before anything can arm, so a
+ *  visitor parked 300px above it and nudging is never touched. */
+const REACH_FRAMES = 2.5;
+const MAX_REACH = 0.25;
+/** The longest the entry lock may hold the visitor on the station she arrived
+ *  at while the rest of a flick's momentum spends itself. A touch fling decays
+ *  in about a second; this is the ceiling that guarantees the page is hers
+ *  again even if something keeps scrolling. */
+const LOCK_MS = 1200;
 /** Scrub playback speed in progress-units/second: one act (1/3) in ~2.4s. */
 const SPEED = 0.14;
 /** Desktop stations that dissolve into a clean approved still at rest. */
@@ -219,23 +246,186 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     // listener (it races Chromium's snap resolution for that same gesture and
     // loses about half the time — it tested green at 1440 and red at 390).
     //
-    // So the snap zone simply STOPS SHORT of both end stations by `SNAP_EDGE`.
-    // Sitting on station 0 or station 3, snapping is off and the page is
-    // ordinary; scrolling outward just leaves, with nothing to race. Scrolling
-    // INWARD crosses into the zone within a few pixels and mandatory snapping
-    // takes over for the rest of the story, exactly as before — one flick, one
-    // step. Entering the section can therefore never jump either: the zone's
-    // edges sit a few pixels inside the first and last snap positions, so
-    // whichever end the visitor arrives at, the snap it engages with is the one
-    // she is already standing on.
+    // So the snap zone AT REST simply STOPS SHORT of both end stations by
+    // `SNAP_EDGE`. Sitting on station 0 or station 3, snapping is off and the
+    // page is ordinary; scrolling outward just leaves, with nothing to race.
+    //
+    // ── AND THAT ALONE LEFT THE PHONE WITH NO LOCK AT ALL (Daniel, 2026-07-30) ──
+    // "It doesn't pull you, which is good, but if I scroll it will keep scrolling
+    // past the step … instead of first locking me into this full page it will go
+    // straight to the animation in step 2. Same when we scroll up. It won't lock
+    // you on the screen even the first time you enter. That's on mobile."
+    //
+    // A mouse wheel is a train of separate one-frame impulses, so the frame after
+    // the zone is entered is already a NEW gesture and snaps normally — which is
+    // why the rule above tested green at 1440. A finger is not: one flick is a
+    // single gesture whose momentum coasts for a second or more, and a scroller
+    // that had `scroll-snap-type: none` when that gesture began keeps it for the
+    // whole flight. Measured on a 390×844 touch context with real Chromium
+    // flings: entering fast from above landed on station 2, entering fast from
+    // below landed on station 0, and a flick from an end station sailed straight
+    // out of the section. The 12px hole is exactly the width of the problem — the
+    // one place a phone gesture ALWAYS starts is an end station.
+    //
+    // So while the scroll is actually MOVING, the zone reaches out ahead of
+    // itself, and only in the direction of travel:
+    //
+    //   • one sustained fling (`FLING_FRAMES` moving frames in a row, still above
+    //     `FLING_SPEED`) arms the snap up to `REACH_FRAMES` frames of travel
+    //     BEFORE the section, so the snap is already live when the momentum
+    //     arrives and Chromium resolves it to the station the visitor is entering
+    //     at — station 0 from above, station 3 from below — instead of one or two
+    //     stations further in;
+    //   • a wheel notch, a slow drag or a parked page never reaches that
+    //     threshold, so approaching gently arms nothing and the geometry above is
+    //     what runs. Daniel's 45px nudge still moves 45px;
+    //   • the reach only ever points INWARD (`d > 0` above the section, `d < 0`
+    //     below it), so a flick that LEAVES an end station is never armed and can
+    //     never be pulled back. That is what keeps the release geometric rather
+    //     than gestural, which the two failed approaches above are about.
+    //
+    // ── AND ONE BACKSTOP, BECAUSE THE PHONE IS NOT ALWAYS AT 60fps ──
+    // Traced on the real page at 390×844: while the 90 mobile frames are still
+    // decoding, this rAF loop runs at EIGHT frames a second. One frame is then
+    // 125ms of travel — measured, a single frame carried the scroll from 96px
+    // above the section to 1372px inside it — and nothing predictive can survive
+    // that, because the reach is computed from a previous frame that was still
+    // showing the finger's slow drag. So there is a second, non-predictive rule:
+    // on the ONE frame where the section goes from not filling the viewport to
+    // filling it, if the visitor arrived faster than `FLING_SPEED` and overshot,
+    // she is put back on the station she entered at — station 0 from above,
+    // station 3 from below — and mandatory snapping takes it from there.
+    // It fires ONLY on that entry frame, so an anchor jump that crosses the whole
+    // section (nav link, deep link) is never caught by it, and at a healthy frame
+    // rate the reach above has already snapped her cleanly and there is nothing
+    // to correct, so it never fires at all.
+    //
+    // ── AND THE SNAP IS NEVER DROPPED MID-MOVEMENT ──
+    // `scroll-behavior: smooth` is set on `html` (globals.css), so the browser
+    // performs its own re-snap as an ANIMATED scroll. That animation travels
+    // through the `SNAP_EDGE` band on its way to an end station, and an earlier
+    // cut of this rule switched snapping off underneath it — which cancels the
+    // animation and strands the visitor 20px off the station. Hence: while the
+    // scroll is moving at all, an engaged snap stays engaged; it is only
+    // re-evaluated once everything has come to rest.
+    //
+    // Inside the section nothing changed: `y mandatory` + `scroll-snap-stop:
+    // always` still means one flick, one step, in both directions.
     let snapOn = false;
-    const applySnap = () => {
-      const r = track.getBoundingClientRect();
-      const on =
-        r.top < -SNAP_EDGE && r.bottom > window.innerHeight + SNAP_EDGE;
+    let lastY: number | null = null;
+    let lastScrollY: number | null = null;
+    /** When the scroll last actually moved, and how fast and which way it was
+     *  going then. Kept in TIME rather than in frames: while the frames decode
+     *  this loop drops to 4-8fps and the browser commits the scroll on every
+     *  OTHER tick, so a "moving frames in a row" counter never gets past one and
+     *  every flick reads as a standing start. Measured, on the real page. */
+    let lastMoveAt = -Infinity;
+    let lastSpeed = 0;
+    let lastDir = 0;
+    /** Which side of the section the gesture in flight started on: -1 above,
+     *  +1 below, 0 "it started inside, or there is no gesture in flight". */
+    let cameFrom = 0;
+    /** The station an entry lock is holding the visitor on, while it holds. */
+    let lockAt: number | null = null;
+    let lockEnds = 0;
+    let lastClampAt = 0;
+    const setSnap = (on: boolean) => {
       if (on === snapOn) return;
       snapOn = on;
       document.documentElement.style.scrollSnapType = on ? "y mandatory" : "";
+    };
+    const scrollBy = (px: number) => {
+      window.scrollTo({ top: window.scrollY + px, behavior: "instant" });
+    };
+    const applySnap = () => {
+      const r = track.getBoundingClientRect();
+      const vh = window.innerHeight;
+      // How far the visitor has travelled into the track, and the offset of the
+      // last station — which is also the last pixel at which the stage still
+      // fills the viewport.
+      const y = -r.top;
+      const end = r.height - vh;
+      const now = performance.now();
+      // Speed and direction come from `scrollY`, NOT from the change in `y`:
+      // `y` also moves when something ABOVE this section changes height (a photo
+      // arriving, a reveal running), and a layout shift read as 300px of scroll
+      // armed the snap and pulled a visitor who had not moved at all into the
+      // section. Position is measured from the rect; motion is measured from the
+      // scroller.
+      const sy = window.scrollY;
+      const d = lastScrollY === null ? 0 : sy - lastScrollY; // + = scrolling down
+      lastScrollY = sy;
+      lastY = y;
+      const speed = Math.abs(d);
+      // Was the page ALREADY travelling when this frame arrived? That is the one
+      // thing that tells a flick apart from a TELEPORT (a restored scroll
+      // position, a script placing the page), which is a single huge frame out
+      // of a standstill and must never be treated as an arrival.
+      const travelling = now - lastMoveAt < GESTURE_MS;
+      if (speed > 0.5) {
+        lastMoveAt = now;
+        lastSpeed = speed;
+        lastDir = Math.sign(d);
+      }
+      const settled = now - lastMoveAt > MOTION_MS;
+      // Which side of the section the gesture that is running now started on.
+      // It STAYS set while she travels through the section, and is forgotten
+      // only when the gesture is over — that is what makes it "the flick that
+      // brought her here" rather than "the last frame".
+      if (y < 0) cameFrom = -1;
+      else if (y > end) cameFrom = 1;
+      if (!travelling) cameFrom = 0;
+
+      // Hold the entry lock. A programmatic scroll does NOT cancel a touch fling
+      // — measured: put back on station 0, the same flick carried on and ended on
+      // station 3 — so the lock is held frame by frame until the momentum has
+      // spent itself (nothing left to correct for `LOCK_QUIET_MS`) or `LOCK_MS`
+      // is up, whichever comes first. Both are times and not frame counts, for
+      // the same reason as above.
+      if (lockAt !== null) {
+        if (Math.abs(y - lockAt) > 1) {
+          scrollBy(lockAt - y);
+          lastY = lockAt;
+          lastScrollY = window.scrollY;
+          lastClampAt = now;
+        }
+        if (now > lockEnds || now - lastClampAt > LOCK_QUIET_MS) {
+          lockAt = null;
+          cameFrom = 0;
+        }
+        setSnap(true);
+        return;
+      }
+
+      // The backstop: a flick that started OUTSIDE has brought the section to
+      // fill the screen. She is put on the station she arrived at — station 0
+      // from above, station 3 from below — and held there until that flick's
+      // momentum is spent. No overshoot test: at a healthy frame rate the reach
+      // below has usually snapped her onto the station already, and the rest of
+      // the same flick would otherwise carry her straight off it.
+      if (cameFrom !== 0 && y >= 0 && y <= end && travelling && lastSpeed > FLING_SPEED) {
+        const target = cameFrom < 0 ? 0 : end;
+        setSnap(true);
+        if (Math.abs(y - target) > 1) {
+          scrollBy(target - y);
+          lastY = target;
+          lastScrollY = window.scrollY;
+        }
+        lockAt = target;
+        lockEnds = now + LOCK_MS;
+        lastClampAt = now;
+        return;
+      }
+
+      const reach =
+        !settled && lastSpeed > FLING_SPEED
+          ? Math.min(lastSpeed * REACH_FRAMES, vh * MAX_REACH)
+          : 0;
+      const inside = y > SNAP_EDGE && y < end - SNAP_EDGE;
+      if (settled) setSnap(inside);
+      else if (snapOn || inside) setSnap(true);
+      else if (y <= SNAP_EDGE) setSnap(lastDir > 0 && y >= -reach);
+      else setSnap(lastDir < 0 && y <= end + reach);
     };
 
     const nearestLoaded = (idx: number) => {
