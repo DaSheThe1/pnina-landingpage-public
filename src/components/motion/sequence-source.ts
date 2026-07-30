@@ -39,13 +39,14 @@ import { publicEnv } from "@/lib/env";
  * while the collection is absent: the probe answers "not there" either way.
  *
  * ── MEMORY, BEFORE RAISING EITHER ──
- * Decoded frames cost width × height × 4 bytes. The mobile cut is safe because
- * phones take every 2nd frame: 90 × 540 × 960 × 4 ≈ 187 MB, which is the figure
- * docs/13 §5 signed off. THE DESKTOP CUT AT 180 × 1440 × 810 × 4 IS ≈ 840 MB
- * held at once, which is far past anything that was ever measured — it cannot
- * bite yet (only 18 of its 180 frames are uploaded, so the completeness probe
- * keeps the whole thing off), but it has to be answered before the desktop
- * sequence goes live, either by stepping desktop too or by evicting frames.
+ * Decoded frames cost width × height × 4 bytes. Holding a cut whole would be
+ * 90 × 540 × 960 × 4 ≈ 187 MB on a phone and 180 × 1440 × 810 × 4 ≈ 840 MB on
+ * desktop — and the full desktop cut IS live in the bucket as of 2026-07-31,
+ * so those figures stopped being theoretical. The answer this comment used to
+ * demand exists now: `frame-store.ts` never holds a cut whole. It keeps a
+ * byte-budgeted window of decoded bitmaps around the current scroll position
+ * (80 MB phone / 220 MB desktop, argued there) and releases the rest, so
+ * raising a frame count raises download bytes but not the decoded ceiling.
  */
 export const SEQUENCE_FRAME_COUNTS = {
   pearl: 180,

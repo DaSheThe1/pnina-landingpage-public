@@ -39,6 +39,20 @@ export function SiteBackground() {
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
+        // While the pearl scrub's stage is pinned it covers this entire layer
+        // with an opaque canvas, and writing `--bg-scroll` here is what makes
+        // the browser re-evaluate a full-viewport `saturate()` filter and a
+        // parallax transform on a fixed layer, once per scroll frame, for a
+        // picture nobody can see. The scrub stamps `data-scrub-pinned` on <html>
+        // for exactly that stretch; globals.css §10a switches off the same
+        // layer's filter and drift from the other side.
+        //
+        // Nothing pops on release. The value goes stale while pinned, and the
+        // first scroll frame after unpinning writes the true one — into a
+        // property whose consumers both carry a 900ms ease, over a section
+        // 300vh tall, which is single-digit pixels of parallax spread across
+        // most of a second.
+        if (document.documentElement.hasAttribute("data-scrub-pinned")) return;
         const max =
           document.documentElement.scrollHeight - window.innerHeight;
         const frac = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;

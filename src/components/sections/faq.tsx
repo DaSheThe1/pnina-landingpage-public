@@ -72,7 +72,7 @@ export function FaqSection() {
                         tabIndex={isOpen ? 0 : -1}
                         aria-label={t("collapse")}
                         onClick={() => setOpen(null)}
-                        className="block w-full cursor-pointer px-5 pb-5 text-start text-sm leading-7 text-muted-foreground"
+                        className="block w-full cursor-pointer px-5 pb-5 text-start text-sm leading-[1.75] text-muted-foreground"
                       >
                         {faq.answer}
                       </button>

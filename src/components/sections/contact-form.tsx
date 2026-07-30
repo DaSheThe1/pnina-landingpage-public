@@ -177,7 +177,7 @@ export function ContactForm({
     >
       {showIntro ? (
         <div className="mb-6">
-          <h2 className="text-[1.3rem] text-foreground">
+          <h2 className="text-[1.55rem] text-foreground">
             {t("simpleTitle")}
           </h2>
           {/* The default lead sentence advertises the open field ("יש גם שדה
@@ -187,7 +187,7 @@ export function ContactForm({
               of this dialog speaks to a woman in the feminine singular, and one
               plural sentence dropped into the middle of it would read as a
               different person talking. */}
-          <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+          <p className="mt-1.5 text-sm leading-normal text-muted-foreground">
             {showQuestion ? t("simpleLead") : t("simpleLeadNoQuestion")}
           </p>
         </div>
@@ -255,7 +255,7 @@ export function ContactForm({
               className={cn(
                 fieldBase,
                 borderFor(),
-                "h-auto min-h-24 resize-y py-2.5 leading-6"
+                "h-auto min-h-24 resize-y py-2.5 leading-normal"
               )}
               value={values.question}
               onChange={(e) => set("question", e.target.value)}
@@ -319,7 +319,7 @@ function RedirectingCard() {
         <CheckCircle2 aria-hidden className="h-8 w-8" />
       </div>
       <h3 className="mt-6 text-2xl font-medium tracking-tight">{t("title")}</h3>
-      <p className="mx-auto mt-3 max-w-sm leading-7 text-muted-foreground">
+      <p className="mx-auto mt-3 max-w-sm leading-relaxed text-muted-foreground">
         {t("text")}
       </p>
       <span

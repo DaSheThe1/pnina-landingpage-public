@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { ArrowRight, Menu, X } from "lucide-react";
 
@@ -18,47 +18,48 @@ export function SiteHeader() {
   const pathname = usePathname();
   const t = useTranslations("header");
   const tNav = useTranslations("nav");
-  const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   return (
     <header className="sticky top-0 z-50">
-      {/* ── The scrolled backdrop: its own layer, and it does NOT animate ──
-          This used to be `transition-colors duration-300` on the header
-          itself, swapping `bg-transparent` for `bg-canvas/80`. The visible
-          failure was nav links and the CTA floating unreadably over the hero
-          video on /about and /thank-you for seconds after a scroll, and the
-          reason turned out not to be the colour: measured at 390px and 1024px
-          in both schemes, ANY transition on this page is starved while the
-          WebGL sand floor and the reveal animations are live. An A/B of a
-          `transition-colors` background against a `transition-opacity` layer,
-          run side by side on the same page, showed both stuck at their start
-          value for the whole 3.6s window in dev, and both taking ~1.2s rather
-          than 300ms against a production build. A 300ms fade that takes a
-          second and a half is not a fade, it is a header you cannot read.
+      {/* ── THE HEADER HAS NO BACKGROUND OF ITS OWN. (2026-07-30, Daniel) ──
+          There used to be a cream `bg-canvas/80 backdrop-blur-xl` sheet on its
+          own layer here, toggled on at `scrollY > 8`. Two rounds of work went
+          into making that toggle behave — the fade was dropped because any
+          transition on this page is starved while the sand floor and the
+          reveals are live — and the answer, reading the live site, was that the
+          sheet should not exist:
 
-          So the backdrop is a plain toggle with no transition on it at all.
-          It is painted once on a pointer-events-none layer under the row and
-          switched on at `scrollY > 8`, where there is nothing behind the bar
-          yet for the swap to be visible against. The hairline rides the same
-          layer so the rule and the wash always arrive together. If you are
-          tempted to put the fade back, re-run that A/B first. */}
+            *"The header will keep it in a different color, the entire header
+            line, and not the background color. I think we might want to leave
+            it the background color."*
+
+          He is right. The page background is a photograph of sand; a cream bar
+          laid over the top of it is a second, flatter colour drawn as a band
+          across the whole width, and the moment it switches on it announces
+          itself. The header is now transparent at every scroll position, over
+          whatever the page has behind it, separated by the hairline below and
+          nothing else.
+
+          Three things went with the sheet, and all three are wins: the scroll
+          listener and its state (a re-render of the whole header on a scroll
+          threshold), the `backdrop-blur-xl` (a full-width blur repainted on a
+          sticky element every frame — part of why the header stuttered on a
+          phone), and the toggle that was making it visibly change.
+
+          Do NOT put a veil back "for contrast" over the sand. Daniel, same
+          review: *"if something is not really seen, I will tell you myself."*
+          The mobile menu panel below is a different case and IS opaque — see
+          the note on it. */}
       <div
         aria-hidden
-        className={cn(
-          // `h-16`, not `inset-0`: the mobile menu below is part of this same
-          // <header>, and a positioned layer spanning the whole element would
-          // paint over it. This covers exactly the bar.
-          "pointer-events-none absolute inset-x-0 top-0 h-16 border-b border-foreground/[0.08] bg-canvas/80 backdrop-blur-xl",
-          scrolled ? "opacity-100" : "opacity-0"
-        )}
+        // All that is left of that layer: the hairline. It keeps its own
+        // element rather than riding on the row below, because the row is
+        // capped at `max-w-6xl` and the rule has to reach both edges of the
+        // viewport. `h-16`, not `inset-0` — the mobile menu is part of this
+        // same <header>, and a layer spanning the whole element would draw its
+        // rule across the middle of the open menu.
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 border-b border-foreground/[0.08]"
       />
 
       <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
@@ -173,10 +174,20 @@ export function SiteHeader() {
         </div>
       </div>
 
-      {/* Mobile menu */}
+      {/* ── Mobile menu: SOLID, and that is the one exception ──
+          The bar above is transparent over the page background now (see the
+          note at the top). This panel is not, and must not be: it is a stack of
+          nav links laid over whatever section of the page happens to be under
+          the header when she opens it — the hero video on `/`, a photograph, a
+          card — and translucency there is not a style, it is text over noise.
+
+          `bg-canvas`, flat, at full opacity. It was `bg-canvas/95
+          backdrop-blur-xl`, which is 95% of the way to this anyway; the last 5%
+          bought nothing and the blur it needed to stay readable is the same
+          full-width GPU layer that came off the bar. */}
       <div
         className={cn(
-          "overflow-hidden border-t border-foreground/[0.06] bg-canvas/95 backdrop-blur-xl transition-[max-height,opacity] duration-300 lg:hidden",
+          "overflow-hidden border-t border-foreground/[0.06] bg-canvas transition-[max-height,opacity] duration-300 lg:hidden",
           open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
         )}
       >

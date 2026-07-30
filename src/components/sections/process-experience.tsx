@@ -21,13 +21,13 @@
  *      — the scrub streams several MB of frames.
  *   3. A media CDN is configured, so there is a bucket to stream them from.
  *   4. THE WHOLE SEQUENCE IS ACTUALLY THERE — first frame AND last frame, via
- *      `probeSequence`, which never costs more than one failed request. This is
- *      the gate that matters today and it is not theoretical: as of 2026-07-30
- *      the bucket holds the complete 180-frame MOBILE cut and only frames 1-18
- *      of the desktop one, so a phone gets the animation and a desktop keeps
- *      the four cards until the rest of that export lands. Checking only the
- *      first frame would have let the desktop through and then fired 162
- *      requests that all 404.
+ *      `probeSequence`, which never costs more than one failed request. Both
+ *      cuts are complete in the bucket as of 2026-07-31 (the desktop export
+ *      landed last — for a day desktops kept the four cards while phones got
+ *      the animation), so today this gate is insurance rather than an active
+ *      filter. It stays: a re-upload or a new sequence goes through the same
+ *      door, and checking only the first frame would let a partial upload
+ *      through and then fire a hundred-plus requests that all 404.
  *
  * A visitor who fails any gate keeps the static section permanently — same
  * copy, same `#process` anchor, nothing missing and nothing downloaded.

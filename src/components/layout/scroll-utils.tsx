@@ -59,16 +59,27 @@ export function BackToTop() {
         })
       }
       className={cn(
-        // `end-6`, not `right-6`. This is an RTL document, so `right` is the
-        // INLINE-START edge — which is exactly where FloatingWhatsApp lives,
-        // and the two buttons sat on top of each other. Logical properties
-        // everywhere on this site.
+        // Positioning comes from `.back-to-top-control` in globals.css, which
+        // owns the whole fixed-control stack: WhatsApp at the bottom
+        // inline-START, the accessibility launcher at the bottom inline-END,
+        // and this button 140px up the inline-END edge, above the launcher.
+        // Logical properties everywhere on this site — in an RTL document
+        // `right` is the INLINE-START edge, so a physical `right-6` here would
+        // put this button on top of the WhatsApp one, which is what v0.6.0
+        // shipped.
         //
-        // Hidden on phones: on a small screen it crowds the WhatsApp button and
-        // the bottom of the form. (The comment that used to be here blamed "the
-        // calculator's sticky result bar" — there is no calculator on this
-        // site; it came from the template this was scaffolded from.)
-        "back-to-top-control fixed z-50 hidden h-11 w-11 items-center justify-center rounded-full border border-foreground/15 bg-surface-2/90 text-foreground-soft shadow-card backdrop-blur transition-all duration-300 hover:border-brand/40 hover:text-foreground md:flex",
+        // ── ON A PHONE TOO (2026-07-30, Daniel, testing the live site) ──
+        // It was `hidden md:flex`. The stated reason was that it crowded the
+        // WhatsApp button on a small screen, and that was true of the geometry
+        // at the time; it is not true of the stack as it stands. The three
+        // fixed controls now occupy three distinct boxes at 390px — WhatsApp
+        // 20-76px up the inline-start edge, the launcher 20-76px up the
+        // inline-end edge, this button 140-184px up the same inline-end edge,
+        // a clear 64px above the launcher and nowhere near the other corner.
+        // And a phone is where a 7,000px page most needs a way back to the top.
+        // `.back-to-top-control` also drops it out of the stack entirely while
+        // the cookie notice is up, which is when the corners are tightest.
+        "back-to-top-control fixed z-50 flex h-11 w-11 items-center justify-center rounded-full border border-foreground/15 bg-surface-2/90 text-foreground-soft shadow-card backdrop-blur transition-all duration-300 hover:border-brand/40 hover:text-foreground",
         visible
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-3 opacity-0"

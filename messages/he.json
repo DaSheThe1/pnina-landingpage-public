@@ -108,7 +108,9 @@
     "fullscreenAria": "הרחבת הסרטון למסך מלא",
     "posterNote": "מרחב בטוח, דיסקרטי, ובקצב שלך.",
     "pause": "השהיית הסרטון",
-    "play": "הפעלת הסרטון"
+    "play": "הפעלת הסרטון",
+    "playWithSound": "הפעלה עם קול",
+    "playWithSoundAria": "הפעלת הסרטון עם קול"
   },
   "servicesTeaser": {
     "eyebrow": "הליווי",

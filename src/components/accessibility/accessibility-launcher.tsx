@@ -67,14 +67,14 @@ function PreferenceButton({
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-start justify-between gap-2">
-          <span className="text-sm font-medium leading-5 text-foreground sm:text-base">
+          <span className="text-sm font-medium leading-tight text-foreground sm:text-base">
             {label}
           </span>
-          <span className="hidden shrink-0 font-mono text-[10px] uppercase tracking-wider text-subtle-foreground sm:inline">
+          <span className="hidden shrink-0 font-mono text-xs uppercase tracking-wider text-subtle-foreground sm:inline">
             {active ? t("enabled") : t("disabled")}
           </span>
         </span>
-        <span className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block">
+        <span className="mt-1 hidden text-xs leading-normal text-muted-foreground sm:block">
           {description}
         </span>
       </span>
@@ -99,13 +99,13 @@ function TextSizeControl({
       <div>
         <p
           id="accessibility-text-size-label"
-          className="text-sm font-medium leading-5 text-foreground sm:text-base"
+          className="text-sm font-medium leading-tight text-foreground sm:text-base"
         >
           {t("textSize")}
         </p>
         <p
           id="accessibility-text-size-description"
-          className="mt-1 hidden text-xs leading-5 text-muted-foreground sm:block"
+          className="mt-1 hidden text-xs leading-normal text-muted-foreground sm:block"
         >
           {t("textSizeDescription")}
         </p>
@@ -162,7 +162,7 @@ function OptionGroup({
 }) {
   return (
     <section>
-      <h3 className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-accent sm:mb-2 sm:text-xs">
+      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-accent sm:mb-2">
         {label}
       </h3>
       <div
@@ -228,7 +228,12 @@ export function AccessibilityLauncher() {
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-[129] bg-black/55 transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
         <Dialog.Viewport className="fixed inset-0 z-[130] flex items-end justify-center overflow-y-auto p-2 sm:items-center sm:p-6">
-          <Dialog.Popup className="relative max-h-[62dvh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-2xl border border-brand/15 bg-surface-1 p-4 shadow-card outline-none transition-all duration-200 data-[ending-style]:translate-y-2 data-[ending-style]:opacity-0 data-[starting-style]:translate-y-2 data-[starting-style]:opacity-0 sm:my-auto sm:max-h-[calc(100dvh-3rem)] sm:max-w-xl sm:border-brand/25 sm:p-6">
+          {/* `accessibility-dialog` is the hook for the counter-zoom in
+              globals.css: the panel is the one thing on the site that must NOT
+              grow when the text-size control it contains is pressed. Read the
+              note there before changing any size on this popup — the `w-full`
+              and the two `max-h` values are corrected by name. */}
+          <Dialog.Popup className="accessibility-dialog relative max-h-[62dvh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-2xl border border-brand/15 bg-surface-1 p-4 shadow-card outline-none transition-all duration-200 data-[ending-style]:translate-y-2 data-[ending-style]:opacity-0 data-[starting-style]:translate-y-2 data-[starting-style]:opacity-0 sm:my-auto sm:max-h-[calc(100dvh-3rem)] sm:max-w-xl sm:border-brand/25 sm:p-6">
             <Dialog.Close
               aria-label={t("close")}
               className="absolute end-2.5 top-2.5 flex size-10 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:ring-3 focus-visible:ring-brand-accent/35 sm:end-3 sm:top-3 sm:size-11 sm:rounded-xl"
@@ -240,7 +245,7 @@ export function AccessibilityLauncher() {
               <Dialog.Title className="text-lg font-medium tracking-tight text-foreground sm:text-xl">
                 {t("title")}
               </Dialog.Title>
-              <Dialog.Description className="mt-2 hidden text-sm leading-6 text-muted-foreground sm:block">
+              <Dialog.Description className="mt-2 hidden text-sm leading-normal text-muted-foreground sm:block">
                 {t("description")}
               </Dialog.Description>
             </div>
@@ -285,7 +290,7 @@ export function AccessibilityLauncher() {
               </OptionGroup>
             </div>
 
-            <p className="mt-5 hidden rounded-xl border border-foreground/10 bg-foreground/[0.025] p-3 text-xs leading-5 text-muted-foreground sm:block">
+            <p className="mt-5 hidden rounded-xl border border-foreground/10 bg-foreground/[0.025] p-3 text-xs leading-normal text-muted-foreground sm:block">
               {t("zoomGuidance")}
             </p>
 

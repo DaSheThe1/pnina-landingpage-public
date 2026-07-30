@@ -167,7 +167,7 @@ export default async function LecturesPage({
                 {facts.map((fact) => (
                   <li
                     key={fact}
-                    className="flex gap-3 text-base leading-7 text-foreground-soft"
+                    className="flex gap-3 text-base leading-relaxed text-foreground-soft"
                   >
                     <span
                       aria-hidden
@@ -197,7 +197,7 @@ export default async function LecturesPage({
           <Reveal>
             <div>
               <Eyebrow>{t("audiences.eyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[2.1rem] text-balance">
+              <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("audiences.title")}
               </h2>
               <ul className="mt-6 space-y-3">
@@ -207,7 +207,7 @@ export default async function LecturesPage({
                       aria-hidden
                       className="mt-1 h-4 w-4 shrink-0 text-teal-deep"
                     />
-                    <span className="text-base leading-7">{audience}</span>
+                    <span className="text-base leading-relaxed">{audience}</span>
                   </li>
                 ))}
               </ul>
@@ -217,7 +217,7 @@ export default async function LecturesPage({
           <Reveal delay={80}>
             <div className="rounded-2xl border border-foreground/[0.08] bg-surface-1 p-7 shadow-card">
               <Eyebrow>{t("format.eyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[1.7rem]">
+              <h2 className="mt-5 text-[2rem]">
                 {t("format.title")}
               </h2>
               <dl className="mt-6 space-y-5">
@@ -226,7 +226,7 @@ export default async function LecturesPage({
                     <dt className="text-sm font-medium text-foreground">
                       {item.title}
                     </dt>
-                    <dd className="mt-1 text-sm leading-6 text-muted-foreground">
+                    <dd className="mt-1 text-sm leading-normal text-muted-foreground">
                       {item.text}
                     </dd>
                   </div>
@@ -268,7 +268,7 @@ export default async function LecturesPage({
                   <h3 className="text-xl font-medium tracking-tight text-foreground">
                     {topic.title}
                   </h3>
-                  <p className="mt-3 text-base leading-7 text-muted-foreground">
+                  <p className="mt-3 text-base leading-relaxed text-muted-foreground">
                     {topic.text}
                   </p>
                 </div>
@@ -282,10 +282,10 @@ export default async function LecturesPage({
       <section className="bg-background px-6 pb-24">
         <Reveal>
           <div className="mx-auto max-w-4xl rounded-2xl border border-brand/20 bg-brand-wash px-8 py-12 text-center shadow-card">
-            <h2 className="text-[2.1rem] text-balance">
+            <h2 className="text-[2.4rem] text-balance">
               {t("closing.title")}
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
               {t("closing.description")}
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">

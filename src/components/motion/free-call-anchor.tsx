@@ -437,7 +437,7 @@ export function FreeCallAnchor({
             2026-07-30). `gap-2` gives the price its own air and cannot be
             collapsed by JSX whitespace handling the way a literal space can.
             `items-baseline` keeps the two sitting on one line of type. */}
-        <p className="free-anchor__value flex items-baseline gap-2 text-base leading-7 text-muted-foreground">
+        <p className="free-anchor__value flex items-baseline gap-2 text-base leading-relaxed text-muted-foreground">
           <span>{valueLabel}</span>
           <Price>{valuePrice}</Price>
         </p>

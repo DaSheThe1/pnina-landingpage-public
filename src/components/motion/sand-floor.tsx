@@ -609,6 +609,9 @@ export function SandFloor() {
     const tick = () => {
       raf = 0;
       if (disposed || !ready) return;
+      // Bail mid-flight too, not only at scheduling time: the stage can pin
+      // underneath a loop that is already running.
+      if (document.documentElement.hasAttribute("data-scrub-pinned")) return;
       stepSim();
       paint();
       energy *= ENERGY_DECAY;
@@ -628,8 +631,31 @@ export function SandFloor() {
       raf = requestAnimationFrame(tick);
     };
 
+    /**
+     * ── AND IT STOPS WHILE THE PEARL STAGE IS PINNED ──
+     * The process scrub's sticky stage is an opaque canvas filling the whole
+     * viewport, and this layer is `position: fixed` at the very bottom of the
+     * page — so for as long as `data-scrub-pinned` is on <html> (written by the
+     * rAF loop in process-scrub.tsx) this simulation would be running two WebGL
+     * passes a frame, at viewport resolution, for pixels nobody can see, on the
+     * one GPU the scrub is already asking for a full-viewport `drawImage` from.
+     *
+     * Treated exactly like `document.hidden`, and for the same reason: the loop
+     * simply is not scheduled. Resuming is free and cannot pop — the height
+     * field is a plain texture that keeps whatever it held, and the next pointer
+     * move calls `schedule()` again. The one visible consequence is that a
+     * groove drawn immediately before pinning does not visibly slump during the
+     * scrub, which is a thing that happens behind an opaque canvas.
+     *
+     * ⚠️ Dormant as written: `RIPPLE_ENABLED` is false (see its note above), so
+     * no context, no loop and no canvas exist today. This is here so that
+     * turning the finger back on does not quietly reintroduce the contention.
+     */
+    const scrubPinned = () =>
+      document.documentElement.hasAttribute("data-scrub-pinned");
+
     const schedule = () => {
-      if (!raf && !disposed && ready && !document.hidden) {
+      if (!raf && !disposed && ready && !document.hidden && !scrubPinned()) {
         raf = requestAnimationFrame(tick);
       }
     };

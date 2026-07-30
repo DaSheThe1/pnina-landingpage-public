@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { Maximize2, Pause, Play } from "lucide-react";
+import { Maximize2, Pause, Play, Volume2 } from "lucide-react";
 
 import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
 import { trackEvent } from "@/lib/analytics";
@@ -29,6 +29,11 @@ export function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  // `started` = she has pressed "הפעלה עם קול". Same meaning, same name and the
+  // same one-way latch as MessageVideo (components/ui/message-video.tsx): before
+  // it the clip is a silent looping preview, after it the clip is the real thing
+  // with sound and it never goes back to being a preview.
+  const [started, setStarted] = useState(false);
   const siteMotionChoiceReduced = usePrefersReducedMotion();
   const userControlledRef = useRef(false);
   // Fire the "watched" analytics event at most once per mount, so repeated
@@ -39,19 +44,30 @@ export function HeroVideo() {
   useFullscreenLetterbox(videoRef);
 
   // `canplay` can fire before hydration attaches a React listener (the video
-  // starts loading with the SSR HTML), so check readyState on mount too.
+  // starts loading with the SSR HTML, and with `autoPlay` + `preload="auto"` it
+  // now really does load), so check readyState on mount too.
+  //
+  // Under the site's reduced-motion switch nothing will ever ask the clip to
+  // play, so `canplay`/HAVE_FUTURE_DATA may never arrive — settle for metadata
+  // there, exactly as MessageVideo does, or the play control that is gated on
+  // `ready` would never render for her to press.
   useEffect(() => {
     if (!VIDEO_SRC) return;
     const video = videoRef.current;
     if (!video) return;
-    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    const wanted = siteMotionChoiceReduced
+      ? HTMLMediaElement.HAVE_METADATA
+      : HTMLMediaElement.HAVE_FUTURE_DATA;
+    const wantedEvent = siteMotionChoiceReduced ? "loadedmetadata" : "canplay";
+
+    if (video.readyState >= wanted) {
       setReady(true);
       return;
     }
     const onCanPlay = () => setReady(true);
-    video.addEventListener("canplay", onCanPlay);
-    return () => video.removeEventListener("canplay", onCanPlay);
-  }, []);
+    video.addEventListener(wantedEvent, onCanPlay);
+    return () => video.removeEventListener(wantedEvent, onCanPlay);
+  }, [siteMotionChoiceReduced]);
 
   // Autoplay, muted, for EVERYONE — Daniel's explicit call in the v0.8.0 pass.
   // This clip is her introducing herself and it is the first thing a visitor
@@ -67,12 +83,37 @@ export function HeroVideo() {
   // is silent, it carries burnt-in captions, and the always-visible pause
   // control below satisfies WCAG 2.2.2 for it.
   //
-  // Playback is still started HERE rather than with an `autoplay` attribute, so
-  // that a refusal is something we can handle: iOS Low Power Mode and strict
-  // autoplay policies reject the promise, and in that case we fall back to the
-  // poster and mark the frame ready off `loadedmetadata` — otherwise it would
-  // sit on the branded placeholder forever and the play control, which is gated
-  // on `ready`, would never render for the visitor to press.
+  // ── BOTH PATHS START IT, AND THAT IS THE FIX (2026-07-30) ──
+  // Until now playback was started ONLY here, in an effect, deliberately: a
+  // refusal (iOS Low Power Mode, a strict autoplay policy) rejects the promise
+  // and that rejection is what puts the styled fallback on screen instead of a
+  // frame stuck on the branded placeholder forever.
+  //
+  // The cost of that was invisible until Daniel tested the live site on an
+  // iPhone: the hero clip did not autoplay there while the /about clip did. An
+  // effect cannot run before hydration, and on a cold, slow load hydration on
+  // this page arrives many seconds after the first paint — by which time iOS has
+  // long since decided nothing wants to play. So the clip just sat there, on the
+  // one page every visitor lands on first.
+  //
+  // The declarative `autoPlay` attribute is in the SSR HTML and needs no
+  // JavaScript at all; with `muted` + `playsInline` beside it, iOS honours it.
+  // So the attribute starts the clip early, and the effect below stays exactly
+  // as it was as the SECOND path — it re-asks for a play that the attribute may
+  // not have got, and it is still the only place a refusal can be caught.
+  //
+  // The two do not fight. `play()` on a video that is already playing resolves
+  // without restarting it (it does not seek, it does not re-trigger `play`), so
+  // the effect is a no-op in the normal case; and if the attribute succeeded,
+  // `canplay` has already fired and `ready` is true, so the blocked-autoplay
+  // fallback never shows.
+  //
+  // The one seam: a visitor whose reduced-motion switch is ON gets the attribute
+  // too (there is one HTML document for everybody, and the switch is only known
+  // in the browser). Her clip can therefore play for the moment between first
+  // paint and hydration, at which point the branch below pauses it. That is a
+  // fraction of a second on a preference that is off by default, and it is the
+  // price of the attribute being declarative; it is not worth a second document.
   //
   // ── THE ONE THING THAT DOES STOP IT ──
   // The site's own "הפחתת תנועה" switch, in the accessibility panel. That is a
@@ -89,21 +130,18 @@ export function HeroVideo() {
 
     if (siteMotionChoiceReduced) {
       if (!userControlledRef.current) video.pause();
-      const onMeta = () => setReady(true);
-      if (video.readyState >= HTMLMediaElement.HAVE_METADATA) onMeta();
-      else video.addEventListener("loadedmetadata", onMeta);
-      return () => video.removeEventListener("loadedmetadata", onMeta);
+      return;
     }
 
-    // Already playing because she pressed play herself: never restart it.
-    if (userControlledRef.current) return;
+    // Already playing because she asked for it herself — the pause control or
+    // the "הפעלה עם קול" button. Never restart it under her.
+    if (userControlledRef.current || started) return;
 
     let cleanup: (() => void) | undefined;
 
     void video.play().catch(() => {
-      // `canplay` needs readyState >= HAVE_FUTURE_DATA, which with
-      // preload="metadata" only arrives once something asks the clip to play.
-      // Nothing will now, so treat "metadata is in" as ready.
+      // Both starts refused. Treat "metadata is in" as ready so the poster gives
+      // way to the real frame and the play control renders for her to press.
       const onMeta = () => setReady(true);
       if (video.readyState >= HTMLMediaElement.HAVE_METADATA) onMeta();
       else {
@@ -113,7 +151,21 @@ export function HeroVideo() {
     });
 
     return () => cleanup?.();
-  }, [siteMotionChoiceReduced]);
+  }, [siteMotionChoiceReduced, started]);
+
+  // Native controls only once it is really playing with sound, or while
+  // fullscreen — silent and pre-play it stays a clean frame. Lifted verbatim
+  // from MessageVideo so the two players behave identically.
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const onChange = () => {
+      video.controls =
+        document.fullscreenElement === video || (started && !video.paused);
+    };
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, [started]);
 
   // Track real playback state rather than assuming it, so the control's label
   // is never a lie — the browser can pause the clip on its own (backgrounded
@@ -132,6 +184,45 @@ export function HeroVideo() {
       video.removeEventListener("ended", sync);
     };
   }, [ready]);
+
+  /**
+   * The first tap: restart from zero, with sound, once through.
+   *
+   * Daniel, 2026-07-30, testing the live site: *"I like the thing that we have
+   * on the About page video where it says 'Play with audio' and the center
+   * thing... The user presses it and it plays with audio."* Until now tapping
+   * the hero clip only expanded it to fullscreen and it stayed muted forever,
+   * so what she is saying — the whole point of the clip — was unreachable from
+   * the home page.
+   *
+   * This is MessageVideo's `playWithSound`, not a second state machine: same
+   * four mutations in the same order, same muted retry when a browser still
+   * refuses audio, same one-way `started` latch (the pill does not come back
+   * when the clip ends, and a second tap goes to fullscreen like any other tap
+   * on a started clip).
+   */
+  function playWithSound() {
+    const video = videoRef.current;
+    if (!video) return;
+    if (!trackedRef.current) {
+      trackedRef.current = true;
+      trackEvent("hero_video_watch");
+    }
+    // This IS a deliberate press, so it counts as user control: the
+    // reduced-motion branch above must not pause the clip she just asked for.
+    userControlledRef.current = true;
+    video.loop = false;
+    video.muted = false;
+    video.controls = true;
+    video.currentTime = 0;
+    void video.play().catch(() => {
+      // Some browsers still refuse audio without a more direct gesture. At
+      // least keep something playing rather than freezing on a still.
+      video.muted = true;
+      void video.play();
+    });
+    setStarted(true);
+  }
 
   function togglePlay() {
     const video = videoRef.current;
@@ -191,16 +282,36 @@ export function HeroVideo() {
           {VIDEO_SRC ? (
             <video
               ref={videoRef}
-              // No `autoPlay` attribute — playback is started in an effect so a
-              // refusal (Low Power Mode) has somewhere to be handled, and so the
-              // accessibility panel's motion switch can veto it. See the effect
-              // above.
+              // `autoPlay` AND the effect above. The attribute is what makes iOS
+              // start the clip before hydration; the effect is what catches a
+              // refusal and what lets the accessibility panel's motion switch
+              // veto it. Read the long note on that effect before removing
+              // either — they are two halves of one fix.
+              autoPlay
               muted
               loop
               playsInline
               poster={POSTER}
-              preload="metadata"
-              onClick={expand}
+              // `auto`, not `metadata`. This clip autoplays for every visitor by
+              // an explicit product decision and it loops, so every byte
+              // `metadata` withholds is fetched a moment later anyway — all
+              // `metadata` bought was a later first frame. It also made the
+              // ready state fragile: `canplay` needs HAVE_FUTURE_DATA, which
+              // with `metadata` only arrives once something asks the clip to
+              // play, which is precisely what was not happening on iOS.
+              preload="auto"
+              // No download, no picture-in-picture, no playback-rate menu, and
+              // no right-click "save video as" — Daniel's call for EVERY video
+              // on the site (2026-07-30), because this is her own footage about
+              // her own assault and it is not ours to hand out copies of. The
+              // three-dot overflow these remove is the browser's own, so it only
+              // appears once native controls do (after "הפעלה עם קול"), but the
+              // attributes are unconditional so no future state can leak it
+              // back. Matched in message-video.tsx.
+              controlsList="nodownload noplaybackrate noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(event) => event.preventDefault()}
+              onClick={started ? expand : playWithSound}
               // `cursor-pointer`, NOT `cursor-zoom-in`: the zoom cursor renders
               // as a magnifying glass with a plus in it, which is a photo-viewer
               // affordance and reads as "inspect this woman's face". A play/
@@ -212,6 +323,39 @@ export function HeroVideo() {
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>
+          ) : null}
+
+          {/* ── "הפעלה עם קול", the /about clip's control, now on the hero ──
+              Rendered BEFORE the two corner buttons on purpose: they are all
+              absolutely positioned, so DOM order is paint order and the corner
+              controls have to stay reachable on top of this sheet.
+
+              The scrim is deliberately LIGHTER than MessageVideo's
+              (black/25→black/60). This clip carries burnt-in Hebrew captions
+              along its bottom edge, and MessageVideo's gradient is heaviest
+              exactly there — it would grey out the one thing a visitor can read
+              while the clip is still silent. The control it wraps is the same
+              size and the same shape, so it still reads as the same affordance
+              on both pages. There is deliberately no `animate-ping` halo behind
+              the circle the way MessageVideo has one: this is the FIRST thing on
+              the home page, and an endless pulse in a visitor's eyeline while she
+              reads the hero is the mechanic CLAUDE.md rule 4 forbids (the same
+              class came off the floating WhatsApp button for the same reason). */}
+          {ready && !started ? (
+            <button
+              type="button"
+              onClick={playWithSound}
+              aria-label={t("playWithSoundAria")}
+              className="group absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-black/10 via-black/20 to-black/35 transition-colors hover:from-black/20 hover:to-black/45"
+            >
+              <span className="relative flex h-18 w-18 items-center justify-center rounded-full bg-brand-deep text-white shadow-[0_12px_44px_-6px_rgba(90,63,43,0.9)] transition-transform duration-300 group-hover:scale-110">
+                <Play className="relative ms-1 h-7 w-7 fill-current" />
+              </span>
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
+                <Volume2 className="h-4 w-4 shrink-0 text-gold" />
+                {t("playWithSound")}
+              </span>
+            </button>
           ) : null}
 
           {ready ? (
@@ -291,10 +435,10 @@ function HeroPoster() {
       >
         {siteConfig.monogram}
       </span>
-      <p className="font-display text-[1.45rem] text-foreground sm:text-[1.7rem]">
+      <p className="font-display text-[1.75rem] text-foreground sm:text-[2rem]">
         {siteConfig.name}
       </p>
-      <p className="max-w-sm text-sm leading-6 text-muted-foreground">
+      <p className="max-w-sm text-sm leading-normal text-muted-foreground">
         {t("posterNote")}
       </p>
     </div>

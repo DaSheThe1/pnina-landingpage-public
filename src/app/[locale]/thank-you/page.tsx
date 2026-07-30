@@ -89,13 +89,13 @@ export default async function ThankYouPage({
               <Eyebrow>{t("eyebrow")}</Eyebrow>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-6 text-[2.5rem] leading-[1.06] text-balance sm:text-[3.35rem]">
+              <h1 className="mt-6 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
                 <span className="text-foreground">{t("titleLead")}</span>
                 <span className="text-shimmer">{t("titleHighlight")}</span>
               </h1>
             </Reveal>
             <Reveal delay={160}>
-              <p className="mx-auto mt-5 max-w-xl text-lg leading-8 text-muted-foreground">
+              <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-muted-foreground">
                 {t("subtitle")}
               </p>
             </Reveal>
@@ -188,7 +188,7 @@ export default async function ThankYouPage({
                     <p className="mt-4 text-base font-medium text-foreground">
                       {title}
                     </p>
-                    <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                    <p className="mt-1.5 text-sm leading-normal text-muted-foreground">
                       {text}
                     </p>
                   </div>
@@ -209,7 +209,7 @@ export default async function ThankYouPage({
                 className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-brand/15 blur-[100px]"
               />
               <div className="relative">
-                <h2 className="text-[1.7rem] text-foreground sm:text-[2.1rem]">
+                <h2 className="text-[2rem] text-foreground sm:text-[2.4rem]">
                   {t("whileYouWaitTitle")}
                 </h2>
                 <p className="mt-2 max-w-xl text-base text-muted-foreground">
@@ -231,7 +231,7 @@ export default async function ThankYouPage({
                           {title}
                           <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                         </span>
-                        <span className="mt-1 text-sm leading-6 text-muted-foreground">
+                        <span className="mt-1 text-sm leading-normal text-muted-foreground">
                           {text}
                         </span>
                       </Link>

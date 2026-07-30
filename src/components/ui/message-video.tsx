@@ -201,6 +201,18 @@ export function MessageVideo({
               playsInline
               poster={poster}
               preload="metadata"
+              // No download, no picture-in-picture, no playback-rate menu, and
+              // no right-click "save video as" — Daniel's call for EVERY video
+              // on the site (2026-07-30): this is her own footage about her own
+              // assault and it is not ours to hand out copies of. The three-dot
+              // overflow these remove belongs to the browser's native controls,
+              // which this player turns on after the first play-with-sound, so
+              // without them the download item is one tap away from every
+              // visitor. Unconditional, so no future state can leak it back.
+              // Matched in sections/hero-video.tsx — keep the two in step.
+              controlsList="nodownload noplaybackrate noremoteplayback"
+              disablePictureInPicture
+              onContextMenu={(event) => event.preventDefault()}
               onClick={started ? undefined : playWithSound}
               className={cn(
                 "absolute inset-0 h-full w-full object-cover",
@@ -231,7 +243,7 @@ export function MessageVideo({
                 ) : null}
                 <Play className="relative h-7 w-7 fill-current" />
               </span>
-              <p className="relative max-w-xs px-6 text-center text-sm leading-6 text-muted-foreground">
+              <p className="relative max-w-xs px-6 text-center text-sm leading-normal text-muted-foreground">
                 {src ? labels.loading : labels.noVideoNote}
               </p>
             </div>

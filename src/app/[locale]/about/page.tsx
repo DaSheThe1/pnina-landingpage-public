@@ -146,18 +146,18 @@ export default async function AboutPage({
                 </div>
               </div>
               <Eyebrow>{t("storyEyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[2.1rem] text-balance">
+              <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("storyTitle")}
               </h2>
               {story.map((paragraph, i) => (
                 <p
                   key={i}
-                  className="mt-4 text-base leading-7 text-muted-foreground"
+                  className="mt-4 text-base leading-relaxed text-muted-foreground"
                 >
                   {paragraph}
                 </p>
               ))}
-              <p className="mt-4 text-base font-medium leading-7 text-foreground">
+              <p className="mt-4 text-base font-medium leading-relaxed text-foreground">
                 {t("storyClose")}
               </p>
               {/* "אף אחת לא צריכה להוכיח שמה שקרה לה מספיק חמור" — this used to
@@ -211,7 +211,7 @@ export default async function AboutPage({
             <Reveal>
               <div className="text-center">
                 <Eyebrow>{tVideo("eyebrow")}</Eyebrow>
-                <h2 className="mb-8 mt-5 text-[1.7rem] text-balance sm:text-[2.1rem]">
+                <h2 className="mb-8 mt-5 text-[2rem] text-balance sm:text-[2.4rem]">
                   {tVideo("title")}
                 </h2>
                 <MessageVideo
@@ -243,7 +243,7 @@ export default async function AboutPage({
                       <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-foreground/12 bg-brand/10 text-brand-accent transition-transform duration-300 group-hover:scale-110">
                         <Icon className="h-5 w-5" />
                       </div>
-                      <p className="mt-4 text-sm font-medium leading-6 text-foreground-soft">
+                      <p className="mt-4 text-sm font-medium leading-normal text-foreground-soft">
                         {text}
                       </p>
                     </div>

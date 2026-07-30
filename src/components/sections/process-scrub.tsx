@@ -41,6 +41,16 @@
  * `SEQUENCE_FRAME_COUNTS` there and re-export to match, after re-reading the
  * memory note beside that table.
  *
+ * ── AND HOW THEY GET HERE: `frame-store.ts` ──
+ * This file no longer fetches anything itself. Requesting, decoding and — the
+ * new part — RELEASING frames is `createFrameStore`, and the reasoning for all
+ * three lives in that file's header. The one-line version: the old loader fired
+ * every request in a single tick and then held every decoded frame forever, and
+ * on Daniel's iPhone and S25 Ultra that cost ~15 seconds of page load and a
+ * scrub that got jerkier the longer you used it. Nothing about the choreography
+ * below changed for it; `draw` just asks the store for the nearest frame it has,
+ * exactly as it always did.
+ *
  * ── KNOWN FOLLOW-UP FOR WHEN THE FRAMES LAND ──
  * The static section carries the section's `h2` ("איך זה עובד") and this stage
  * does not; a page whose process section has upgraded therefore loses one
@@ -53,10 +63,8 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 
-import {
-  frameUrl,
-  type SequenceSource,
-} from "@/components/motion/sequence-source";
+import { createFrameStore } from "@/components/motion/frame-store";
+import { type SequenceSource } from "@/components/motion/sequence-source";
 
 const STATIONS = 4;
 /** How far inside the first and last stations the root-level snap zone starts,
@@ -95,6 +103,38 @@ const LOCK_MS = 1200;
 const SPEED = 0.14;
 /** Desktop stations that dissolve into a clean approved still at rest. */
 const STILL_STATIONS = [1, 2, 3] as const;
+
+/** ── THE EXIT RELEASE (see the long note beside `applySnap`) ──
+ *  How long an outward gesture at an end station keeps snapping switched off,
+ *  measured from the last frame that still saw the gesture. Long enough that a
+ *  touch fling's momentum carries clear of the section on its own, short enough
+ *  that a visitor who changes her mind and scrolls back in gets the normal
+ *  arrival behaviour. */
+const ESCAPE_MS = 700;
+/** How much raw input counts as "she means it" rather than jitter, so a finger
+ *  trembling on an arrival lock cannot eject itself. Wheel in normalised px,
+ *  touch in CSS px of travel since the last reading. */
+const INTENT_WHEEL_MIN = 2;
+const INTENT_TOUCH_MIN = 8;
+
+/** ── THE DESKTOP WHEEL TRAIN (see `onWheel`) ──
+ *  Wheel events closer together than this belong to the same gesture. A mouse
+ *  notch train runs 50-100ms apart and a trackpad ~10-16ms, so 220ms groups both
+ *  without joining two deliberate flicks. */
+const TRAIN_GAP = 220;
+/** How much accumulated, deltaMode-normalised wheel travel a train needs before
+ *  it moves a station. One Chrome mouse notch (~100px) clears it on its own; a
+ *  train of small trackpad notches adds up to it, which is the pre-existing bug
+ *  where a gentle trackpad scroll snapped back forever without ever advancing. */
+const WHEEL_THRESHOLD = 40;
+/** After a train has moved a station, no further wheel input may move another
+ *  one until this is up. This is the fix for "two quick scrolls jump two or more
+ *  stations": people double-scroll when they think the page has not responded,
+ *  and the second scroll must be absorbed, not obeyed. */
+const STATION_COOLDOWN = 550;
+/** How long after a wheel-driven station move `applySnap` leaves the CSS snap
+ *  alone, so mandatory snapping cannot fight the smooth scroll we started. */
+const WHEEL_MOVE_MS = 900;
 
 type ProcessCopy = { title: string; lines: string[] };
 
@@ -164,45 +204,35 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     // Phones fetch every 2nd frame — half the bytes and decoded memory; the
     // constant-rate playback plus blending hides the halved temporal detail.
     const step = isMobile ? 2 : 1;
-    const frames: (HTMLImageElement | undefined)[] = new Array(frameCount);
-    frames[0] = firstFrame;
-    const stills: Record<number, HTMLImageElement> = {};
-    let disposed = false;
-    let started = false;
 
-    const load = () => {
-      if (started) return;
-      started = true;
-      for (let i = step; i < frameCount; i += step) {
-        const img = new Image();
-        img.src = frameUrl(base, i + 1);
-        img
-          .decode()
-          .then(() => {
-            if (!disposed) frames[i] = img;
-          })
-          .catch(() => {});
-      }
-      if (!isMobile) {
-        for (const s of STILL_STATIONS) {
-          const img = new Image();
-          img.src = `${base}/still-${s + 1}.webp`;
-          img
-            .decode()
-            .then(() => {
-              if (!disposed) stills[s] = img;
-            })
-            .catch(() => {});
-        }
-      }
-    };
+    /** Which frame each snap station rests on, snapped to the fetch grid. These
+     *  are the images a visitor actually STOPS on, so the store fetches them
+     *  first and never evicts them — a station is always drawable exactly, even
+     *  if the act leading to it has been released. */
+    const stationIndices = Array.from({ length: STATIONS }, (_, s) =>
+      Math.round((s / (STATIONS - 1)) * (frameCount - 1))
+    );
+
+    const store = createFrameStore({
+      baseUrl: base,
+      frameCount,
+      step,
+      stationIndices,
+      stillStations: isMobile ? [] : STILL_STATIONS,
+      frameBytes: dims.w * dims.h * 4,
+      cut: isMobile ? "mobile" : "desktop",
+      firstFrame,
+    });
 
     // Start fetching well before the section scrolls into view, so frame 0 is
-    // ready when the stage pins. Never await a full preload — draw() falls back
-    // to the nearest loaded frame.
+    // ready when the stage pins. Starting early is only a problem when it
+    // STARVES the page, and since the store caps concurrency and marks every
+    // request `fetchPriority: "low"` it no longer does — so the 150% margin
+    // stays. Never await a full preload: draw() falls back to the nearest frame
+    // the store happens to hold.
     const io = new IntersectionObserver(
       (entries) => {
-        if (entries.some((e) => e.isIntersecting)) load();
+        if (entries.some((e) => e.isIntersecting)) store.start();
       },
       { rootMargin: "150%" }
     );
@@ -311,8 +341,46 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     //
     // Inside the section nothing changed: `y mandatory` + `scroll-snap-stop:
     // always` still means one flick, one step, in both directions.
+    //
+    // ── AND THEN THE SAMSUNG TRAP (Daniel, 2026-07-30, S25 Ultra) ──
+    // "It's very hard to get out of the section once you're inside — you need to
+    // pull with the finger really really hard."
+    //
+    // Everything above is about getting IN. Nothing above was about getting OUT,
+    // and two of its rules combine into a wall:
+    //
+    //   • the arrival lock sets `snapOn` while it holds, and
+    //   • "the snap is never dropped mid-movement" means that once `snapOn` is
+    //     true it STAYS true for as long as the scroll keeps moving.
+    //
+    // Sitting on station 0 the nearest snap position IS station 0, so mandatory
+    // snapping resolves an outward flick straight back to where it started. The
+    // scroller therefore never comes to rest anywhere else, `settled` never
+    // becomes true, the snap is never re-evaluated, and the only way out is to
+    // out-muscle the browser's own snap animation. That is the "pull really
+    // really hard".
+    //
+    // THE RELEASE. Locking is for travel BETWEEN stations. At the first station
+    // going up, or the last station going down, there is no next station to
+    // protect and nothing to hold on to, so neither the lock nor mandatory
+    // snapping may engage at all — one ordinary flick has to leave.
+    //
+    // Which needs the gesture's DIRECTION, and the note above is right that
+    // `scrollY` cannot supply it: at a trapped station the browser cancels the
+    // scroll before it commits and the delta reads zero forever. So the raw
+    // input is read for its INTENT only — a wheel's `deltaY` sign, a finger's
+    // travel between two `touchmove`s — and it is read from PASSIVE listeners
+    // that never call `preventDefault`, so there is nothing for Chromium's snap
+    // resolution to race. The geometry still decides everything; the input only
+    // says which way she is asking to go.
+    //
+    // And the release is STICKY (`ESCAPE_MS`) rather than per-frame, because a
+    // touch fling stops producing events the moment the finger lifts while the
+    // momentum runs on for a second. One outward frame at a boundary switches
+    // snapping off for the whole flight; an inward intent cancels it early, so
+    // changing her mind and scrolling back in gets the ordinary arrival above.
+    // It only ever switches snapping OFF, so it can never pull anybody anywhere.
     let snapOn = false;
-    let lastY: number | null = null;
     let lastScrollY: number | null = null;
     /** When the scroll last actually moved, and how fast and which way it was
      *  going then. Kept in TIME rather than in frames: while the frames decode
@@ -329,6 +397,24 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     let lockAt: number | null = null;
     let lockEnds = 0;
     let lastClampAt = 0;
+    /** Which way the RAW INPUT says she wants to go, and when it last said so.
+     *  Never used for position or speed — only for direction, and only at the
+     *  two end stations. */
+    let intentDir = 0;
+    let intentAt = -Infinity;
+    /** While `performance.now()` is under this, snapping stays off no matter
+     *  what the geometry says: she is on her way out. `escapeDir` is the
+     *  direction that armed it, so an intent the other way can cancel it. */
+    let escapeUntil = 0;
+    let escapeDir = 0;
+    /** Set by the wheel-train handler while it is driving a station move of its
+     *  own; see `onWheel` and the `applySnap` branch that reads it. */
+    let wheelMoveUntil = 0;
+    const noteIntent = (dir: number) => {
+      if (!dir) return;
+      intentDir = dir;
+      intentAt = performance.now();
+    };
     const setSnap = (on: boolean) => {
       if (on === snapOn) return;
       snapOn = on;
@@ -355,7 +441,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       const sy = window.scrollY;
       const d = lastScrollY === null ? 0 : sy - lastScrollY; // + = scrolling down
       lastScrollY = sy;
-      lastY = y;
       const speed = Math.abs(d);
       // Was the page ALREADY travelling when this frame arrived? That is the one
       // thing that tells a flick apart from a TELEPORT (a restored scroll
@@ -376,6 +461,43 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       else if (y > end) cameFrom = 1;
       if (!travelling) cameFrom = 0;
 
+      // ── THE EXIT RELEASE ──
+      // Read the long note above `snapOn`. `atFirst`/`atLast` deliberately stay
+      // true once she is PAST the end of the section as well as on it, so the
+      // release keeps refreshing all the way out rather than expiring halfway.
+      const atFirst = y <= SNAP_EDGE;
+      const atLast = y >= end - SNAP_EDGE;
+      if (intentDir !== 0 && now - intentAt < GESTURE_MS) {
+        if ((atFirst && intentDir < 0) || (atLast && intentDir > 0)) {
+          escapeDir = intentDir;
+          escapeUntil = now + ESCAPE_MS;
+          // An arrival lock is for holding her on the station she came in at.
+          // She is asking to leave from it, which is the one thing it must not
+          // outrank.
+          lockAt = null;
+          cameFrom = 0;
+        } else if (escapeDir !== 0 && intentDir !== escapeDir) {
+          // She changed her mind and is heading back in. Give the section its
+          // ordinary arrival behaviour back immediately.
+          escapeUntil = 0;
+          escapeDir = 0;
+        }
+      }
+      if (now < escapeUntil) {
+        // The only place that drops the snap while the scroll is still moving.
+        // The rule it breaks exists to protect the browser's own re-snap
+        // animation — and at a boundary station that animation IS the trap.
+        setSnap(false);
+        return;
+      }
+
+      // A wheel train is driving a smooth scroll of our own (see `onWheel`).
+      // Mandatory snapping would fight it for the whole animation.
+      if (now < wheelMoveUntil) {
+        setSnap(false);
+        return;
+      }
+
       // Hold the entry lock. A programmatic scroll does NOT cancel a touch fling
       // — measured: put back on station 0, the same flick carried on and ended on
       // station 3 — so the lock is held frame by frame until the momentum has
@@ -385,7 +507,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       if (lockAt !== null) {
         if (Math.abs(y - lockAt) > 1) {
           scrollBy(lockAt - y);
-          lastY = lockAt;
           lastScrollY = window.scrollY;
           lastClampAt = now;
         }
@@ -408,7 +529,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         setSnap(true);
         if (Math.abs(y - target) > 1) {
           scrollBy(target - y);
-          lastY = target;
           lastScrollY = window.scrollY;
         }
         lockAt = target;
@@ -428,41 +548,84 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       else setSnap(lastDir < 0 && y <= end + reach);
     };
 
-    const nearestLoaded = (idx: number) => {
-      for (let d = 0; d < frameCount; d++) {
-        if (frames[idx - d]) return idx - d;
-        if (frames[idx + d]) return idx + d;
-      }
-      return -1;
-    };
+    /**
+     * What the canvas last painted, as a string.
+     *
+     * The rAF loop below runs every frame whether or not anything has changed,
+     * and this used to redraw regardless — so a visitor PARKED on a station,
+     * reading the four lines of copy, was paying for a full-viewport `drawImage`
+     * (three more on desktop, for the still dissolve) sixty times a second,
+     * forever, for a picture that was identical every time. On a phone that is
+     * the difference between a section that idles at nothing and one that never
+     * stops working; it also came straight out of the budget the scrub itself
+     * needs while it IS moving. Now the loop is free whenever the resolved
+     * picture has not changed.
+     *
+     * The signature is the resolved frame INDICES rather than the raw progress,
+     * so it also covers the other direction: when a frame finishes decoding,
+     * `nearestIndex` starts answering with it, the signature changes, and the
+     * canvas updates without anything having to tell it to.
+     */
+    let lastSig = "";
 
     const draw = (p: number, settled: boolean) => {
       const f = p * (frameCount - 1);
+      // Frames only exist on the fetch grid (every `step`), so the blend runs on
+      // the grid too. It used to interpolate between `floor(f)` and
+      // `floor(f) + step`, which on a phone is only a real pair of frames half
+      // the time — the other half asked for an odd index that is never fetched
+      // and silently drew no second layer at all.
+      const g0 = Math.min(
+        Math.floor((frameCount - 1) / step) * step,
+        Math.floor(f / step) * step
+      );
+      const frac = (f - g0) / step;
+
+      let i0: number;
+      let i1 = -1;
       if (settled) {
-        const i = nearestLoaded(Math.round(f));
-        if (i >= 0) ctx.drawImage(frames[i]!, 0, 0, dims.w, dims.h);
+        i0 = store.nearestIndex(Math.round(f));
       } else {
-        const i0 = nearestLoaded(Math.floor(f));
-        if (i0 >= 0) ctx.drawImage(frames[i0]!, 0, 0, dims.w, dims.h);
-        const i1 = Math.floor(f) + step;
-        const frac = f - Math.floor(f);
-        if (frac > 0 && frames[i1]) {
-          ctx.globalAlpha = frac;
-          ctx.drawImage(frames[i1]!, 0, 0, dims.w, dims.h);
-          ctx.globalAlpha = 1;
-        }
+        i0 = store.nearestIndex(g0);
+        // Blend only between two frames that are genuinely adjacent AND both
+        // decoded. If the nearest loaded frame is not the one the blend is
+        // anchored on, a second layer at partial alpha is a double exposure of
+        // two unrelated moments, which is exactly what the header comment about
+        // settled stations is warning against.
+        if (frac > 0.02 && i0 === g0 && store.at(g0 + step)) i1 = g0 + step;
       }
+      if (i0 < 0) return;
+
+      let sig = `${i0}:${i1}:${i1 < 0 ? 0 : Math.round(frac * 32)}`;
+      // Clean still dissolves in across the approach and is fully opaque BEFORE
+      // the text is allowed to enter (see stillDone below).
+      const stillAlpha: number[] = [];
       if (!isMobile) {
-        // Clean still dissolves in across the approach and is fully opaque
-        // BEFORE the text is allowed to enter (see stillDone below).
         for (const s of STILL_STATIONS) {
           const w = (0.1 - Math.abs(p - s / (STATIONS - 1))) / 0.06;
-          if (w > 0 && stills[s]) {
-            ctx.globalAlpha = Math.min(1, w);
-            ctx.drawImage(stills[s], 0, 0, dims.w, dims.h);
+          const a = w > 0 && store.still(s) ? Math.min(1, w) : 0;
+          stillAlpha.push(a);
+          sig += `:${Math.round(a * 32)}`;
+        }
+      }
+      if (sig === lastSig) return;
+      lastSig = sig;
+
+      ctx.drawImage(store.at(i0)!, 0, 0, dims.w, dims.h);
+      if (i1 >= 0) {
+        ctx.globalAlpha = frac;
+        ctx.drawImage(store.at(i1)!, 0, 0, dims.w, dims.h);
+        ctx.globalAlpha = 1;
+      }
+      if (!isMobile) {
+        STILL_STATIONS.forEach((s, k) => {
+          const a = stillAlpha[k];
+          if (a > 0) {
+            ctx.globalAlpha = a;
+            ctx.drawImage(store.still(s)!, 0, 0, dims.w, dims.h);
             ctx.globalAlpha = 1;
           }
-        }
+        });
       }
     };
 
@@ -470,15 +633,162 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     let smoothP = 0;
     let lastT = 0;
     let raf = 0;
+    /** Mirrors `data-scrub-pinned` on <html>, so the attribute is only written
+     *  on the frame it actually changes. */
+    let pinnedNow = false;
 
     const progress = () => {
       const r = track.getBoundingClientRect();
       return Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
     };
+    /** Does the sticky stage fill the viewport right now?
+     *
+     *  The half-pixel tolerance is not slop. The track's height is fractional
+     *  (300vh of a fractional viewport), so parked exactly on the LAST station
+     *  the bottom edge lands a fraction of a pixel short and a strict `>=` reads
+     *  "not pinned" — which hid the "שלב 4 מתוך 4" pill on the very station it
+     *  names, and flickered `data-scrub-pinned` at the one place a visitor
+     *  stops. Measured at 390×844 and 1440×900: the shortfall is 0.375px. */
     const pinned = () => {
       const r = track.getBoundingClientRect();
-      return r.top <= 0 && r.bottom >= window.innerHeight;
+      return r.top <= 0.5 && r.bottom >= window.innerHeight - 0.5;
     };
+    /** Where the visitor is inside the track, in track-pixels, and where the
+     *  last station sits. Both are also the two ends of the pinned range. */
+    const geometry = () => {
+      const r = track.getBoundingClientRect();
+      const end = Math.max(1, r.height - window.innerHeight);
+      return { y: -r.top, end };
+    };
+
+    // ── RAW INPUT, FOR ITS DIRECTION ONLY ──
+    // Both listeners are passive and neither one moves anything. They exist so
+    // `applySnap` can tell which way the visitor is ASKING to go at an end
+    // station, which the committed scroll position cannot say — see the note
+    // above `snapOn`.
+    let touchY = 0;
+    const onTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (touch) touchY = touch.clientY;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (!touch) return;
+      // Finger travelling UP drags the content up, which is scrolling DOWN.
+      const dy = touchY - touch.clientY;
+      if (Math.abs(dy) < INTENT_TOUCH_MIN) return;
+      touchY = touch.clientY;
+      noteIntent(Math.sign(dy));
+    };
+
+    /** One wheel event in CSS pixels, whichever unit it arrived in. */
+    const wheelPx = (event: WheelEvent) => {
+      if (event.deltaMode === 1) return event.deltaY * 16;
+      if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
+      return event.deltaY;
+    };
+
+    let trainAt = 0;
+    let trainDelta = 0;
+    let firedAt = -Infinity;
+
+    /**
+     * ── ONE WHEEL GESTURE, ONE STATION ──
+     * Daniel, on desktop: two quick scrolls travel two or more stations at once.
+     * People double-scroll when they think a page has not responded, and this
+     * section takes ~2.4s to play an act, so it looks unresponsive for exactly
+     * as long as it takes to double-scroll — and then they overshoot the step
+     * they were trying to read. The mirror-image bug was already here and is
+     * fixed by the same accumulator: a train of SMALL notches (a trackpad, a
+     * free-spinning wheel) never reached a snap threshold at all, so each notch
+     * snapped back and the section could not be advanced gently.
+     *
+     * So while the stage is pinned, the wheel does not scroll the page — it asks
+     * for a station. A move needs `WHEEL_THRESHOLD` of accumulated, normalised
+     * travel, the accumulator is reset whenever the wheel has been quiet for
+     * `TRAIN_GAP`, and — the rule that actually does the work — no move may
+     * follow another inside `STATION_COOLDOWN`. Taking the scroll over outright
+     * is what makes "never more than one" true: there is no native scroll left
+     * to race and no momentum left to arrive late.
+     *
+     * The consequence worth stating plainly: a SUSTAINED gesture (a trackpad
+     * drag held for seconds) advances one station per cooldown rather than one
+     * in total. That is deliberate. "One station per gesture, forever" would
+     * mean a visitor holding a trackpad scroll sits motionless until she lets
+     * go, which reads as a dead page — the same complaint from the other side.
+     * Two flicks in quick succession are what must not overshoot, and they do
+     * not.
+     *
+     * ⚠️ IT NEVER INTERCEPTS AN EXIT. At the first station scrolling up, or the
+     * last scrolling down, the event is left completely alone: no
+     * `preventDefault`, no accumulation, nothing. The direction is known from
+     * the FIRST event of the train, so the beginning of a leaving gesture is
+     * never swallowed and then regretted. That is the same rule as the exit
+     * release in `applySnap`, expressed on the other input.
+     *
+     * Touch never reaches here: a phone has the CSS snap path and the release
+     * above, and this listener is the only non-passive one in the file precisely
+     * so that it is the only place a `preventDefault` can happen.
+     */
+    const onWheel = (event: WheelEvent) => {
+      // Pinch-zoom arrives as a ctrl-wheel and is not a scroll.
+      if (event.ctrlKey) return;
+      const px = wheelPx(event);
+      const dir = Math.sign(px);
+      if (!dir) return;
+      if (Math.abs(px) >= INTENT_WHEEL_MIN) noteIntent(dir);
+      if (!pinned()) return;
+
+      const { y, end } = geometry();
+      if ((dir < 0 && y <= SNAP_EDGE) || (dir > 0 && y >= end - SNAP_EDGE)) {
+        trainAt = 0;
+        trainDelta = 0;
+        return;
+      }
+
+      event.preventDefault();
+      const now = performance.now();
+
+      // ⚠️ THE COOLDOWN IS CHECKED FIRST, BEFORE THE TRAIN GROUPING, and that
+      // ordering is the whole fix. The first cut had it the other way round —
+      // group into trains, then rate-limit within a train — and it did not work,
+      // because the reported gesture is TWO SEPARATE FLICKS. Measured in
+      // Chromium: two "quick" wheel scrolls actually land ~400ms apart, which is
+      // past `TRAIN_GAP`, so the grouping declared a fresh train, cleared the
+      // fired flag and let the cooldown be skipped entirely. Two notches, two
+      // stations — exactly the bug. The rate limit has to sit ABOVE the grouping
+      // to be a rate limit at all.
+      if (now - firedAt < STATION_COOLDOWN) {
+        // Absorbed. Still cancelled, so nothing drifts, and the accumulator is
+        // reset so the next gesture has to earn its threshold from zero rather
+        // than firing the instant the cooldown lapses.
+        trainAt = now;
+        trainDelta = 0;
+        return;
+      }
+      if (now - trainAt > TRAIN_GAP) trainDelta = 0;
+      trainAt = now;
+      trainDelta += px;
+      if (Math.abs(trainDelta) < WHEEL_THRESHOLD) return;
+
+      firedAt = now;
+      const from = Math.round((y / end) * (STATIONS - 1));
+      const to = Math.min(
+        STATIONS - 1,
+        Math.max(0, from + Math.sign(trainDelta))
+      );
+      const target = (end * to) / (STATIONS - 1);
+      setSnap(false);
+      wheelMoveUntil = now + WHEEL_MOVE_MS;
+      window.scrollTo({
+        top: window.scrollY + (target - y),
+        behavior: "smooth",
+      });
+    };
+
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false });
 
     const tick = (now: number) => {
       const dt = Math.min(0.1, (now - lastT) / 1000 || 0.016);
@@ -488,6 +798,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       const stepP = SPEED * dt;
       smoothP =
         Math.abs(delta) <= stepP ? targetP : smoothP + Math.sign(delta) * stepP;
+      // Where the playhead is, so the store can keep its decoded window around
+      // it and reach for the frames she is about to need rather than the next
+      // ones on its list. Cheap and idempotent: it returns immediately unless
+      // the playhead has crossed onto a different stored frame.
+      store.focus(Math.round(smoothP * (frameCount - 1)));
       draw(smoothP, smoothP === targetP);
 
       const station = Math.round(targetP * (STATIONS - 1));
@@ -510,7 +825,25 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       if (arrowRef.current)
         arrowRef.current.style.visibility =
           station >= STATIONS - 1 ? "hidden" : "visible";
-      pillRef.current?.classList.toggle("scrub-on", pinned());
+      // ── TELL THE REST OF THE PAGE IT IS INVISIBLE ──
+      // While the stage is pinned it fills the viewport with an opaque canvas,
+      // so every fixed layer behind it — the drifting colour field, the sand
+      // plate, and the WebGL sand simulation whenever that comes back off its
+      // hold — is painting a picture nobody can see, on the one GPU the scrub
+      // needs all of. `data-scrub-pinned` on <html> is how they find out; the
+      // consumers are `.site-bg` in globals.css §10a and the loop guards in
+      // site-background.tsx and sand-floor.tsx.
+      //
+      // The attribute is toggled on the exact frame the stage starts and stops
+      // filling the viewport, which is also the exact frame the canvas starts
+      // and stops covering those layers, so nothing can pop: at the boundary the
+      // covered pixels are all canvas either way.
+      const isPinned = pinned();
+      if (isPinned !== pinnedNow) {
+        pinnedNow = isPinned;
+        document.documentElement.toggleAttribute("data-scrub-pinned", isPinned);
+      }
+      pillRef.current?.classList.toggle("scrub-on", isPinned);
       applySnap();
 
       raf = requestAnimationFrame(tick);
@@ -518,9 +851,13 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     raf = requestAnimationFrame(tick);
 
     return () => {
-      disposed = true;
       cancelAnimationFrame(raf);
       io.disconnect();
+      store.dispose();
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("wheel", onWheel);
+      document.documentElement.removeAttribute("data-scrub-pinned");
       document.documentElement.style.scrollSnapType = "";
       // iOS keeps canvas backing stores alive aggressively; zeroing the
       // dimensions releases the bitmap on unmount.

@@ -92,26 +92,51 @@
    copy over bare sand. The whole ladder shifted rather than the About page
    alone, because every route now sits on the same photograph — so the fix
    belongs in the token, not in one page's classes.
+
+   ── AND THEN IT MOVED AGAIN, THE SAME DAY, BECAUSE IT HAD NOT MOVED ENOUGH ──
+   Daniel, on the built site: *"You can make the text more black, like I
+   requested, which you didn't do"* — of the body copy AND, separately, *"the
+   text in the header needs to also be blacker and more good-looking."* The
+   header's inactive nav links are `text-muted-foreground` and its icon buttons
+   are `text-foreground-soft`, so both of those complaints are the same two
+   rungs, and both are answered here rather than in `site-header.tsx`: a colour
+   this site uses in ~200 places belongs in the token.
+
+   The whole ladder therefore dropped again, keeping its warm hue (23-27°, the
+   brand's own) and its spacing. It is now genuinely near-black on the cream —
+   the top rung is 15.71:1, which is 84% of the way from the old ink to pure
+   black — without going to #000, which flares on this paper and would also make
+   every `bg-foreground/[0.03]` wash and `border-foreground/12` hairline read
+   grey instead of warm.
+
    Second column is the canvas; third is the darkest pixel of the sand plate
-   (its floor, ~#c1c1c1), which is what open type can now land on:
-     --foreground        #3a2e27   12.30:1   7.29
-     --foreground-soft   #4c3e35    9.61:1   5.70  (was #5a4a40, 7.91 / 4.69)
-     --muted-foreground  #5a4a40    7.91:1   4.69  (was #655448, 6.75 / 4.00)
-     --subtle-foreground #635248    6.95:1   4.12  (was #695749, 6.43 / 3.81)
-                                     ← the floor. Do not lighten. Note that each
-                                     rung simply took the value of the rung above
-                                     it, so the ladder's spacing is unchanged and
-                                     nothing collapsed into its neighbour.
-                                     The third column is BELOW 4.5 at the bottom
-                                     rung, and that is a known, accepted trade:
-                                     Daniel took the veil off deliberately and
+   (its floor, ~#c1c1c1), which is what open type can land on. Both measured
+   2026-07-30 against the shipped surfaces:
+     --foreground        #241c16   15.71:1   9.31  (was #3a2e27, 12.30 / 7.29)
+     --foreground-soft   #322820   13.48:1   7.99  (was #4c3e35,  9.61 / 5.70)
+     --muted-foreground  #3f3229   11.58:1   6.86  (was #5a4a40,  7.91 / 4.69)
+     --subtle-foreground #4d3d33    9.69:1   5.74  (was #635248,  6.95 / 4.12)
+                                     ← the floor. Do not lighten.
+                                     ON OTHER SURFACES, the same four inks:
+                                       white      16.76 / 14.38 / 12.36 / 10.34
+                                       --surface-2 14.21 / 12.20 / 10.48 / 8.77
+                                       --surface-3 12.83 / 11.00 /  9.45 / 7.91
+                                       --gold-soft 14.71 / 12.62 / 10.84 / 9.07
+                                       --brand-wash 14.89 / 12.77 / 10.97 / 9.18
+                                     THE KNOWN AA FAILURE IS GONE. Until this
+                                     pass the bottom rung measured 4.12:1 on
+                                     bare sand — under AA, and documented here
+                                     as an accepted trade because Daniel had
+                                     taken the paper veil off deliberately and
                                      said readability rides on the opaque cards
-                                     ("most of our text is inside squares"). The
-                                     same review turned the About / thank-you
-                                     cards and the final-CTA form solid, so LESS
-                                     small type sits on open sand than before,
-                                     not more. If he ever asks for it back, the
-                                     lever is `--background`, not this ladder.
+                                     ("most of our text is inside squares").
+                                     At #4d3d33 it is 5.74:1, so every rung of
+                                     this ladder now clears AA on every surface
+                                     on the site, sand included. The trade was
+                                     bought back by darkening, not by putting
+                                     the veil back — `--background` is still
+                                     `transparent` and the photograph still
+                                     shows at full strength.
 
    Non-text contrast (WCAG 1.4.11, ≥3:1):
      --input #8a7d70 — 3.75:1 on canvas, 4.00:1 on white, 3.39:1 on --surface-2.
@@ -226,21 +251,31 @@
 
   /* Ink — warm brown, never pure black (pure black on cream glares). The ink is
      tinted toward the brand hue so type and brand feel related. */
-  --foreground: #3a2e27;
+  --foreground: #241c16;
   /* #5a4a40 until launch night, when it moved down to what is now
      `--muted-foreground`'s old neighbourhood. See the ladder note in the header:
      with the veil at `transparent` every rung took the value of the rung above
-     it. 9.61:1 on the canvas. */
-  --foreground-soft: #4c3e35;
+     it. Then #4c3e35 → #322820 in the same day's second review, when Daniel said
+     the ink still was not black enough. 13.48:1 on the canvas, 7.99:1 on the
+     sand plate's darkest pixel.
+     This rung is also the header's icon buttons and its mobile CTA label, which
+     is half of "the text in the header needs to also be blacker". */
+  --foreground-soft: #322820;
   /* Darkened twice on 2026-07-30. First from #6f5d51 → #655448 when the veil
      went 84% → 55% (it measured 3.89:1 on the footer's nav links once the
      photograph started reading through the paper). Then #655448 → #5a4a40 on
      launch night, when the veil came off entirely and Daniel said the About
      page's body copy was "a shade of black which is a little bit lighter" than
      it should be. This is the rung most body copy on the site is set in, so it
-     is the one he was looking at. 7.91:1 on the canvas, 4.69:1 on the sand's
-     darkest pixel. */
-  --muted-foreground: #5a4a40;
+     is the one he was looking at.
+
+     Darkened a THIRD time the same day, #5a4a40 → #3f3229, after he read the
+     built site and said "you can make the text more black, like I requested,
+     which you didn't do". Two of his complaints land on exactly this token: the
+     body copy, and the header's inactive nav links, which are
+     `text-muted-foreground` in `site-header.tsx`. 11.58:1 on the canvas, 6.86:1
+     on the sand's darkest pixel. */
+  --muted-foreground: #3f3229;
   /* The lightest ink in the ladder, and the one that decides whether this site
      can claim AA (ת"י 5568) on its accessibility statement — it is used at 12px
      for footer labels, the copyright line, legal-page meta and the "הפרטים
@@ -266,13 +301,22 @@
      altogether and the whole ladder stepping down one rung (header note). Same
      reason a third time, and by now the pattern is the point: this ink is
      measured against the WORST surface it can land on, and taking the paper away
-     made every surface worse at once. #635248 measures
+     made every surface worse at once. #635248 measured
        --canvas 6.95  ·  white 7.42  ·  --surface-2 6.29  ·  --surface-3 5.68
-       and 4.12:1 on the sand plate's darkest pixel — under AA, and accepted:
-       see the header note. The footer, which is where this ink is smallest, no
-       longer uses it for anything but the copyright row.
-     Still visibly lighter than --muted-foreground (7.91:1), so the ladder holds. */
-  --subtle-foreground: #635248;
+       and 4.12:1 on the sand plate's darkest pixel — under AA, and accepted at
+       the time: see the header note.
+
+     2026-07-30, FOURTH and last, #635248 → #4d3d33, with the whole ladder
+     dropping again for Daniel's "make the text more black". This is the change
+     that clears the outstanding failure: #4d3d33 measures
+       --canvas 9.69  ·  white 10.34  ·  --surface-2 8.77  ·  --surface-3 7.91
+       ·  --gold-soft 9.07  ·  --brand-wash 9.18
+       and 5.74:1 on the sand plate's darkest pixel, so the smallest ink on the
+       site now clears AA on the worst surface on the site. Nothing on this page
+       is exempt any more.
+     Still visibly lighter than --muted-foreground (11.58:1), so the ladder
+     holds. */
+  --subtle-foreground: #4d3d33;
 
   /* Brand — natural brown, the darkest warm note in her palette. Unlike the
      plum this replaced, `--brand` is NOT decorative-only: it is the filled-CTA
@@ -514,23 +558,27 @@
 
   /* Mapped shadcn-style tokens */
   --card: #ffffff;
-  --card-foreground: #3a2e27;
+  --card-foreground: #241c16;
   --popover: #ffffff;
-  --popover-foreground: #3a2e27;
+  --popover-foreground: #241c16;
   /* Primary = the ink itself (default buttons are dark with a cream label). The
-     brand CTA uses --brand; both put near-white ink on top. */
-  --primary: #3a2e27;
+     brand CTA uses --brand; both put near-white ink on top.
+     These five all mirror `--foreground` and moved with it on 2026-07-30 (see
+     the ink ladder in the header); leaving them at the old #3a2e27 would have
+     put a lighter ink inside every card than outside it. --primary-foreground
+     on --primary is 16.14:1. */
+  --primary: #241c16;
   --primary-foreground: #fff8f2;
-  --secondary: rgba(58, 46, 39, 0.05);
-  --secondary-foreground: #3a2e27;
+  --secondary: rgba(36, 28, 22, 0.05);
+  --secondary-foreground: #241c16;
   --muted: #f4ebe0;
   --accent: #855128;
   --accent-foreground: #ffffff;
   --destructive: #b3261e;
   --success: #3f5c6b;
 
-  --border: rgba(58, 46, 39, 0.12);
-  --border-subtle: rgba(58, 46, 39, 0.07);
+  --border: rgba(36, 28, 22, 0.12);
+  --border-subtle: rgba(36, 28, 22, 0.07);
   /* Form-field boundaries. SOLID, not an alpha of the ink: this is the one
      border on the site that has a contrast requirement (WCAG 1.4.11 wants 3:1
      for the edge of a control), and an alpha value quietly fails it the moment
@@ -543,7 +591,7 @@
   /* The colour of a heavy drop shadow (the video frames, the hover lift on
      cards). On paper a shadow is tinted ink; on a dark canvas ink-coloured
      shadows are invisible, so dark swaps in real black. */
-  --shadow-strong: rgba(58, 46, 39, 0.5);
+  --shadow-strong: rgba(36, 28, 22, 0.5);
 
   /* WhatsApp's brand green (#25d366) is ~2:1 on this canvas — fine as a fill,
      unreadable as type. This is the readable green for WhatsApp LABELS in each
@@ -639,7 +687,7 @@
   --animate-spin-slow: spin 30s linear infinite;
 }
 
-/* ───────────────────  THE TYPE SCALE  (0.12.0)  ───────────────────
+/* ───────────────  THE TYPE SCALE  (0.12.0, RAISED AGAIN 0.14)  ───────────────
    Daniel, 2026-07-30: "text on most pages is too small to read comfortably."
    A rendered-size sweep of all eight pages agreed with him, loudly. The site
    was shipping 278 separate runs of text at 14px on a 390px phone — 203 of them
@@ -650,33 +698,75 @@
    phone, often in distress, sometimes in a hurry and sometimes crying. Type she
    has to lean in for is type she stops reading.
 
-   So the FIVE BOTTOM RUNGS of Tailwind's scale are re-pointed, once, here —
-   rather than by editing ~300 call sites — and every `text-xs`/`text-sm`/
-   `text-base`/`text-lg`/`text-xl` on the site moves with them. The floors this
-   is built to, from the review brief:
+   ── AND ONCE WAS NOT ENOUGH (the 0.14 raise) ──
+   Reviewing the built site on a 27-inch monitor and on flagship phones, Daniel
+   asked for it AGAIN, and this time he gave a number and a calibration: *"The
+   text should be bigger, I think maybe 4px bigger, almost everywhere.
+   Especially the headers and the important text should be bigger, at least
+   4px."* Then he set the site's own accessibility zoom to 130%, read a page,
+   and said: *"the text looks a good size. We probably would want that size on
+   by default on everything."* He named the offers section's tracks label
+   ("המסלולים שנדבר עליהם בשיחה") as an example of type that is too small.
 
-     body / paragraph copy   ≥16px on a phone, ≥17px on a desktop
-     secondary / meta        ≥14px everywhere
-     anything interactive    ≥14px everywhere (was 12.8px in the header CTA)
+   130% of the 0.12.0 scale IS therefore the target, and the table below sits at
+   or just under it — full 130% on the desktop rungs, a little short of it on
+   the phone, where 22.75px body copy starts wrapping Hebrew badly at 390px.
+
+   That lands this site's body copy at 20px on a phone and 23px on a desktop,
+   which is ABOVE the 2025-26 landing-page norm (16px minimum, 18-20px the
+   recommended desktop range) rather than inside it. That is deliberate and it
+   is the same argument as the paragraph above: an audience of women in
+   distress, often older, usually on a phone, is exactly the audience the
+   accessibility literature says to go past the minimum for — the US health-
+   literacy guidance already asks for ≥19px for older readers before any of this
+   site's other circumstances are counted.
+
+   THE ONE EXCLUSION: the process section's scrub overlay ("Not on the
+   animation" — Daniel). Its cards are pinned back to the 0.12.0 sizes by a
+   scoped variable override on `.scrub-beat` / `.scrub-pill` further down this
+   file, so raising a rung here cannot move them.
+
+   So the BOTTOM SEVEN RUNGS of Tailwind's scale are re-pointed, once, here —
+   rather than by editing ~300 call sites — and every `text-xs` … `text-3xl` on
+   the site moves with them. The floors this is built to:
+
+     body / paragraph copy   ≥20px on a phone, ≥23px on a desktop
+     secondary / meta        ≥15.5px everywhere
+     anything interactive    ≥15.5px everywhere
 
    The result, and the whole scale in one table (px):
 
-     step    before        <640px    ≥640px    who uses it
-     xs      12            14        14        footer meta, legal notes, © line
-     sm      14            16        17        card copy, FAQ answers, nav, forms
-     base    16            17.5      18.5      section descriptions, lead paras
-     lg      18            19.5      21        hero subtitle, /about story
-     xl      20            21.5      23        card titles set in the body face
-     2xl+    unchanged — those rungs are HEADINGS, and the display face got its
-             own +12% compensation at each call site (see the h1/h2 note below).
+     step    0.11    0.12         0.14         who uses it
+                     <640 / ≥640  <640 / ≥640
+     xs      12      14   / 14    15.5 / 16    footer meta, legal notes, © line
+     sm      14      16   / 17    18   / 19    card copy, FAQ answers, nav, forms
+     base    16      17.5 / 18.5  20   / 23    section descriptions, lead paras
+     lg      18      19.5 / 21    22   / 25.5  hero subtitle, /about story
+     xl      20      21.5 / 23    24   / 27    card titles set in the body face
+     2xl     24      24   / 24    27   / 30    contact card h3, trust band, footer
+     3xl     30      30   / 30    32   / 35    trust band / footer tagline at ≥640
+
+   2xl and 3xl joined the re-pointed set in 0.14. They were left alone in 0.12.0
+   on the grounds that "those rungs are HEADINGS" — but they are not, not here:
+   the four places that use them (the contact card's h3, the trust band, the
+   footer tagline and the scrub overlay) are all set in the BODY face, and the
+   real display headings use the `text-[Nrem]` ladder with its own compensation
+   (see the h1/h2 note below). Leaving them behind would have left the footer's
+   tagline smaller than a card title.
 
    HOW IT WORKS, AND WHY IT IS SAFE: Tailwind 4 compiles `text-sm` to
    `font-size: var(--text-sm)`, so re-pointing the variable moves the utility.
    The line-heights are RATIOS in v4 (`calc(1.25 / 0.875)`), so they have to be
    restated whenever the size moves or the leading silently tightens — every one
-   below is written out for that reason, and the small rungs get slightly MORE
-   leading than the ratio would give, because a 16px line of Hebrew at 1.43 is
-   cramped.
+   below is written out for that reason, with its resulting ratio in the comment,
+   and the small rungs keep slightly MORE leading than the big ones, because a
+   short line of Hebrew at 1.33 is cramped and a 35px headline at 1.5 is loose.
+
+   ⚠️ A `leading-<number>` utility is a FIXED rem length, not a ratio, so it does
+   NOT move with these variables. Every `leading-5/6/7/8` that sat on a rung
+   moved to a ratio (`leading-normal`, `leading-relaxed`, …) in the same pass;
+   if you add one, use a ratio or it will silently tighten the next time this
+   table moves.
 
    Why a `min-width: 640px` block rather than `clamp()`: the codebase already
    writes its responsive type as `sm:` steps, `sm:` is where this design's
@@ -688,6 +778,58 @@
    overriding variables that import declares on `:root`. Moving it above the
    import silently reverts the whole scale. */
 :root {
+  --text-xs: 0.96875rem; /* 15.5px */
+  --text-xs--line-height: calc(1.4375 / 0.96875); /* 1.48 */
+  --text-sm: 1.125rem; /* 18px */
+  --text-sm--line-height: calc(1.6875 / 1.125); /* 1.50 */
+  --text-base: 1.25rem; /* 20px */
+  --text-base--line-height: calc(1.9375 / 1.25); /* 1.55 */
+  --text-lg: 1.375rem; /* 22px */
+  --text-lg--line-height: calc(2 / 1.375); /* 1.45 */
+  --text-xl: 1.5rem; /* 24px */
+  --text-xl--line-height: calc(2.0625 / 1.5); /* 1.38 */
+  --text-2xl: 1.6875rem; /* 27px */
+  --text-2xl--line-height: calc(2.125 / 1.6875); /* 1.26 */
+  --text-3xl: 2rem; /* 32px */
+  --text-3xl--line-height: calc(2.4375 / 2); /* 1.22 */
+}
+
+@media (min-width: 640px) {
+  :root {
+    --text-xs: 1rem; /* 16px */
+    --text-xs--line-height: calc(1.5 / 1); /* 1.50 */
+    --text-sm: 1.1875rem; /* 19px */
+    --text-sm--line-height: calc(1.75 / 1.1875); /* 1.47 */
+    --text-base: 1.4375rem; /* 23px */
+    --text-base--line-height: calc(2.1875 / 1.4375); /* 1.52 */
+    --text-lg: 1.59375rem; /* 25.5px */
+    --text-lg--line-height: calc(2.25 / 1.59375); /* 1.41 */
+    --text-xl: 1.6875rem; /* 27px */
+    --text-xl--line-height: calc(2.25 / 1.6875); /* 1.33 */
+    --text-2xl: 1.875rem; /* 30px */
+    --text-2xl--line-height: calc(2.3125 / 1.875); /* 1.23 */
+    --text-3xl: 2.1875rem; /* 35px */
+    --text-3xl--line-height: calc(2.625 / 2.1875); /* 1.20 */
+  }
+}
+
+/* ── THE ONE EXCLUSION FROM THE 0.14 RAISE: the process scrub ──
+   Daniel asked for bigger type "almost everywhere" and then drew the line
+   himself: *"Not on the animation."* The process section's overlay copy is a
+   card that rides over a pinned film at a size that was tuned against the
+   frame behind it — its cards sit at `inset-x-[5%]` on a phone and in a
+   `w-[min(560px,44vw)]` column on a desktop, and there is no slack in either.
+
+   Rather than pin each of its eight text call sites (which would mean editing
+   `process-scrub.tsx`, and the size would then drift the next time the table
+   above moves), the OLD scale is restored as scoped variables on the two
+   overlay containers. Tailwind 4 compiles `text-base` to
+   `font-size: var(--text-base)` and custom properties inherit, so every rung
+   used inside a `.scrub-beat` resolves to its 0.12.0 value while the rest of
+   the page reads the raised one. Nothing here needs to be touched again unless
+   Daniel asks for the animation's copy to grow too. */
+.scrub-beat,
+.scrub-pill {
   --text-xs: 0.875rem; /* 14px */
   --text-xs--line-height: calc(1.25 / 0.875);
   --text-sm: 1rem; /* 16px */
@@ -698,10 +840,13 @@
   --text-lg--line-height: calc(1.8125 / 1.21875);
   --text-xl: 1.34375rem; /* 21.5px */
   --text-xl--line-height: calc(1.875 / 1.34375);
+  --text-2xl: 1.5rem; /* 24px */
+  --text-2xl--line-height: calc(2 / 1.5);
 }
 
 @media (min-width: 640px) {
-  :root {
+  .scrub-beat,
+  .scrub-pill {
     --text-sm: 1.0625rem; /* 17px */
     --text-sm--line-height: calc(1.625 / 1.0625);
     --text-base: 1.15625rem; /* 18.5px */
@@ -809,7 +954,32 @@
      side at 1440 and 390 the current display sizes still fill their measure
      without overflowing or breaking badly. The sizes in page-hero.tsx,
      marketing-sections.tsx, quote-reveal.tsx, pearl-reveal-section.tsx and
-     brand-mark.tsx are a set and were judged together. */
+     brand-mark.tsx are a set and were judged together.
+
+     ── THE WHOLE SET MOVED UP IN 0.14, and it is still a set ──
+     Daniel wanted the headings bigger by "at least 4px" everywhere (see the type
+     scale table above). The display ladder is written as `text-[Nrem]` at each
+     call site rather than as a rung, so it moved as one sweep — every tier by
+     +4px or more, none of them by so much that two tiers collapsed into one:
+
+       18.4 → 22.4   the hot CTA's label      (1.15 → 1.4rem)
+       20.8 → 24.8   dialog / card h2         (1.3  → 1.55rem)
+       23.2 → 28     legal h2, monogram       (1.45 → 1.75rem)
+       27.2 → 32     section h3, track title  (1.7  → 2rem)
+       30.4 → 35.2   track title ≥640         (1.9  → 2.2rem)
+       33.6 → 38.4   section h2 <640          (2.1  → 2.4rem)
+       34.4 → 39.2   free-call h3 ≥640        (2.15 → 2.45rem)
+       40   → 45.6   section h2 ≥640, h1 <640 (2.5  → 2.85rem)
+       53.6 → 60     page h1 ≥640             (3.35 → 3.75rem)
+       36.8 → 41.6   "ללא עלות" <640          (§9, body face at 700)
+       42.1 → 47.2   "ללא עלות" ≥640
+
+     The 5rem decorative numeral in the "why" cards is deliberately NOT in that
+     list: it is a graphic, not a heading, and it is already the largest glyph on
+     the page. The hero was checked at 390 after the move and still sets on TWO
+     lines, which is the constraint that caps this ladder — if a future raise
+     takes the h1 to three lines on a phone, pull it back rather than shipping
+     it. */
   h1,
   h2 {
     font-family: var(--font-display), Georgia, "Times New Roman", serif;
@@ -839,7 +1009,7 @@
     background: var(--surface-2);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(58, 46, 39, 0.18);
+    background: rgba(36, 28, 22, 0.18);
     border-radius: 9999px;
     border: 2px solid var(--surface-2);
   }
@@ -1175,6 +1345,46 @@
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
+}
+
+/* ── §10a  WHILE THE PEARL STAGE IS PINNED, EVERYTHING BEHIND IT STANDS DOWN ──
+   `data-scrub-pinned` is stamped on <html> by the rAF loop in
+   src/components/sections/process-scrub.tsx for exactly as long as the scrub's
+   sticky stage fills the viewport. During that stretch the stage is an OPAQUE
+   canvas covering every pixel of the screen, so this whole field, its vignette
+   and its grain are being composited for nobody — while the scrub is asking the
+   same GPU for a full-viewport `drawImage` every frame it moves. On the phones
+   Daniel tested (an S25 Ultra and an iPhone 13/14) that contention is a
+   measurable part of the "super laggy between images".
+
+   What stands down is only the WORK, never the picture:
+     • the five blurred blobs stop their 34-52s drift loops. A paused animation
+       holds its current transform, so the layer under the canvas is identical to
+       the frame before — there is nothing to see and so nothing to pop when it
+       resumes;
+     • `will-change` is dropped, which releases five promoted compositor layers
+       (each a 38-52rem blurred radial) for the duration;
+     • the scroll-reactive `saturate()` filter — a whole-viewport filter that
+       re-evaluates on every scroll frame, and the single most expensive thing in
+       this block — is switched off. site-background.tsx separately stops writing
+       `--bg-scroll` while the attribute is set, so nothing is even asking for it.
+
+   Deliberately NOT hidden: `visibility`/`display` would be cheaper still, but a
+   sub-pixel rounding gap at the top or bottom edge of the stage would then show
+   the page background instead of the field, and that WOULD pop. Pausing costs
+   nothing and cannot. */
+:root[data-scrub-pinned] .site-bg {
+  filter: none;
+  transition: none;
+}
+
+:root[data-scrub-pinned] .site-bg__inner,
+:root[data-scrub-pinned] .site-bg__blob {
+  will-change: auto;
+}
+
+:root[data-scrub-pinned] .site-bg__blob {
+  animation-play-state: paused;
 }
 
 /* ─────────────────────────  Utilities  ───────────────────────── */
@@ -2068,6 +2278,60 @@ html[data-a11y-text-scale="130"] {
   font-size: 130%;
 }
 
+/* ── THE PANEL DOES NOT ZOOM ITSELF ──
+   Daniel, 2026-07-30: pressing the + *"will also zoom the Accessibility section
+   itself, which I don't think is good. Accessibility should probably stay the
+   same size."* He is right, and not only aesthetically: the control you are
+   using to change the page should not move and re-wrap under your thumb while
+   you press it, and at 130% the panel outgrew a 320px phone (which is what the
+   `.accessibility-compact-grid` reflow below used to paper over).
+
+   WHY `zoom` AND NOT A COMPENSATING `font-size`. The obvious fix — put
+   `font-size: calc(1rem * 100 / 130)` on the dialog — does nothing here. Every
+   size in this dialog is a Tailwind utility, and Tailwind's utilities are in
+   `rem`: `rem` is relative to the ROOT font size, not to the parent's, so a
+   font-size on the container is inherited by exactly nothing. `zoom` is the one
+   property that scales a whole subtree's used lengths, `rem` included, and it
+   affects layout (unlike `transform: scale`, which would leave the dialog
+   occupying its unscaled box and mis-centre it).
+
+   The two corrections below are the values `zoom` CANNOT fix by itself, because
+   they do not come from the root font size in the first place:
+     · `width` — the popup is `w-full`, and a percentage resolves against the
+       (unzoomed) viewport container before the zoom shrinks it, so a phone
+       dialog would come out 77% of the screen wide. Pre-multiplying by the same
+       factor lands it back on the full width.
+     · `max-height` — same story for the `dvh` in `max-h-[62dvh]` /
+       `sm:max-h-[calc(100dvh-3rem)]`. Measured, not assumed: with these
+       corrections the popup's rendered box is within a pixel of its 100% size
+       at both 115% and 130%, on a 390px phone and at 1440.
+
+   Everything INSIDE keeps its own `sm:` steps and its own rem sizes, so the
+   dialog is simply the 100% dialog at every zoom step — including its type,
+   which is why it does not need the compact-grid reflow any more. The page
+   behind it still zooms; that is the whole point of the control. */
+html[data-a11y-text-scale="115"] .accessibility-dialog {
+  --a11y-dialog-unzoom: 1.15;
+}
+
+html[data-a11y-text-scale="130"] .accessibility-dialog {
+  --a11y-dialog-unzoom: 1.3;
+}
+
+html[data-a11y-text-scale="115"] .accessibility-dialog,
+html[data-a11y-text-scale="130"] .accessibility-dialog {
+  zoom: calc(1 / var(--a11y-dialog-unzoom));
+  width: calc(100% * var(--a11y-dialog-unzoom));
+  max-height: calc(62dvh * var(--a11y-dialog-unzoom));
+}
+
+@media (min-width: 640px) {
+  html[data-a11y-text-scale="115"] .accessibility-dialog,
+  html[data-a11y-text-scale="130"] .accessibility-dialog {
+    max-height: calc((100dvh - 3rem) * var(--a11y-dialog-unzoom));
+  }
+}
+
 /* At 320px, enlarged type needs the header's duplicated wordmark and social
    shortcuts to step aside. The logo, menu, CTA destinations, floating
    WhatsApp action and footer links remain available. */
@@ -2234,18 +2498,15 @@ html.show--consent .back-to-top-control {
 }
 
 /* The alignment guide keeps compact preference groups in two columns on
-   phones. At the narrowest supported width, however, the rem-scaled 130%
-   stepper cannot physically fit beside another card without overlapping it.
-   Preserve the paired geometry at ordinary phone widths and reflow only at
-   320px-class widths or when 130% text is active on a phone. */
+   phones. At the narrowest supported width, however, the stepper cannot
+   physically fit beside another card without overlapping it, so reflow at
+   320px-class widths.
+   The companion rule that also reflowed at 130% is GONE (2026-07-30): the
+   dialog is counter-zoomed now (see the block above this file's contrast
+   palette), so 130% text no longer makes this grid any wider than 100% does and
+   the exception it existed for cannot occur. */
 @media (max-width: 22rem) {
   .accessibility-compact-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-@media (max-width: 30rem) {
-  html[data-a11y-text-scale="130"] .accessibility-compact-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 }
@@ -3205,7 +3466,10 @@ html.show--consent .back-to-top-control {
   position: relative;
   isolation: isolate;
   font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
-  font-size: 2.3rem;
+  /* 2.3rem until the 0.14 type raise, which moved the whole display ladder up
+     by at least 4px a tier. This word has to stay bigger than everything in the
+     section but its h2, so it moves with them or it stops being the punchline. */
+  font-size: 2.6rem; /* 41.6px */
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--gold-deep);
@@ -3275,7 +3539,7 @@ html.show--consent .back-to-top-control {
 
 @media (min-width: 640px) {
   .free-anchor__free {
-    font-size: 2.63rem;
+    font-size: 2.95rem; /* 47.2px; 2.63rem before the 0.14 raise */
   }
 }
 

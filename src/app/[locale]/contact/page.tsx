@@ -103,7 +103,7 @@ export default async function ContactPage({
                   {whatYouGet.map((item) => (
                     <li
                       key={item}
-                      className="flex gap-3 text-sm leading-6 text-foreground-soft"
+                      className="flex gap-3 text-sm leading-normal text-foreground-soft"
                     >
                       <CheckCircle2 className="mt-0.5 h-4.5 w-4.5 shrink-0 text-brand-accent" />
                       {item}
@@ -134,7 +134,7 @@ export default async function ContactPage({
                           <p className="text-sm font-medium text-foreground">
                             {title}
                           </p>
-                          <p className="mt-0.5 text-sm leading-6 text-muted-foreground">
+                          <p className="mt-0.5 text-sm leading-normal text-muted-foreground">
                             {text}
                           </p>
                         </div>
@@ -151,7 +151,7 @@ export default async function ContactPage({
                     return (
                       <li
                         key={text}
-                        className="flex gap-3 text-sm leading-6 text-muted-foreground"
+                        className="flex gap-3 text-sm leading-normal text-muted-foreground"
                       >
                         <Icon className="mt-0.5 h-4.5 w-4.5 shrink-0 text-brand-accent" />
                         {text}

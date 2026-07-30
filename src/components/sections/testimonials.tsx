@@ -192,7 +192,7 @@ export function Testimonials({ showHeading = true }: { showHeading?: boolean }) 
                     aria-hidden
                     className="h-6 w-6 shrink-0 text-gold"
                   />
-                  <blockquote className="mt-4 flex-1 text-lg leading-8 text-foreground">
+                  <blockquote className="mt-4 flex-1 text-lg leading-relaxed text-foreground">
                     {item.quote}
                   </blockquote>
                   <figcaption className="mt-5 flex flex-wrap items-center gap-x-2.5 gap-y-1 border-t border-foreground/[0.07] pt-4 text-sm">

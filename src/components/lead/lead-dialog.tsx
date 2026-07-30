@@ -127,14 +127,14 @@ function LeadDialog({
             </Dialog.Close>
 
             <div className="mb-6 pe-12">
-              <Dialog.Title className="text-[1.3rem] text-foreground">
+              <Dialog.Title className="text-[1.55rem] text-foreground">
                 {t("title")}
               </Dialog.Title>
               {/* The default sentence advertises Pnina's optional open field,
                   so the lecture variant — which hides that field — needs its
                   own. Same rule as `simpleLead` / `simpleLeadNoQuestion` in the
                   form itself: never point at a box that is not on screen. */}
-              <Dialog.Description className="mt-1.5 text-sm leading-6 text-muted-foreground">
+              <Dialog.Description className="mt-1.5 text-sm leading-normal text-muted-foreground">
                 {source === "lectures"
                   ? t("descriptionNoQuestion")
                   : t("description")}

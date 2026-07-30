@@ -338,14 +338,34 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   never fetched unless the parameter selects them. `?font=bellefair` is the
   0.12.0 rendering and is pinned back to 400 there, because 700 on it would be a
   synthesised fake. They go when Daniel confirms the headline face.
-- Type scale: the bottom five rungs of Tailwind's scale (`xs`/`sm`/`base`/`lg`/
-  `xl`) are **re-pointed in globals.css**, once, right after the `@theme` block —
-  14 / 16 / 17.5 / 19.5 / 21.5px on a phone and 14 / 17 / 18.5 / 21 / 23px from
-  640px up. Daniel, 2026-07-30: most pages were too small to read comfortably,
-  and a sweep found 278 runs of 14px text on a 390px phone. The floors this site
-  holds to now: body copy ≥16px mobile and ≥17px desktop, secondary/meta ≥14px,
-  nothing interactive below 14px. **Do not "fix" a small label with an arbitrary
-  `text-[13px]`** — there are none left; move the rung or use `text-xs`.
+- Type scale: the bottom **seven** rungs of Tailwind's scale (`xs` … `3xl`) are
+  **re-pointed in globals.css**, once, right after the `@theme` block —
+  15.5 / 18 / 20 / 22 / 24 / 27 / 32px on a phone and
+  16 / 19 / 23 / 25.5 / 27 / 30 / 35px from 640px up. Daniel asked for this
+  twice on 2026-07-30: first because most pages were "too small to read
+  comfortably" (a sweep found 278 runs of 14px text on a 390px phone), and then
+  again on the built site — *"the text should be bigger, maybe 4px bigger, almost
+  everywhere"* — after setting the site's own accessibility zoom to 130% and
+  saying that was the size he wanted on by default. The floors now: body copy
+  ≥20px mobile and ≥23px desktop, secondary/meta ≥15.5px, nothing interactive
+  below 15.5px. **Do not "fix" a small label with an arbitrary `text-[13px]`**
+  — there are none left; move the rung or use `text-xs`.
+  Two things go with it. **`leading-<number>` is a fixed rem length, not a
+  ratio, so it does NOT move with the rungs** — use `leading-normal` /
+  `leading-relaxed` / `leading-snug`, never `leading-6`. And the display
+  headings are a separate ladder of `text-[Nrem]` call sites (carrying Bona
+  Nova's +12% compensation); they were raised by ≥4px a tier in the same pass
+  and the whole ladder is tabulated in the h1/h2 note in globals.css.
+  **The ONE exclusion is the process scrub's overlay copy** ("Not on the
+  animation" — Daniel). `.scrub-beat` / `.scrub-pill` carry a scoped variable
+  override that pins the old rungs, so raising the table cannot move them.
+- The accessibility panel **does not zoom itself**. `data-a11y-text-scale`
+  scales the whole page from the root font size; the dialog counter-zooms so it
+  stays visually identical at 100 / 115 / 130% (Daniel: "Accessibility should
+  probably stay the same size"). The hook is the `accessibility-dialog` class on
+  `Dialog.Popup` plus one block in globals.css — read the note there before
+  changing any size on that popup, because its `w-full` and its two `max-h`
+  values are corrected there by name.
 
 ## Forbidden actions
 

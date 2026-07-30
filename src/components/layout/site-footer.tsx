@@ -19,10 +19,10 @@ export function SiteFooter() {
 
   return (
     // The bottom padding is a RESERVATION, not styling: FloatingWhatsApp is
-    // fixed at the inline-start bottom corner (56px tall, 20px up) and
-    // BackToTop at the inline-end one from `md`, so without it the last thing
-    // on every route — the copyright line on /privacy and /terms, the footer
-    // nav on a phone — comes to rest underneath a button. 64px on a phone
+    // fixed at the inline-start bottom corner (56px tall, 20px up) and the
+    // accessibility launcher at the inline-end one, so without it the last
+    // thing on every route — the copyright line on /privacy and /terms, the
+    // footer nav on a phone — comes to rest underneath a button. 64px on a phone
     // clears the 76px the WhatsApp button occupies once the row's own py-7 is
     // counted; 48px does the same for the smaller desktop pair.
     <footer className="relative overflow-hidden border-t border-foreground/[0.08] bg-background pb-16 md:pb-12">
@@ -72,7 +72,7 @@ export function SiteFooter() {
                 The type SIZES are untouched — the footer's scale was already
                 argued out at the 44px-target rework above; this is weight and
                 ink only. */}
-            <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-foreground-soft">
+            <p className="mt-2 max-w-xl text-sm font-medium leading-normal text-foreground-soft">
               {t("ctaText")}
             </p>
           </div>
@@ -90,9 +90,26 @@ export function SiteFooter() {
           </LeadButton>
         </div>
 
-        {/* Columns */}
-        <div className="grid gap-10 py-14 text-sm md:grid-cols-[1.4fr_0.8fr_0.8fr]">
-          <div>
+        {/* ── Columns. TWO of them on a phone, three from `md` (2026-07-30) ──
+            The two nav lists used to stack, so a phone got one column roughly
+            900px long: the brand block, then every page link, then every legal
+            link, then the cookies control, and the copyright line somewhere off
+            the bottom. Daniel asked for the two lists side by side, and they fit
+            easily — the longest label in either is two short words.
+
+            `grid-cols-2` at the base with the brand block spanning both, then
+            the existing `md:grid-cols-[1.4fr_0.8fr_0.8fr]` untouched from `md`
+            up (with the span released so the three columns are three columns
+            again). No `dir` work is needed: a CSS grid in an RTL document lays
+            its columns out right to left on its own, so "pages" lands under the
+            wordmark on the right and "legal" beside it on the left.
+
+            The column gap is `gap-x-6`, not the row's `gap-10`: 40px of the
+            390px viewport spent on a gutter between two lists of short links is
+            padding nobody asked for. Row gap and the desktop gap are unchanged,
+            and the rows themselves keep their `min-h-11` tap targets. */}
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 py-14 text-sm md:grid-cols-[1.4fr_0.8fr_0.8fr] md:gap-10">
+          <div className="col-span-2 md:col-span-1">
             <Link
               href="/"
               data-a11y-no-underline
@@ -101,7 +118,7 @@ export function SiteFooter() {
               <BrandMark size={28} />
               {siteConfig.name}
             </Link>
-            <p className="mt-4 max-w-sm font-medium leading-6 text-foreground-soft">
+            <p className="mt-4 max-w-sm font-medium leading-normal text-foreground-soft">
               {t("blurb", { founder: founderDisplayName() })}
             </p>
             {/* `gap-1` with `min-h-11` on each row, not `gap-3` with a 32px

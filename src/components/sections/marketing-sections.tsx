@@ -65,7 +65,7 @@ export function PageShell({ children }: { children: ReactNode }) {
 
 export function Eyebrow({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-surface-2/85 px-3.5 py-1.5 text-[14px] font-semibold tracking-[0.04em] text-brand-accent shadow-card backdrop-blur-sm">
+    <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-surface-2/85 px-3.5 py-1.5 text-sm font-semibold tracking-[0.04em] text-brand-accent shadow-card backdrop-blur-sm">
       {/* A static dot. It used to carry `animate-ping` — a perpetual pulse on
           every section label on every page, which is a "live/urgent" signal
           attached to nothing that is live or urgent. See rule 4 in AGENTS.md:
@@ -101,14 +101,14 @@ export function SectionHeading({
       ) : null}
       <h2
         className={cn(
-          "text-[2.1rem] text-balance sm:text-[2.5rem]",
+          "text-[2.4rem] text-balance sm:text-[2.85rem]",
           gradient ? "text-gradient" : "text-foreground"
         )}
       >
         {title}
       </h2>
       {description ? (
-        <p className="mt-4 text-base leading-7 text-muted-foreground">
+        <p className="mt-4 text-base leading-relaxed text-muted-foreground">
           {description}
         </p>
       ) : null}
@@ -194,7 +194,7 @@ export function HeroSection() {
                 sentence its own block means the break is ours, it is the same
                 on a phone and on a desktop, and no neutral character can drift
                 across it. Nothing else is allowed back on this line. */}
-            <h1 className="mt-5 text-[2.5rem] leading-[1.06] text-balance sm:text-[3.35rem]">
+            <h1 className="mt-5 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
               <span className="block">{t("titleLead")}</span>
               {/* PINK, not bronze, and it is the same pink as the filled CTA:
                   `--headline-accent` resolves through `--rose-deep` (globals.css
@@ -217,7 +217,7 @@ export function HeroSection() {
 
         <div className="order-3 w-full max-w-3xl lg:col-start-1 lg:row-start-2 lg:self-start">
           <Reveal delay={160}>
-            <p className="mt-8 text-center text-lg leading-8 text-foreground lg:mt-6 lg:text-start">
+            <p className="mt-8 text-center text-lg leading-relaxed text-foreground lg:mt-6 lg:text-start">
               {t("subtitle")}
             </p>
           </Reveal>
@@ -453,7 +453,7 @@ export function ProcessSection() {
                       {/* Step number plate, over the lower corner of the photo. */}
                       <span
                         className={cn(
-                          "absolute bottom-3 end-3 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[14px] font-semibold shadow-card backdrop-blur-md",
+                          "absolute bottom-3 end-3 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-sm font-semibold shadow-card backdrop-blur-md",
                           tint.icon
                         )}
                       >
@@ -478,14 +478,18 @@ export function ProcessSection() {
                             letters apart into ש ל ב. Both gone — a small label
                             is made small by size and colour, not by spacing
                             letters a script does not letterspace. */}
-                        <span className="text-[14px] font-semibold tracking-[0.06em] text-subtle-foreground">
+                        <span className="text-sm font-semibold tracking-[0.06em] text-subtle-foreground">
                           {t("stepLabel")}{" "}
                           <span dir="ltr">
                             {number}
                           </span>
                         </span>
                       </div>
-                      <h3 className="mt-3 text-lg font-semibold leading-snug tracking-tight text-balance text-foreground sm:text-xl lg:text-[1.3rem]">
+                      {/* No `lg:` step any more: with the 0.14 scale `text-xl`
+                          is already 27px from 640px up, so the arbitrary rem
+                          this used to carry had become a SHRINK at the widest
+                          breakpoint rather than a step up. */}
+                      <h3 className="mt-3 text-lg font-semibold leading-snug tracking-tight text-balance text-foreground sm:text-xl">
                         {step.title}
                       </h3>
                       {/* Her line breaks are load-bearing here: the short closing
@@ -496,7 +500,7 @@ export function ProcessSection() {
                         {step.lines.map((line) => (
                           <p
                             key={line}
-                            className="text-sm leading-7 text-muted-foreground"
+                            className="text-sm leading-[1.75] text-muted-foreground"
                           >
                             {line}
                           </p>
@@ -608,7 +612,7 @@ export function ServicesTeaser() {
                     >
                       <Icon className="h-4.5 w-4.5" />
                     </span>
-                    <span className="text-sm font-medium leading-5 text-foreground-soft transition-colors group-hover:text-foreground">
+                    <span className="text-sm font-medium leading-tight text-foreground-soft transition-colors group-hover:text-foreground">
                       {service.title}
                     </span>
                   </Link>
@@ -777,7 +781,7 @@ function NodeLabel({
   children: string;
 }) {
   return (
-    <p className="flex items-center gap-2.5 text-[14px] font-semibold tracking-[0.05em] text-accent-ink">
+    <p className="flex items-center gap-2.5 text-sm font-semibold tracking-[0.05em] text-accent-ink">
       {node}
       {children}
     </p>
@@ -796,7 +800,7 @@ function OfferIncludes({
   return (
     <ul
       className={cn(
-        "space-y-2 text-sm leading-7 text-muted-foreground",
+        "space-y-2 text-sm leading-[1.75] text-muted-foreground",
         className
       )}
     >
@@ -894,10 +898,10 @@ export function OffersSection() {
 
             <div className="relative">
               <NodeLabel node={<ShellNode />}>{intro.label}</NodeLabel>
-              <h3 className="font-display mt-2 text-[1.7rem] leading-tight text-foreground sm:text-[2.15rem]">
+              <h3 className="font-display mt-2 text-[2rem] leading-tight text-foreground sm:text-[2.45rem]">
                 {intro.title}
               </h3>
-              <p className="mt-3 max-w-lg text-base leading-7 text-foreground-soft">
+              <p className="mt-3 max-w-lg text-base leading-relaxed text-foreground-soft">
                 {intro.body}
               </p>
               <OfferIncludes items={intro.includes} className="mt-4" />
@@ -924,7 +928,7 @@ export function OffersSection() {
                 <LeadButton
                   source="landing"
                   variant="brand"
-                  className="cta-hot h-14 w-full rounded-2xl px-6 text-[1.15rem] tracking-[0.01em] [&_svg]:size-5"
+                  className="cta-hot h-14 w-full rounded-2xl px-6 text-[1.4rem] tracking-[0.01em] [&_svg]:size-5"
                 >
                   {intro.cta}
                   <ArrowRight data-icon="inline-end" />
@@ -943,7 +947,11 @@ export function OffersSection() {
         <Reveal delay={120}>
           <div className="mt-12 flex items-center gap-4 sm:mt-14">
             <span aria-hidden className="h-px flex-1 bg-gold/25" />
-            <p className="text-center text-[14px] font-semibold tracking-[0.04em] text-subtle-foreground">
+            {/* `text-base`, not the `text-sm` the rest of the eyebrows wear:
+                Daniel named THIS string ("המסלולים שנדבר עליהם בשיחה") as his
+                example of type that is too small on a 27-inch monitor. It was
+                pinned at 14px and never moved with the scale at all. */}
+            <p className="text-center text-base font-semibold tracking-[0.04em] text-foreground-soft">
               {t("tracksEyebrow")}
             </p>
             <span aria-hidden className="h-px flex-1 bg-gold/25" />
@@ -1005,14 +1013,14 @@ export function OffersSection() {
                       `flex-wrap` because "מסלול הפנינה" + "₪2,880" does not fit
                       one line on a phone. */}
                   <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h3 className="font-display text-[1.7rem] leading-tight text-foreground sm:text-[1.9rem]">
+                    <h3 className="font-display text-[2rem] leading-tight text-foreground sm:text-[2.2rem]">
                       {track.title}
                     </h3>
                     <p className="text-base text-muted-foreground">
                       <Price>{track.price}</Price>
                     </p>
                   </div>
-                  <p className="mt-3.5 max-w-xl text-base leading-7 text-foreground-soft">
+                  <p className="mt-3.5 max-w-xl text-base leading-relaxed text-foreground-soft">
                     {track.fit}
                   </p>
                   {/* Two short items each, so on the wide card they sit side by
@@ -1030,7 +1038,7 @@ export function OffersSection() {
         </ol>
 
         <Reveal>
-          <p className="mt-9 text-center text-base leading-7 text-balance text-subtle-foreground">
+          <p className="mt-9 text-center text-base leading-relaxed text-balance text-subtle-foreground">
             {t("note")}
           </p>
         </Reveal>
@@ -1090,7 +1098,7 @@ export function AudienceSection() {
                   <h3 className="mt-4 text-base font-semibold leading-snug text-foreground">
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                  <p className="mt-1.5 text-sm leading-normal text-muted-foreground">
                     {item.text}
                   </p>
                 </div>
@@ -1100,7 +1108,7 @@ export function AudienceSection() {
         </ul>
 
         <Reveal className="mt-8 flex justify-center">
-          <p className="max-w-xl text-center text-sm leading-6 text-foreground-soft">
+          <p className="max-w-xl text-center text-sm leading-normal text-foreground-soft">
             {t("closing")}
           </p>
         </Reveal>
@@ -1158,7 +1166,7 @@ export function MomentsSection() {
                   >
                     <Icon className="h-5 w-5" />
                   </span>
-                  <p className="text-base leading-7 text-foreground-soft">
+                  <p className="text-base leading-relaxed text-foreground-soft">
                     {item}
                   </p>
                 </div>
@@ -1215,7 +1223,7 @@ export function WhySection() {
                 <p className="mt-4 text-base font-medium text-foreground">
                   {reason.title}
                 </p>
-                <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                <p className="mt-1.5 text-sm leading-normal text-muted-foreground">
                   {reason.text}
                 </p>
               </div>
@@ -1292,14 +1300,14 @@ export function FounderTeaser() {
               <p className="mt-10 text-xl font-semibold tracking-tight text-foreground">
                 {founderName}
               </p>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
+              <p className="mt-1 text-sm leading-normal text-muted-foreground">
                 {t("role")}
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-1.5">
                 {chips.map((chip) => (
                   <span
                     key={chip}
-                    className="rounded-full border border-brand/20 bg-brand-wash px-2.5 py-1 text-[14px] font-medium text-brand-accent"
+                    className="rounded-full border border-brand/20 bg-brand-wash px-2.5 py-1 text-sm font-medium text-brand-accent"
                   >
                     {chip}
                   </span>
@@ -1321,10 +1329,10 @@ export function FounderTeaser() {
             {/* Story */}
             <div className="relative">
               <Eyebrow>{t("eyebrow")}</Eyebrow>
-              <h2 className="mt-4 text-[2.1rem] text-balance sm:text-[2.5rem]">
+              <h2 className="mt-4 text-[2.4rem] text-balance sm:text-[2.85rem]">
                 {t("title")}
               </h2>
-              <p className="mt-5 text-lg leading-8 text-foreground-soft">
+              <p className="mt-5 text-lg leading-relaxed text-foreground-soft">
                 {t("body", {
                   brand: siteConfig.name,
                   founder: founderName,
@@ -1411,11 +1419,11 @@ export function FinalCta() {
           <div className="relative px-6 py-14 sm:px-10 sm:py-16">
             <div className="relative">
               <div className="text-center">
-                <h2 className="mx-auto max-w-2xl text-[2.1rem] text-balance sm:text-[2.5rem]">
+                <h2 className="mx-auto max-w-2xl text-[2.4rem] text-balance sm:text-[2.85rem]">
                   {t("titleLead")}
                   <span className="text-gradient">{t("titleHighlight")}</span>
                 </h2>
-                <p className="mx-auto mt-4 max-w-xl text-base leading-7 text-muted-foreground">
+                <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
                   {t("body")}
                 </p>
               </div>

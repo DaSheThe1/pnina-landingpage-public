@@ -12,6 +12,44 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.14.0] - 2026-07-31
+
+### The phone release: fast loading, a smooth animation, bigger and blacker text
+
+- **The site loads fast on phones again.** The animation's ~90-180 frames used
+  to all download at once the moment the page opened, ahead of everything the
+  page actually needed — that was the 15-second load, the header appearing
+  late, and the WhatsApp and accessibility buttons blinking in and out. Frames
+  now download a few at a time, at low priority, important ones first; the
+  page always wins.
+- **The animation itself is smooth.** Instead of holding every frame decoded
+  in memory (which made phones silently throw frames away and stutter
+  re-decoding them mid-scroll), the site keeps a small window of frames around
+  where you are and lets the rest go. While the animation fills the screen,
+  the sand simulation and other background effects pause — they were invisible
+  behind it and fighting it for the phone's GPU.
+- **Leaving the animation is easy now.** On the first or last step, a single
+  ordinary flick outward exits the section — the "catch" that stops fast
+  flings from skipping steps now applies only between steps. On desktop, one
+  mouse-wheel gesture moves exactly one step: no more double-scroll jumping
+  two steps, and no more small scrolls doing nothing at all.
+- **Text is bigger everywhere and genuinely darker.** Body text is now 20px on
+  phones and 23px on desktop (the size Daniel judged right at 130% zoom),
+  every heading tier is up at least 4px, and the ink is near-black. The one
+  place left alone is the animation overlay, as requested. The smallest grey
+  text now passes the AA readability standard even directly on the sand.
+- **The hero video plays with sound on a tap.** Same treatment as the about
+  page: it opens silent, a centered "הפעלה עם קול" invitation sits on it, and
+  tapping restarts it from the beginning with audio. Autoplay also no longer
+  depends on the page's JavaScript finishing — the fix for iPhones that showed
+  a frozen first frame. No video on the site offers a download menu anymore.
+- **Header keeps the page's own background.** The cream bar that used to
+  appear on scroll is gone; a hairline underlines the header instead.
+- **Footer links sit in two columns on phones**, and the back-to-top arrow now
+  shows on phones too.
+- **The accessibility panel no longer zooms itself** when you raise the text
+  size — the page grows, the controls stay put.
+
 ## [0.13.2] - 2026-07-30
 
 ### The animation locks properly on phones, white cards over the sand, and buttons that never hide
