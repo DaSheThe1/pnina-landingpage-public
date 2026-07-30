@@ -58,7 +58,21 @@ export function SiteFooter() {
             <p className="text-2xl font-medium tracking-tight text-foreground sm:text-3xl">
               {t("ctaTitle")}
             </p>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground">
+            {/* ── THE FOOTER TYPE IS ONE RUNG DARKER AND ONE STEP HEAVIER
+                (2026-07-30, launch night) ──
+                Daniel, reading the live footer over the sand: *"all the footer
+                text should be a little bit bolder and blacker so it will be
+                easier to view."*
+                This is the one region of the site with NO opaque card under it —
+                every other block of small type now sits on a surface, but the
+                footer sits straight on the photograph, which is exactly why it
+                was the first thing he noticed. So every line here moved up the
+                ink ladder (`--subtle-foreground` → `--muted-foreground` →
+                `--foreground-soft`) and picked up `font-medium`/`font-semibold`.
+                The type SIZES are untouched — the footer's scale was already
+                argued out at the 44px-target rework above; this is weight and
+                ink only. */}
+            <p className="mt-2 max-w-xl text-sm font-medium leading-6 text-foreground-soft">
               {t("ctaText")}
             </p>
           </div>
@@ -87,7 +101,7 @@ export function SiteFooter() {
               <BrandMark size={28} />
               {siteConfig.name}
             </Link>
-            <p className="mt-4 max-w-sm leading-6 text-muted-foreground">
+            <p className="mt-4 max-w-sm font-medium leading-6 text-foreground-soft">
               {t("blurb", { founder: founderDisplayName() })}
             </p>
             {/* `gap-1` with `min-h-11` on each row, not `gap-3` with a 32px
@@ -97,7 +111,7 @@ export function SiteFooter() {
             <div className="mt-6 flex flex-col gap-1">
               <a
                 href={`mailto:${siteConfig.email}`}
-                className="group flex min-h-11 w-fit items-center gap-2.5 text-brand-accent transition-colors hover:text-brand-hover"
+                className="group flex min-h-11 w-fit items-center gap-2.5 font-medium text-brand-accent transition-colors hover:text-brand-hover"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand-accent transition-colors group-hover:bg-brand/15">
                   <Mail className="h-4 w-4" />
@@ -106,7 +120,7 @@ export function SiteFooter() {
               </a>
               <a
                 href={`tel:${siteConfig.phoneE164}`}
-                className="group flex min-h-11 w-fit items-center gap-2.5 text-brand-accent transition-colors hover:text-brand-hover"
+                className="group flex min-h-11 w-fit items-center gap-2.5 font-medium text-brand-accent transition-colors hover:text-brand-hover"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand-accent transition-colors group-hover:bg-brand/15">
                   <Phone className="h-4 w-4" />
@@ -120,7 +134,11 @@ export function SiteFooter() {
                   `--whatsapp-ink`, which clears 4.5:1 in BOTH schemes (a
                   darkened green on paper, a lightened one on the dark canvas)
                   and still reads as WhatsApp. */}
-              <WhatsAppLink className="group flex min-h-11 w-fit items-center gap-2.5 text-whatsapp-ink transition-colors hover:text-whatsapp-ink-hover">
+              {/* `font-medium` only — the ink stays `--whatsapp-ink` rather than
+                  moving up the brown ladder with the rest of the footer. It is a
+                  brand colour doing a legibility job (see the note above) and
+                  darkening it toward brown would cost the recognition it is for. */}
+              <WhatsAppLink className="group flex min-h-11 w-fit items-center gap-2.5 font-medium text-whatsapp-ink transition-colors hover:text-whatsapp-ink-hover">
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#25d366]/12 text-whatsapp-ink transition-colors group-hover:bg-[#25d366]/20">
                   <WhatsAppIcon className="h-4 w-4" />
                 </span>
@@ -131,7 +149,7 @@ export function SiteFooter() {
                   href={siteConfig.profiles.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group flex min-h-11 w-fit items-center gap-2.5 text-brand-accent transition-colors hover:text-brand-hover"
+                  className="group flex min-h-11 w-fit items-center gap-2.5 font-medium text-brand-accent transition-colors hover:text-brand-hover"
                 >
                   <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand/10 text-brand-accent transition-colors group-hover:bg-brand/15">
                     <InstagramIcon className="h-4 w-4" />
@@ -146,14 +164,14 @@ export function SiteFooter() {
               24px at 390px. The height is padding, not type — the footer's
               type scale is unchanged. */}
           <nav aria-label={t("footerNav")} className="flex flex-col gap-1">
-            <p className="mb-2 font-medium text-xs uppercase tracking-wider text-subtle-foreground">
+            <p className="mb-2 font-semibold text-xs uppercase tracking-wider text-foreground-soft">
               {t("pages")}
             </p>
             {footerNavigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex min-h-11 w-fit items-center text-muted-foreground transition-colors hover:text-foreground"
+                className="flex min-h-11 w-fit items-center font-medium text-foreground-soft transition-colors hover:text-foreground"
               >
                 {tNav(item.key)}
               </Link>
@@ -161,14 +179,14 @@ export function SiteFooter() {
           </nav>
 
           <nav aria-label={t("legalNav")} className="flex flex-col gap-1">
-            <p className="mb-2 font-medium text-xs uppercase tracking-wider text-subtle-foreground">
+            <p className="mb-2 font-semibold text-xs uppercase tracking-wider text-foreground-soft">
               {t("legal")}
             </p>
             {legalNavigation.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex min-h-11 w-fit items-center text-muted-foreground transition-colors hover:text-foreground"
+                className="flex min-h-11 w-fit items-center font-medium text-foreground-soft transition-colors hover:text-foreground"
               >
                 {tNav(item.key)}
               </Link>
@@ -176,12 +194,12 @@ export function SiteFooter() {
             <CookieSettingsButton
               enabled={Boolean(publicEnv.ga4MeasurementId)}
               label={t("cookieSettings")}
-              className="w-fit text-muted-foreground transition-colors hover:text-foreground"
+              className="w-fit font-medium text-foreground-soft transition-colors hover:text-foreground"
             />
           </nav>
         </div>
 
-        <div className="flex flex-col items-start justify-between gap-3 border-t border-foreground/[0.06] py-7 text-xs text-subtle-foreground sm:flex-row sm:items-center">
+        <div className="flex flex-col items-start justify-between gap-3 border-t border-foreground/[0.06] py-7 text-xs font-medium text-muted-foreground sm:flex-row sm:items-center">
           <p>{t("rights", { year, brand: siteConfig.name })}</p>
           <p>{t("tagline")}</p>
         </div>

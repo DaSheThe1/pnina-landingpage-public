@@ -261,7 +261,15 @@ export function MessageVideo({
               type="button"
               onClick={expand}
               aria-label={labels.fullscreenAria}
-              className="absolute bottom-3 end-3 inline-flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-black/60 px-3 text-xs font-medium text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
+              // TOP-inline-end, moved off `bottom-3 end-3` on 2026-07-30 for the
+              // same reason as the hero clip's controls (the argument is written
+              // out in hero-video.tsx): the accessibility launcher is fixed at
+              // the viewport's bottom-inline-end corner, and this clip appears on
+              // /about and /thank-you, so at some scroll position the two always
+              // find each other. The top edge is out of reach of both
+              // bottom-pinned floating buttons. h-11, not h-9 — 44px touch
+              // minimum, matched to the hero clip's controls.
+              className="absolute top-3 end-3 inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 bg-black/60 px-3 text-xs font-medium text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
             >
               <Maximize2 className="h-3.5 w-3.5" />
               {labels.fullscreen}

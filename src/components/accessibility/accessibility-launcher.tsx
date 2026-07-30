@@ -199,9 +199,28 @@ export function AccessibilityLauncher() {
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
+      {/* ── IT HAS TO BE FINDABLE AGAINST THE PHOTOGRAPH (2026-07-30) ──
+          Daniel, testing the live site: *"the WhatsApp icon and the
+          accessibility one on the phone won't always show... sometimes one of
+          them is showing, sometimes none."*
+          For the WhatsApp button that was a real bug (it hid itself — see
+          floating-whatsapp.tsx). For THIS button it was not: it has no
+          visibility logic at all and never unmounts, which was confirmed by
+          measuring it at every route, scroll position and viewport — always
+          `opacity: 1`, always on screen. What varied was the sand BEHIND it.
+          It was `bg-surface-2` (cream) with a `/40` hairline border, designed
+          when the canvas was flat cream and the veil was still on. On the
+          full-strength photograph a cream disc with a 40%-opacity ring is
+          camouflage, and it appears and disappears as the sand's tone changes
+          under it — exactly the symptom he described.
+          So: the opaque card surface (white on paper, the dark card colour on
+          dark) and a real 2px bronze ring, which is the same answer the About /
+          thank-you cards got in this pass — a solid surface is what reads on
+          this background. Deliberately NOT as loud as the filled green FAB: it
+          must be findable, not compete with the page's one conversion action. */}
       <Dialog.Trigger
         aria-label={t("launcher")}
-        className="accessibility-launcher fixed z-[70] flex size-14 items-center justify-center rounded-full border border-brand-accent/40 bg-surface-2 text-brand-accent shadow-card outline-none transition-colors hover:border-brand-accent/70 hover:bg-surface-3 hover:text-brand-hover focus-visible:border-brand-accent focus-visible:ring-3 focus-visible:ring-brand-accent/35"
+        className="accessibility-launcher fixed z-[70] flex size-14 items-center justify-center rounded-full border-2 border-brand-accent/60 bg-surface-1 text-brand-accent shadow-card outline-none transition-colors hover:border-brand-accent hover:bg-surface-2 hover:text-brand-hover focus-visible:border-brand-accent focus-visible:ring-3 focus-visible:ring-brand-accent/35"
       >
         <Accessibility aria-hidden className="size-6" />
       </Dialog.Trigger>

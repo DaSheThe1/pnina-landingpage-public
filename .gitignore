@@ -71,3 +71,9 @@ next-env.d.ts
 
 # office app lock files (LibreOffice/OpenOffice)
 .~lock.*#
+
+# Local tool state and stray generation outputs (committed once by mistake, 2026-07-30)
+.wrangler/
+.next-e2e-alignment-2/
+skills-lock.json
+k*hf_*.png

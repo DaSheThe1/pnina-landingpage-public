@@ -78,22 +78,30 @@ export default async function Home({
       <JsonLd data={faqPageSchema(faqs)} />
       <HeroSection />
       <FounderTeaser />
-      <section id={sectionIds.audience} className="scroll-mt-20">
-        <AudienceSection />
-      </section>
-      {/* The "הליווי נבנה סביבך, לא סביב תבנית" teaser used to sit here, between
-          the audience grid and the process. Removed from the home page on
-          2026-07-29 at Daniel's request: it said the same thing the audience
-          section above it had just said, in weaker words and a busier frame.
-          `ServicesTeaser` itself is kept (unmounted, like `QuoteReveal`) so the
-          copy is one line away if it ever earns a place on /about — see
-          docs/02-site-structure.md. */}
-      {/* `ProcessExperience`, not `ProcessSection`: it renders the static four
+      {/* ── PROCESS BEFORE AUDIENCE (2026-07-30, Daniel) ──
+          The process/animation section moved ABOVE "למי זה מתאים" at Daniel's
+          request: "I think it's nicer and more important." The pearl scrub is
+          the site's showpiece, and it now lands right after her story instead
+          of after the audience grid. The identification-before-reassurance
+          argument in the header comment still holds — her story is still
+          first; only the how-it-works and the who-it-is-for swapped places.
+
+          `ProcessExperience`, not `ProcessSection`: it renders the static four
           cards on the server and for every visitor who has asked for less
           motion or less data, and upgrades to the scroll-scrubbed pearl only
           when the frames actually exist. Same anchor, same copy either way. */}
       <section id={sectionIds.process} className="scroll-mt-20">
         <ProcessExperience />
+      </section>
+      {/* The "הליווי נבנה סביבך, לא סביב תבנית" teaser used to sit between
+          the audience grid and the process. Removed from the home page on
+          2026-07-29 at Daniel's request: it said the same thing the audience
+          section had just said, in weaker words and a busier frame.
+          `ServicesTeaser` itself is kept (unmounted, like `QuoteReveal`) so the
+          copy is one line away if it ever earns a place on /about — see
+          docs/02-site-structure.md. */}
+      <section id={sectionIds.audience} className="scroll-mt-20">
+        <AudienceSection />
       </section>
       <OffersSection />
       <MomentsSection />

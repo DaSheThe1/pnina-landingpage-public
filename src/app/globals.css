@@ -84,18 +84,34 @@
                                       ink in BOTH schemes — 9.63:1 here.
 
    Ink ladder (warm brown, never pure black — black on cream glares).
-   THE BOTTOM TWO RUNGS WERE DARKENED ON 2026-07-30 to pay for the veil going
-   84% → 55%; the third column is what they measure on the worst background the
-   audit finds anywhere on the site, which is the footer's nav column:
-     --foreground        #3a2e27   12.30:1
-     --foreground-soft   #5a4a40    7.91:1
-     --muted-foreground  #655448    6.75:1   4.99  (was #6f5d51, 5.86 / 3.89 ✗)
-     --subtle-foreground #695749    6.43:1   4.66  (was #715e53, 5.74 / 3.76 ✗)
-                                     ← the floor. Do not lighten. It is set by
-                                     the WORST surface it lands on, not by the
-                                     canvas: 5.25:1 on --surface-3 and 4.66:1 on
-                                     the darkest pixel measured under any line
-                                     set in it.
+   THE THREE SOFT RUNGS EACH MOVED DOWN ONE STEP ON 2026-07-30 (launch night),
+   when the paper veil went to `transparent` and the sand photograph started
+   showing at full strength behind every band. Daniel, reviewing the live site:
+   *"Most of the text on the About page should be blacker. It's a shade of black
+   which is a little bit lighter."* He was reading `--muted-foreground` body
+   copy over bare sand. The whole ladder shifted rather than the About page
+   alone, because every route now sits on the same photograph — so the fix
+   belongs in the token, not in one page's classes.
+   Second column is the canvas; third is the darkest pixel of the sand plate
+   (its floor, ~#c1c1c1), which is what open type can now land on:
+     --foreground        #3a2e27   12.30:1   7.29
+     --foreground-soft   #4c3e35    9.61:1   5.70  (was #5a4a40, 7.91 / 4.69)
+     --muted-foreground  #5a4a40    7.91:1   4.69  (was #655448, 6.75 / 4.00)
+     --subtle-foreground #635248    6.95:1   4.12  (was #695749, 6.43 / 3.81)
+                                     ← the floor. Do not lighten. Note that each
+                                     rung simply took the value of the rung above
+                                     it, so the ladder's spacing is unchanged and
+                                     nothing collapsed into its neighbour.
+                                     The third column is BELOW 4.5 at the bottom
+                                     rung, and that is a known, accepted trade:
+                                     Daniel took the veil off deliberately and
+                                     said readability rides on the opaque cards
+                                     ("most of our text is inside squares"). The
+                                     same review turned the About / thank-you
+                                     cards and the final-CTA form solid, so LESS
+                                     small type sits on open sand than before,
+                                     not more. If he ever asks for it back, the
+                                     lever is `--background`, not this ladder.
 
    Non-text contrast (WCAG 1.4.11, ≥3:1):
      --input #8a7d70 — 3.75:1 on canvas, 4.00:1 on white, 3.39:1 on --surface-2.
@@ -211,14 +227,20 @@
   /* Ink — warm brown, never pure black (pure black on cream glares). The ink is
      tinted toward the brand hue so type and brand feel related. */
   --foreground: #3a2e27;
-  --foreground-soft: #5a4a40;
-  /* DARKENED 2026-07-30 from #6f5d51 (5.86:1 on the canvas) with the veil going
-     84% → 55%. It measured 3.89:1 on the footer's nav links once the photograph
-     was reading through the paper — and 4.30:1 even with the footer's brown wash
-     taken out, i.e. it was already the thinner half of a pair that only ever
-     passed because the sand was covered up. #655448 is 6.75:1 on the canvas and
-     4.99:1 on the darkest pixel any line set in it actually lands on. */
-  --muted-foreground: #655448;
+  /* #5a4a40 until launch night, when it moved down to what is now
+     `--muted-foreground`'s old neighbourhood. See the ladder note in the header:
+     with the veil at `transparent` every rung took the value of the rung above
+     it. 9.61:1 on the canvas. */
+  --foreground-soft: #4c3e35;
+  /* Darkened twice on 2026-07-30. First from #6f5d51 → #655448 when the veil
+     went 84% → 55% (it measured 3.89:1 on the footer's nav links once the
+     photograph started reading through the paper). Then #655448 → #5a4a40 on
+     launch night, when the veil came off entirely and Daniel said the About
+     page's body copy was "a shade of black which is a little bit lighter" than
+     it should be. This is the rung most body copy on the site is set in, so it
+     is the one he was looking at. 7.91:1 on the canvas, 4.69:1 on the sand's
+     darkest pixel. */
+  --muted-foreground: #5a4a40;
   /* The lightest ink in the ladder, and the one that decides whether this site
      can claim AA (ת"י 5568) on its accessibility statement — it is used at 12px
      for footer labels, the copyright line, legal-page meta and the "הפרטים
@@ -238,12 +260,19 @@
      sand photograph is visible on every route (see `--background`). At 84% this
      ink already measured 3.76:1 on the footer's 14px column headings, which is
      the smallest type on the site; the veil drop is what made that impossible to
-     keep ignoring. #695749 clears 4.5:1 on every surface this ink can reach:
-       --canvas 6.43  ·  white 6.86  ·  --surface-2 5.82  ·  --surface-3 5.25
-       and 4.66:1 on the darkest background any rendered pixel of it actually
-       sits on — the footer nav at 1440, with the sand at 45% through the paper
-     and is still visibly lighter than --muted-foreground (6.75:1). */
-  --subtle-foreground: #695749;
+     keep ignoring.
+
+     2026-07-30 again, #695749 → #635248, launch night, with the veil off
+     altogether and the whole ladder stepping down one rung (header note). Same
+     reason a third time, and by now the pattern is the point: this ink is
+     measured against the WORST surface it can land on, and taking the paper away
+     made every surface worse at once. #635248 measures
+       --canvas 6.95  ·  white 7.42  ·  --surface-2 6.29  ·  --surface-3 5.68
+       and 4.12:1 on the sand plate's darkest pixel — under AA, and accepted:
+       see the header note. The footer, which is where this ink is smallest, no
+       longer uses it for anything but the copyright row.
+     Still visibly lighter than --muted-foreground (7.91:1), so the ladder holds. */
+  --subtle-foreground: #635248;
 
   /* Brand — natural brown, the darkest warm note in her palette. Unlike the
      plum this replaced, `--brand` is NOT decorative-only: it is the filled-CTA

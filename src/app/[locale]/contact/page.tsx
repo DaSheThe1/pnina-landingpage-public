@@ -87,7 +87,7 @@ export default async function ContactPage({
               transform would fight position:sticky. */}
           <div className="self-start lg:sticky lg:top-24">
             <Reveal>
-              <div className="ring-shine relative overflow-hidden rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6 shadow-card md:p-8">
+              <div className="ring-shine relative overflow-hidden rounded-2xl border border-foreground/[0.08] bg-surface-1 p-6 shadow-card md:p-8">
                 <div className="hairline-top absolute inset-x-0 top-0" />
                 <ContactForm source="contact" />
               </div>
@@ -112,7 +112,7 @@ export default async function ContactPage({
                 </ul>
               </div>
 
-              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
+              <div className="rounded-2xl border border-foreground/[0.08] bg-surface-1 p-6">
                 <p className="font-medium text-xs uppercase tracking-wider text-subtle-foreground">
                   {t("howItWorksLabel")}
                 </p>
@@ -144,7 +144,7 @@ export default async function ContactPage({
                 </ol>
               </div>
 
-              <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
+              <div className="rounded-2xl border border-foreground/[0.08] bg-surface-1 p-6">
                 <ul className="space-y-3">
                   {assurances.map((text, i) => {
                     const Icon = assuranceIcons[i] ?? ShieldCheck;

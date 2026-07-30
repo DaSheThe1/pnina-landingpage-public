@@ -1196,7 +1196,19 @@ export function WhySection() {
         <div className="grid gap-4 sm:grid-cols-2">
           {reasons.map((reason, i) => (
             <Reveal key={reason.title} delay={i * 80} className="h-full">
-              <div className="group h-full cursor-pointer select-none rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:bg-foreground/[0.04] hover:shadow-card">
+              {/* SOLID `surface-1`, not the old `bg-foreground/[0.02]` tint
+                  (2026-07-30). That 2% wash was designed to sit on flat cream,
+                  where it read as a faint card; on the full-strength sand
+                  photograph it reads as nothing at all — the sand shows straight
+                  through and the four promises turn muddy. Daniel: *"the square
+                  should be white to give a good contrast."*
+                  `surface-1` is the right token in BOTH schemes: it is literally
+                  white on paper and the documented card surface (#27201a) on
+                  dark, so this stays a lifted card rather than becoming a glaring
+                  white slab in a dark room.
+                  The hover no longer tints the fill — an opaque card has nowhere
+                  to go — so the lift, the brand border and the shadow carry it. */}
+              <div className="group h-full cursor-pointer select-none rounded-xl border border-foreground/[0.08] bg-surface-1 p-5 transition-all duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-card">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-foreground/12 bg-brand/10 text-brand-accent transition-all duration-300 group-hover:scale-110 group-hover:border-brand/40 group-hover:bg-brand/20">
                   <CheckCircle2 className="h-5 w-5" />
                 </div>
@@ -1382,14 +1394,21 @@ export function FinalCta() {
     <section className="bg-background px-6 pb-24 pt-4">
       <div className="mx-auto max-w-6xl">
         <Reveal>
-          <div className="relative overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1 px-6 py-14 sm:px-10 sm:py-16">
-            {/* The old wash ran at 0.5 alpha and was gone by 60%, which drew a
-                visible ring across the card where the falloff ended. Softer
-                fill, later falloff, same warmth. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -top-32 left-1/2 h-80 w-[44rem] -translate-x-1/2 aurora-cta animate-aurora rounded-full blur-[80px]"
-            />
+          {/* NO PANEL HERE, DELIBERATELY (2026-07-30, launch night).
+              This used to be a `bg-surface-1` card — pure white, full-width,
+              rounded, bordered — with the form card sitting on it in cream. Two
+              stacked surfaces for one ask. Daniel, reviewing on the sand: *"I
+              don't see the reason why we need a bit larger white square."* He is
+              right; the outer one was doing nothing the inner one wasn't.
+              So the heading and the WhatsApp line now sit straight on the sand
+              like every other section's heading does, and the form card below is
+              the section's ONE surface. Do not re-wrap this in a panel. */}
+          {/* The gold aurora wash that used to sit here went with the panel. It
+              was a light source FOR the white card — and with the card gone it
+              had nothing to warm, no `overflow-hidden` left to clip it, and at
+              `w-[44rem]` it would have pushed a horizontal scrollbar onto every
+              390px phone. The sand is the warmth now. */}
+          <div className="relative px-6 py-14 sm:px-10 sm:py-16">
             <div className="relative">
               <div className="text-center">
                 <h2 className="mx-auto max-w-2xl text-[2.1rem] text-balance sm:text-[2.5rem]">
@@ -1401,7 +1420,13 @@ export function FinalCta() {
                 </p>
               </div>
 
-              <div className="mx-auto mt-9 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2/80 p-6 shadow-card backdrop-blur-sm sm:p-7">
+              {/* SOLID, not `surface-2/80`. The 80% was tuned against the white
+                  panel that used to be behind it — the sand it now sits on is
+                  darker and far busier, and 20% of a photograph coming through
+                  the surface a woman types her phone number on is both a
+                  contrast problem and a visual one. Same colour, no transparency,
+                  no backdrop blur (nothing left to blur). */}
+              <div className="mx-auto mt-9 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2 p-6 shadow-card sm:p-7">
                 <ContactForm source="landing" />
               </div>
 

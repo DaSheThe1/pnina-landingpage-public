@@ -12,6 +12,30 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.13.2] - 2026-07-30
+
+### The animation locks properly on phones, white cards over the sand, and buttons that never hide
+
+- **The animation section behaves on phones.** A fast flick used to sail
+  straight past the first step (or, coming from below, past all of them).
+  Now the section catches arriving momentum and holds the step you landed
+  on; one flick still moves exactly one step, and the gentle no-yank entry
+  stays.
+- **The animation moved up.** It now comes right after her story, above
+  "למי זה מתאים".
+- **Cards are solid white over the sand.** The "מה שחשוב לי שתדעי מראש"
+  cards, the thank-you steps, and the contact page's form and info cards no
+  longer let the photograph bleed through the surface you read and type on.
+  The inline lead form also lost its extra outer white panel: one clean card.
+- **Text got darker and the footer got bolder** so everything reads
+  comfortably against the photograph.
+- **The WhatsApp and accessibility buttons never hide anymore.** The
+  WhatsApp bubble used to step aside while the video was on screen (it
+  looked like a bug, and hid the highest-converting action exactly at the
+  top of the page); and the accessibility button was a cream circle
+  camouflaged against the sand. Both are always visible now, and the video's
+  own controls moved to the top corners of the clip so nothing overlaps them.
+
 ## [0.13.1] - 2026-07-30
 
 ### Animations for everyone, the photograph everywhere, and a gentler animation section

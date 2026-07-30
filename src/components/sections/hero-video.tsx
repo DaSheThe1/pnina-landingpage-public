@@ -177,16 +177,11 @@ export function HeroVideo() {
       />
 
       <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_var(--shadow-strong)]">
-        {/* `data-fab-avoid`: the floating WhatsApp button steps aside while this
-            frame is on screen. Its fixed corner and this frame's pause control
-            share the same corner of a 390px viewport, and the button was
-            sitting on top of the one control WCAG 2.2.2 requires to be
-            reachable. FloatingWhatsApp picks the attribute up by selector —
-            nothing else is wired between the two files. */}
-        <div
-          data-fab-avoid
-          className="relative aspect-[9/16] overflow-hidden rounded-[1.6rem] bg-foreground"
-        >
+        {/* This used to carry `data-fab-avoid`, which made the floating WhatsApp
+            button fade out whenever this frame was on screen. That is gone — see
+            the header of floating-whatsapp.tsx. The collision it was avoiding is
+            now solved by where the pause button sits (just below). */}
+        <div className="relative aspect-[9/16] overflow-hidden rounded-[1.6rem] bg-foreground">
           {/* The branded poster panel sits underneath and shows whenever no
               video can play: no video supplied yet, a slow connection, or a
               blocked autoplay. It is designed to look deliberate rather than
@@ -223,15 +218,32 @@ export function HeroVideo() {
             <>
               {/* WCAG 2.2.2: anything that moves for more than five seconds
                   needs a way to stop it, and this clip is a minute long and
-                  starts on its own. Opposite corner from the fullscreen
-                  button, same treatment, always visible — not a hover-reveal,
-                  which is unreachable on the phones most of these visitors
-                  are holding. */}
+                  starts on its own. Always visible — not a hover-reveal, which
+                  is unreachable on the phones most of these visitors are
+                  holding.
+
+                  ── BOTH CONTROLS LIVE ON THE TOP EDGE, AND THAT IS
+                  LOAD-BEARING (2026-07-30) ──
+                  They sat at `bottom-3 start-3` and `bottom-3 end-3` until
+                  Daniel's launch review. The site has TWO bottom-pinned floating
+                  buttons — WhatsApp at the viewport's bottom-inline-start,
+                  the accessibility launcher at bottom-inline-end — and at
+                  390x844 this clip's bottom corners collided with both: 12px
+                  into the WhatsApp button, and a measured 17x8px into the
+                  accessibility launcher. The old answer was to make the WhatsApp
+                  button hide itself whenever this clip was on screen, i.e. hide
+                  it at the top of the home page; Daniel asked for both floating
+                  buttons to simply always show.
+                  So the controls moved instead of the buttons. The top edge is
+                  the one place a bottom-pinned FAB can never reach, and on these
+                  9:16 clips it is the better edge anyway — the burned-in captions
+                  sit along the bottom.
+                  Keep both of these out of the bottom corners. */}
               <button
                 type="button"
                 onClick={togglePlay}
                 aria-label={playing ? t("pause") : t("play")}
-                className="absolute bottom-3 start-3 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/15 bg-black/60 text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
+                className="absolute top-3 start-3 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/15 bg-black/60 text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
               >
                 {playing ? (
                   <Pause className="h-3.5 w-3.5 fill-current" />
@@ -244,7 +256,11 @@ export function HeroVideo() {
                 type="button"
                 onClick={expand}
                 aria-label={t("fullscreenAria")}
-                className="absolute bottom-3 end-3 inline-flex h-9 items-center gap-2 rounded-lg border border-white/15 bg-black/60 px-3 text-xs font-medium text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
+                // `top-3 end-3` — the opposite corner of the SAME (top) edge as
+                // the pause button. See the note above for why neither of these
+                // may sit at the bottom. h-11 matches the pause button; both
+                // were h-9 (36px), under the 44px touch minimum.
+                className="absolute top-3 end-3 inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 bg-black/60 px-3 text-xs font-medium text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
               >
                 <Maximize2 className="h-3.5 w-3.5" />
                 {t("fullscreen")}

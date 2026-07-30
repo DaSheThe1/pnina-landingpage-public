@@ -156,7 +156,17 @@ export default async function ThankYouPage({
               const Icon = nextStepIcons[i] ?? MessageCircle;
               return (
                 <Reveal key={title} delay={i * 90} className="h-full">
-                  <div className="h-full rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
+                  {/* SOLID `surface-1`, same call as the /about "why" cards
+                      (2026-07-30). The old `bg-foreground/[0.02]` tint was built
+                      for a flat cream band; with the paper veil off, the sand
+                      photograph reads straight through it and these three steps
+                      stop looking like cards. `surface-1` is white on paper and
+                      the card surface on dark, so it lifts in both schemes.
+
+                      This also retires the `pt-10` contrast worry noted above:
+                      "מה עכשיו" is still open type, but the steps under it are
+                      now on opaque cards rather than floating on the plate. */}
+                  <div className="h-full rounded-2xl border border-foreground/[0.08] bg-surface-1 p-6">
                     {/* The step number sits WITH the icon, not pinned to the
                         far corner. It used to be `absolute end-5 top-5`, which
                         stranded a tiny "01" across the card from the thing it
