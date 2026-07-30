@@ -16,15 +16,24 @@ Four specs in `e2e/`, written and reviewed but **not currently runnable**:
 
 | Spec | Covers |
 | --- | --- |
-| `smoke.spec.ts` | every route renders, one `<h1>` each, no console errors, `lang`/`dir`, alt text on every image, the 1202 crisis line is present |
+| `smoke.spec.ts` | every route renders, one `<h1>` each, no console errors, `lang`/`dir`, alt text on every image, the real contact details are in the footer |
 | `navigation.spec.ts` | header anchors scroll into the funnel, page links, logo home, all three legal links, mobile menu |
 | `lead-form.spec.ts` | dialog open/close/Escape, validation, a valid lead reaching `/thank-you`, **that the payload carries no field beyond name/phone/source/language/company**, the lectures CTA tagging its source, and a server failure keeping the visitor on the form |
 | `contact-api.spec.ts` | the API contract: bad input, strict-schema rejection of unknown fields, honeypot, the 503-with-an-email path, health |
 
 Two of these are worth keeping even if the suite is ever trimmed: the payload-key
 assertion in `lead-form.spec.ts` enforces the privacy boundary from `AGENTS.md`
-in code, and the crisis-line assertion in `smoke.spec.ts` means removing that
-link has to be a deliberate act.
+in code, and the footer-contact assertion in `smoke.spec.ts` guards against a
+regression to the scaffold's placeholder phone number, which would send every
+enquiry to a stranger. (The crisis-line assertion that used to be named here is
+gone with the crisis line itself — see the note at `e2e/smoke.spec.ts:61`.)
+
+**Two specs are stale as of v0.6.0** and will fail once the harness is fixed:
+`navigation.spec.ts` follows a `/lectures` nav link that no longer exists (the
+route is deliberately unlinked and noindexed until Phase 1), and both it and
+`smoke.spec.ts` still visit `/lectures` directly, which is fine. They are left
+untouched rather than half-fixed against a harness nobody can run — updating
+them belongs with the Phase 1 work that puts the link back.
 
 ## ⚠️ Known issue: the harness cannot start the app
 

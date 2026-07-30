@@ -4,20 +4,27 @@ Read this file plus `README.md` and `docs/00-index.md` before editing.
 
 ## Project summary
 
-Hebrew-first landing page for **PLACEHOLDER_שם_מלא**, who accompanies women who
-have experienced sexual assault. One goal: get a woman to leave a name and a
-phone number so she can be called back for a first conversation at no cost.
+Hebrew-first landing page for **פנינה פאף** (Penina Phaff), who accompanies
+women who have experienced sexual assault. One goal: get a woman to leave a name
+and a phone number so she can be called back for a first conversation at no cost.
 A secondary audience — organisations booking a lecture — has its own page and
-its own CTA (`/lectures`).
+its own CTA (`/lectures`). It carries her real talk ("שכבות של פנינה") as of
+Phase 1, so it is linked from the nav, indexed and back in the sitemap.
+
+The site is served at **peninaphaff.com**. That host lives in exactly one place,
+`DOMAIN` in `src/config/site.ts`; `public/CNAME` is generated from it. Never
+write a hostname anywhere else.
 
 Next.js App Router + TypeScript + Tailwind 4 + next-intl, pnpm, Playwright.
 **Hebrew-only** (single `he` locale, RTL, served at the root). No database, no
 payments, no client area. Scaffolded from the `yarin-landingpage` template; the
 next-intl machinery stays so English can be added later.
 
-**The client has not delivered most of her content yet.** Everything she still
-owes is tracked in `docs/01-client-intake.md`, and every unconfirmed value in the
-code is a loud `PLACEHOLDER_*`. Do not invent replacements for them.
+**Most of her content is in as of Phase 1** (her sections, her audience list,
+her lecture, her prices). What is still outstanding is tracked in
+`docs/01-client-intake.md` and `docs/12-redesign-plan.md` §C, and every
+unconfirmed value in the code is a loud `PLACEHOLDER_*`. Do not invent
+replacements for them, and do not upgrade "she said roughly X" into a number.
 
 ## This site is not a normal marketing site
 
@@ -25,34 +32,111 @@ The people this site is built for arrive after a sexual assault, often in
 distress, sometimes on a device someone else can see. That changes what "good"
 means here, and these rules are not stylistic preferences:
 
-1. **Never add a free-text field to the lead form.** Name and phone, nothing
-   else. A "tell me a bit about what happened" box would create a permanent
-   record of the most sensitive thing a person could write, sitting in an n8n
-   execution log. See the header comment in `src/lib/contact-schema.ts`.
-2. **Never present invented testimonials as real.** `testimonialsAreSamples`
-   stays `true` until real, consented quotes replace the placeholders. Fabricated
-   testimony about trauma is not a marketing shortcut. Read
-   `docs/04-testimonials-policy.md` before touching anything testimonial-shaped.
-3. **Never invent numbers.** Every stat in `src/content/stats.ts` is `0` and the
-   section hides itself while they all are. "עזרתי ל-200 נשים" is a claim about
-   real people; if it is not true it is a cruel lie. Only Pnina supplies these.
+1. **Exactly ONE optional free-text field on the lead form, and it is hers.**
+   The form is name + phone + Pnina's own question, "מה הכי היית רוצה שיקרה
+   בעקבות השיחה שלנו?" (field name `question`, approved 2026-07-29 — docs/12,
+   D1). That question asks what a woman wants to HAPPEN NEXT, not what happened
+   to her, and that distinction is the entire safety argument: a "tell me a bit
+   about what happened" box would create a permanent record of the most
+   sensitive thing a person could write, sitting in an n8n execution log, a
+   spreadsheet and an inbox. So:
+   - it stays **optional** — never required, never validated, never nagged for;
+   - it stays **alone** — never a second free-text field;
+   - it stays **her wording** — never re-phrased into a prompt to describe the
+     assault, and never widened past its 300-character cap;
+   - it is **never tracked**. `AnalyticsEvent` must not learn it exists, and
+     nothing about its contents reaches analytics.
+   `contactSchema` stays `.strict()`, so anything else is rejected outright.
+   Changing it means changing `src/lib/contact-schema.ts` AND its hand-kept copy
+   in `worker/src/contact.js` in the same commit. Read the header comment in the
+   schema file first.
+2. **Only real, consented testimonial material — never invented.** The quotes
+   and screenshots on the site now ARE real: messages Pnina received and shared
+   publicly herself, which is why `testimonialsAreSamples` in
+   `src/content/testimonials.ts` is correctly `false` and the section shows
+   `privacyNote` rather than a "these are examples" disclaimer. The invariant is
+   not the value of that flag — it is that the flag must always tell the truth
+   about what is on screen. The moment anything illustrative or placeholder-
+   shaped goes back in, it flips to `true` in the same commit.
+   Third-party identity in a screenshot (a face, a handle, a phone number) is
+   redacted by `scripts/media/redact-testimonials.mjs`, never by hand.
+   Read `docs/04-testimonials-policy.md` before touching anything
+   testimonial-shaped. Fabricated testimony about trauma is not a marketing
+   shortcut.
+3. **Never invent numbers.** "עזרתי ל-200 נשים" is a claim about real people; if
+   it is not true it is a cruel lie. The site therefore carries NO counters:
+   the placeholder stats strip (`stats.ts` + `StatsSection`, every value `0`)
+   was deleted rather than kept as an empty frame, and `MomentsSection` does
+   that slot's job with five things she has witnessed and no arithmetic. If
+   Pnina ever supplies real, checkable figures, a strip gets built then — from
+   her numbers, never from plausible ones. The same rule governs prices: the
+   only ones on the site (₪490 / ₪990 / ₪2,880) are hers.
 4. **No pressure mechanics.** No countdown timers, no "only 2 spots left", no
    flashing discounts. The template's always-on pulsing price animation was
    removed for exactly this reason (it also overrode `prefers-reduced-motion`
-   with `!important`). The price funnel itself is fine — anchor, strike, free —
-   it just does not throb.
-5. **Honour `prefers-reduced-motion` with no exceptions.** No `!important`
-   escapes in `globals.css`. Nothing on this site animates meaning.
+   with `!important`). The funnel it belonged to is gone too: the offer
+   (`OffersSection`) is the free שיחת היכרות as one panel carrying the section's
+   ONLY button, with the two tracks below it as two equal columns — track prices
+   as small facts, no strikethrough, no badge, no `featured` flag, no winner. Do
+   not reintroduce a struck-through "before" price; the only ones that ever
+   existed here were invented.
+   **That panel — and ONLY that panel — may be loud (Daniel, 2026-07-29):** warm
+   gold wash, a hot gradient CTA, "ללא עלות" set larger than anything in the
+   section but its h2, and a one-time entrance where the ₪490 lands, a gold
+   arrow draws toward the gift and light crosses it once. The licence is about
+   JOY and it stops at the panel's edge. It is not a licence to loop anything:
+   no throb, no timed sheen, no countdown, no scarcity, nothing that repeats
+   while she reads. Loud once is enthusiasm; loud forever is pressure. The line
+   is argued in full at the head of `src/components/motion/free-call-anchor.tsx`
+   and in globals.css §9.
+5. **Honour `prefers-reduced-motion` with no exceptions.** Nothing on this site
+   animates meaning. Since 2026-07-30 there are TWO ways to ask for less of it —
+   the device's own setting, and the "הפחתת תנועה" switch in the site's
+   accessibility panel — and every gate must honour both. In JavaScript that
+   means `usePrefersReducedMotion` (`src/components/motion/use-reduced-motion.ts`)
+   or `prefersReducedMotion()` (`src/lib/eval-flags.ts`), never a bare
+   `matchMedia` call.
+   **No `!important` escapes** — meaning nothing may `!important` its way PAST
+   the reduced-motion block. That block itself uses the flag, and has to: it has
+   to outrank the more specific motion-system rules further down the file. The
+   test is simple — never put `!important` on something that MOVES.
+   The one place the hero clip differs is documented in `hero-video.tsx`: it
+   autoplays for everyone (muted, captioned, always-visible pause control, WCAG
+   2.2.2) by Daniel's 2026-07-29 call, and only the panel's own switch stops it.
+   The ONE thing that looks like an exception is not one: `?motion=force`
+   (globals.css §7, `src/lib/eval-flags.ts`) is a TEMPORARY evaluation override
+   that a person can only switch ON by typing a query parameter, because Daniel
+   reviews this site on a machine with reduce-motion enabled and otherwise
+   cannot see the motion work. Since 2026-07-29 it is **sticky**, at his
+   request: typing it once stores `pnina:eval-motion` in `localStorage`, an
+   inline script re-applies it before the first paint on later loads, and
+   `?motion=reset` clears it. That changes nothing for a visitor — the key is
+   created by that one keystroke and by nothing else, so a browser that has
+   never had the parameter typed into it stores nothing and renders exactly as
+   before. It is deleted with the `?hover=` switcher at the end of the redesign
+   round. **Do not widen it beyond that keystroke: no default, no UI control,
+   no second stored preference, and never a way for a visitor to end up with
+   motion forced on without having asked.**
 6. **No session-replay or form-capture analytics, ever.** Not Hotjar, not
    Clarity, not FullStory. Recording what these visitors read or type is a
    serious breach. `AnalyticsEvent` in `src/lib/analytics.ts` is a closed union
-   of four events carrying no data — keep it that way.
+   of five events carrying no data — keep it that way.
+   GA4 (`G-8WH5H49LVN`) IS live, set in `.github/workflows/deploy-pages.yml`,
+   and it sets cookies. The privacy page's "עוגיות וכלי מדידה" section says so;
+   **the two change together.** It may load only after explicit opt-in through
+   `MinimalCookieConsent`; no other GA/GTM loader is allowed.
 7. **No stock imagery of distressed women.** Missing photos render a calm
    monogram panel; that is better than a stock photo of someone crying.
-8. **Keep the crisis line.** `siteConfig.crisisLine` puts 1202 in the footer.
-   This is a private practice with a callback delay, not a 24/7 service, and
-   saying so costs the funnel nothing. Removing it is Pnina's call, not an
-   agent's — flip `enabled` only if she asks.
+8. **The 1202 crisis line was REMOVED, and stays removed.** The footer used to
+   carry a banner pointing at the 1202 national helpline. Daniel asked for it
+   taken out — it was never in the brief — so `siteConfig.crisisLine`, the
+   footer banner and the e2e test that guarded it are all gone (see the note at
+   `e2e/smoke.spec.ts:61`). The "this is not an emergency service" line still
+   stands on the terms page, which is where it belongs.
+   This is a decision about how Pnina's own practice presents itself, so it is
+   hers and Daniel's to revisit. **Do not re-add it, and do not remove what
+   remains of it, without one of them asking.** An agent that "helpfully"
+   restores it is overruling a client decision.
 
 If a change would trade any of the above for conversion rate, don't make it —
 raise it with Daniel instead.
@@ -105,13 +189,47 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   the other.
 - `src/components/sections/` — page sections. `layout/` — header/footer/chrome.
   `ui/` — primitives. No business logic in components.
+- `src/components/accessibility/` — the visitor-facing accessibility options:
+  the launcher and its dialog, the skip link, `AccessibilityProvider` (the five
+  preferences, stored per browser and never sent anywhere) and
+  `a11y-boot-script.ts`, an inline script that stamps the stored choices on
+  `<html>` before the first paint. The CSS that reads those `data-a11y-*`
+  attributes is one block in `globals.css`, immediately above the reduced-motion
+  rules. Adding a preference means touching all three: the provider, the boot
+  script and that block.
+- `src/components/consent/` — `MinimalCookieConsent`, the opt-in gate GA4 loads
+  behind (rule 6 above), plus the footer's "עוגיות" control that reopens it.
+- `src/components/motion/` — the redesign's motion layer, and
+  `use-reduced-motion.ts`, which is the ONLY place a component should ask
+  whether to move. Outside the React tree, ask `prefersReducedMotion()` in
+  `src/lib/eval-flags.ts`; the two read the same three inputs (device setting,
+  the panel's switch, the `?motion=force` override) and must stay in step.
 - `src/config/` — `site.ts` (identity, all the PLACEHOLDERs) and `navigation.ts`.
 - `src/content/` — structure only, matched by index to `messages/he.json`.
   **`media.ts` is the single registry of every image/video the client owes**;
   a `null` src renders a designed placeholder rather than a broken image.
 - `src/lib/` — env access (`env.ts`), contact schema, seo, analytics, version.
 - `messages/he.json` — **all** user-facing copy. Never hardcode Hebrew in a
-  component; add a key.
+  component; add a key. **No em-dashes or en-dashes in Hebrew copy** — not `—`,
+  not `–`. Daniel's rule, swept clean on 2026-07-29: they read as machine-set
+  English typography in a Hebrew sentence, and a page written for a woman in
+  distress should sound like a person wrote it. Use a full stop, a comma or a
+  colon instead; the sentence almost always improves. A plain hyphen inside a
+  range or a compound ("40-60 דקות", "ב-public/brand") is fine and is not what
+  this is about. The rule covers everything a visitor can read, including `alt`
+  text in `src/content/`. Code comments and these docs are unaffected.
+  **The site addresses its readers in the FEMININE everywhere** (Daniel,
+  2026-07-30: "all of the website should be female, plural, and
+  female-speaking"). The funnel's intimate feminine singular (אלייך, שלחי)
+  stays; where the copy is plural it is feminine plural, so `לכן` / `אליכן` /
+  `שלכן` / `אתן`, never `לכם` / `אליכם` / `שלכם` / `אתם`. **Feminine plural
+  PRONOUNS and suffixed prepositions only. VERBS keep their standard modern
+  plural form** (`השאירו`, `תרצו`, `צרו קשר`); the archaic ־נה feminine plural
+  (`תשלחנה`, `תרצינה`) is **banned**, because it reads as a grammar exercise
+  rather than as a woman talking. If a sentence fights the morphology, rephrase
+  it to drop the pronoun instead of forcing it. Grammatical masculine that
+  agrees with a masculine NOUN ("הליווי ... מתאים", "התהליך הוא") is correct
+  Hebrew and is not what this rule is about.
 - `worker/` — the Cloudflare Worker serving `/api/contact` in production. Holds
   the n8n URL/secret. Excluded from the public mirror.
 - `.github/workflows/deploy-pages.yml` — the live deploy (runs in the PUBLIC
@@ -129,9 +247,80 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   `rgba(1,2,3,0.4)`. The template shipped several of these silently broken.
 - `src/middleware.ts` must NOT be renamed to `proxy.ts` despite Next 16's
   deprecation warning — see the comment in that file. It causes a redirect loop.
-- Design tokens: `--brand` is **decorative only** (fails AA as text);
-  `--brand-accent` is the rose for type; `--brand-deep` is the filled-CTA
-  background. Same split for sage. See the header of `src/app/globals.css`.
+- Design tokens (v0.8.0 — cream · gold · brown, her palette, NOT the template's
+  plum · teal). `--brand` (#6b4f3a natural brown) is the filled-CTA background
+  AND every soft wash; `--brand-accent` (#855128 bronze) is the brand colour for
+  TYPE; `--brand-deep` is the small badge that carries white ink in both schemes.
+  `--gold` and `--teal` (a silver-blue, name kept from the old scheme) are
+  **decorative only** and fail AA as text — their `-deep` siblings are the
+  readable ends. `--gold-line` is hairlines only, never a glyph. `--input` is a
+  SOLID border value, not an alpha, because it is the only one that clears 3:1
+  on every surface the form appears on. Every ratio is measured and written down
+  in the header of `src/app/globals.css` and at the top of its dark block —
+  change a value, re-measure, update the comment in the same commit.
+- **The accent is PINK, and it has to LOOK pink.** The `--rose-*` family is the
+  filled CTA, the panel light and the highlighted headline line. It shipped at
+  hue 348-352° / 30-43% saturation, which read as a brownish mauve, and Daniel
+  said three times that he could not see any pink; a warmer rose (hue 339-344°)
+  followed, and then Daniel chose the LIVE SITE's orchid-magenta over it
+  (2026-07-30: "the pink color is nicer on the version that is currently
+  live"). The family now sits at **hue 327-333°**: light CTA fill `--rose-deep`
+  #8a1f58 carrying `--cta-ink` #fff8f5 at a measured 8.27:1, pink type
+  `--rose-ink` #a32d6b, hover #74184a — the live palette's own graded values.
+  Dark mode deliberately does NOT copy the live site's dark values (its
+  hover-to-near-white would erase the label); it keeps this site's inversion,
+  hue-shifted (lit fill #e28fb9 family, near-black ink).
+  Do not desaturate it back toward brown "for warmth".
+  The highlighted half of a two-part heading is `--headline-accent`, which is
+  `--rose-deep` itself: the headline and the button are the same pink BY
+  CONSTRUCTION and must not drift apart again. Use `text-headline-accent` (or
+  `.text-gradient`) there, never `text-brand-accent`. For pink TYPE at body size
+  use `--rose-ink` instead.
+- Fonts: display **Bona Nova at a real weight 700**, body **Assistant**, both
+  loaded in `src/app/[locale]/layout.tsx`. The h1/h2 + `.font-display` rule in
+  `globals.css` sets `font-weight: 700`, `letter-spacing: -0.008em`,
+  `line-height: 1.15` and — non-negotiably — `font-variant-numeric: lining-nums`.
+  **THE HEADLINES ARE SUPPOSED TO BE BOLD. Do not walk this back.** Daniel asked
+  three separate times ("make the text bold … either choose a bold font or just
+  choose a font which has boldness … and when I mean the headers, I mean
+  everywhere the header is used"). 0.11.4 answered with Frank Ruhl Libre at 700,
+  which he called ugly; 0.12.0 answered with Bellefair, a ONE-MASTER display face
+  at 400 plus a `-webkit-text-stroke: 0.4px currentColor` standing in for the
+  bold it does not have, and he rejected that too. Both the stroke rule and its
+  two exclusions are **deleted**, and they are not to come back: they were
+  compensation for a missing bold, and this face has one.
+  Bona Nova was picked by rendering the real hero headline in all five loaded
+  candidates at 700, at the real hero size, side by side — it is the only one
+  that is genuinely heavy and still elegant (Frank Ruhl goes blunt, Noto Serif
+  Hebrew wraps the hero to three lines, David Libre reads as the Israeli
+  office default, Assistant 800 is just the body face again). The full argument
+  is at the head of the locale layout.
+  **`lining-nums` is mandatory, not a refinement**: Bona Nova sets OLDSTYLE
+  figures by default, so without it "₪990" and the process-spine "01" ride off
+  the baseline. It also needs the `latin` subset — the digits and curly quotes
+  live there, only ₪ and the letters ride in `hebrew` — and it loads 400 as well
+  as 700, because `.free-anchor__free` and the display numerals sit in the family
+  at text sizes. The ~+12% size compensation each display call site got in 0.12.0
+  is KEPT: Bona Nova's Hebrew sits at nearly the same optical size, and the set
+  was re-judged at 1440 and 390 rather than assumed.
+  The header WORDMARK is a separate thing and is plain `font-bold` — it is set in
+  Assistant, which has a real 700.
+  Assistant ships no `tnum` feature but its digits are uniform-width anyway, so
+  there is deliberately no `tabular-nums` anywhere on the site.
+  Five other faces (Bellefair, Frank Ruhl Libre, Noto Serif Hebrew, David Libre,
+  Assistant 800) are declared in that file with `preload: false` — they exist
+  ONLY for the temporary `?font=` evaluation switcher (globals.css §8) and are
+  never fetched unless the parameter selects them. `?font=bellefair` is the
+  0.12.0 rendering and is pinned back to 400 there, because 700 on it would be a
+  synthesised fake. They go when Daniel confirms the headline face.
+- Type scale: the bottom five rungs of Tailwind's scale (`xs`/`sm`/`base`/`lg`/
+  `xl`) are **re-pointed in globals.css**, once, right after the `@theme` block —
+  14 / 16 / 17.5 / 19.5 / 21.5px on a phone and 14 / 17 / 18.5 / 21 / 23px from
+  640px up. Daniel, 2026-07-30: most pages were too small to read comfortably,
+  and a sweep found 278 runs of 14px text on a 390px phone. The floors this site
+  holds to now: body copy ≥16px mobile and ≥17px desktop, secondary/meta ≥14px,
+  nothing interactive below 14px. **Do not "fix" a small label with an arbitrary
+  `text-[13px]`** — there are none left; move the rung or use `text-xs`.
 
 ## Forbidden actions
 

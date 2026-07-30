@@ -17,8 +17,13 @@
  * `testimonials.items` are real messages Pnina received and shared publicly on
  * her own Instagram. The section shows `privacyNote` instead.
  *
- * ⚠️ Never flip this back to `false` for invented copy. Presenting made-up
- * quotes as real client experiences of sexual assault recovery is not a
- * marketing shortcut — it is fabricated testimony about trauma.
+ * ⚠️ This flag must always tell the truth about what is on screen. If anything
+ * illustrative, placeholder or unconsented ever goes back into the section,
+ * flip it back to `true` IN THE SAME COMMIT. Presenting made-up quotes as real
+ * client experiences of sexual assault recovery is not a marketing shortcut —
+ * it is fabricated testimony about trauma.
+ *
+ * (This comment used to say "never flip this back to `false`", which was the
+ * wrong way round: `false` is the current, correct value.)
  */
 export const testimonialsAreSamples = false;

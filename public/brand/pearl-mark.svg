@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!--
+    פנינה פאף — the pearl mark.
+
+    An open scallop: the upper valve fans up from the hinge line at y=45.5, the
+    lower valve is the shallow dish beneath it, and one filled pearl sits at the
+    join. Drawn to work at 28px (the header lockup) and at 512px (src/app/icon.png).
+
+    NOT a trace of the client's reference photographs — those are a mood, this is
+    a geometric mark built from a hinge point, a 41 degree fan half-angle and five
+    scallop channels. The generator that produced these numbers, if the shape ever
+    needs re-cutting, is documented in scripts/brand/generate-icon.mjs.
+
+    COLOUR: every stroke is `currentColor`, so the mark takes the colour of
+    whatever it sits in — gold on cream, light gold on the dark canvas. The one
+    hard-coded value is the PEARL'S FILL (#eddcae, a pale gold), and it is
+    hard-coded on purpose: the practice is named פנינה, so the pearl has to read
+    as the luminous thing in the shell. Filled with `currentColor` it came out
+    as a dark ball — the brightest object in the reference photograph rendered
+    as the darkest object in the mark. A fixed pale fill reads correctly against
+    both canvases and keeps enough mass to survive at 16px, which an unfilled
+    outline does not. The gold tokens (--gold / --gold-deep) fail AA as text but
+    this is not text; keep it decorative or pair it with the wordmark, never use
+    it alone as a link.
+  -->
+  <g
+    stroke="currentColor"
+    stroke-width="2.3"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M 11.99 22.48 Q 11.69 13.98 19.3 17.77 Q 21.41 9.53 27.65 15.31 Q 32 8 36.35 15.31 Q 42.59 9.53 44.7 17.77 Q 52.31 13.98 52.01 22.48 Q 50.16 36.75 41 45.5 L 23 45.5 Q 13.84 36.75 11.99 22.48 Z" />
+    <g stroke-width="1.79" opacity="0.7">
+      <path d="M 24.92 30.04 L 20.55 20.5" />
+      <path d="M 29.58 28.67 L 28.08 18.28" />
+      <path d="M 34.42 28.67 L 35.92 18.28" />
+      <path d="M 39.08 30.04 L 43.45 20.5" />
+    </g>
+    <path d="M 11 45.5 Q 9.43 48.29 15.01 50.2 Q 18.05 52.81 25.51 53.11 Q 32 54.54 38.49 53.11 Q 45.95 52.81 48.99 50.2 Q 54.57 48.29 53 45.5" />
+    <path d="M 11 45.5 L 22.8 45.5" /><path d="M 41.2 45.5 L 53 45.5" />
+  </g>
+  <circle
+    cx="32"
+    cy="40.5"
+    r="8"
+    fill="#eddcae"
+    stroke="currentColor"
+    stroke-width="2.3"
+  />
+</svg>

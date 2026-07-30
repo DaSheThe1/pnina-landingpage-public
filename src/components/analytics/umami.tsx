@@ -12,8 +12,8 @@ import { publicEnv } from "@/lib/env";
  * /thank-you pageview need no extra code. Custom funnel events are fired via
  * `trackEvent()` in @/lib/analytics.
  *
- * Rendered alongside <GoogleAnalytics /> by the composing <Analytics /> — the
- * two are independent and each no-ops when its own env is unset.
+ * Rendered independently by <Analytics />. Google is owned exclusively by the
+ * consent component so this cookieless tracker cannot become a bypass path.
  */
 export function Umami() {
   const scriptUrl = publicEnv.umamiScriptUrl;

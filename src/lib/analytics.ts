@@ -32,13 +32,10 @@ export type AnalyticsEvent =
 
 declare global {
   interface Window {
-    // Present only after gtag.js has loaded. Optional so every access is
-    // null-safe — when GA is unconfigured it never exists.
-    gtag?: (
-      command: "event",
-      name: string,
-      params?: Record<string, unknown>
-    ) => void;
+    // Present only after consent has been granted and gtag.js has loaded.
+    // Optional so every access remains safe when GA is absent or declined.
+    gtag?: (command: string, ...args: unknown[]) => void;
+    dataLayer?: unknown[];
     // Present only after Umami's tracker has loaded. Same null-safety.
     umami?: {
       track: (name: string, data?: Record<string, unknown>) => void;

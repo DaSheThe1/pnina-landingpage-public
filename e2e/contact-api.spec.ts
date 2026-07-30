@@ -32,9 +32,19 @@ test("rejects a phone that is not phone-shaped", async ({ request }) => {
 
 test("rejects unknown fields rather than forwarding them", async ({ request }) => {
   // The schema is `.strict()` on purpose: a stray field is either a bug or an
-  // attempt to smuggle extra data about a visitor into the n8n log.
+  // attempt to smuggle extra data about a visitor into the n8n log. `question`
+  // is the ONE free-text key the contract knows about; `story` is not it.
   const response = await request.post("/api/contact", {
     data: { name: "פנינה", phone: "050-1234567", story: "..." },
+  });
+  expect(response.status()).toBe(400);
+});
+
+test("rejects an over-long answer to the optional question", async ({ request }) => {
+  // 300 characters, mirrored in worker/src/contact.js. The cap is what keeps
+  // "one short optional line" from drifting into a free-text confessional.
+  const response = await request.post("/api/contact", {
+    data: { name: "פנינה", phone: "050-1234567", question: "א".repeat(301) },
   });
   expect(response.status()).toBe(400);
 });

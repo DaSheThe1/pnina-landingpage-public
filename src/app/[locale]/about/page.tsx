@@ -2,16 +2,14 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import {
   ArrowRight,
-  Boxes,
-  FileText,
-  MapPin,
-  Network,
+  Award,
+  BookOpen,
+  Clock,
+  Heart,
   Phone,
-  Server,
-  ShieldCheck,
-  Terminal,
-  Workflow,
-  Wrench,
+  Quote,
+  Users,
+  Video,
 } from "lucide-react";
 
 import {
@@ -28,21 +26,24 @@ import { MessageVideo } from "@/components/ui/message-video";
 import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { PortraitFrame } from "@/components/ui/portrait-frame";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
-import { media, videoSrc, videos } from "@/content/media";
+import { media, posterSrc, videoSrc, videos } from "@/content/media";
 import { siteConfig } from "@/config/site";
 import { Link } from "@/i18n/navigation";
 import { breadcrumbSchema, pageMetadata, personSchema } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 
-const credentialIcons = [
-  Server,
-  Terminal,
-  Workflow,
-  FileText,
-  Network,
-  ShieldCheck,
-];
-const quickFactIcons = [MapPin, Wrench, Boxes];
+// Icons are matched BY POSITION to the copy in messages/he.json — change one
+// and check the other. These arrays inherited the architecture/devops template's
+// icons and shipped a spanner and a stack of boxes beside "ליווי אישי, פנים אל
+// פנים או מקוון", and a server rack waiting for her first qualification.
+//
+// pages.about.credentials: qualification · training · the human part of it.
+const credentialIcons = [Award, BookOpen, Heart];
+// pages.about.quickFacts: where the sessions happen · the free intro call and
+// its length · who it is for. These replaced a set that included "מלווה נשים
+// בישראל ובחו״ל", which nobody had confirmed — a globe for a claim she never
+// made.
+const quickFactIcons = [Video, Clock, Users];
 
 export async function generateMetadata({
   params,
@@ -102,7 +103,7 @@ export default async function AboutPage({
       >
         <div className="mt-7 flex flex-wrap gap-2.5">
           {quickFacts.map((fact, i) => {
-            const Icon = quickFactIcons[i] ?? MapPin;
+            const Icon = quickFactIcons[i] ?? Video;
             return (
               <span
                 key={i}
@@ -145,26 +146,36 @@ export default async function AboutPage({
                 </div>
               </div>
               <Eyebrow>{t("storyEyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-3xl tracking-tight text-balance">
+              <h2 className="mt-5 text-[2.1rem] text-balance">
                 {t("storyTitle")}
               </h2>
               {story.map((paragraph, i) => (
                 <p
                   key={i}
-                  className="mt-4 leading-7 text-muted-foreground"
+                  className="mt-4 text-base leading-7 text-muted-foreground"
                 >
                   {paragraph}
                 </p>
               ))}
-              <p className="mt-4 font-medium leading-7 text-foreground">
+              <p className="mt-4 text-base font-medium leading-7 text-foreground">
                 {t("storyClose")}
               </p>
+              {/* "אף אחת לא צריכה להוכיח שמה שקרה לה מספיק חמור" — this used to
+                  be the quote in the home page's trust band. Her pearl line
+                  took that slot in Phase 1; the sentence is too good to delete,
+                  and it belongs beside her own story anyway. */}
+              <blockquote className="mt-8 rounded-2xl border border-brand/20 bg-brand-wash/70 p-6">
+                <Quote aria-hidden className="h-6 w-6 text-gold" />
+                <p className="mt-3 text-lg font-medium leading-snug text-balance text-foreground">
+                  {t("storyQuote")}
+                </p>
+              </blockquote>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
                   href="/contact"
                   className={cn(
                     buttonVariants({ variant: "brand" }),
-                    "h-11 rounded-lg px-5 text-[15px]"
+                    "h-11 rounded-lg px-5"
                   )}
                 >
                   {tCommon("bookAuditPrimary")}
@@ -173,7 +184,7 @@ export default async function AboutPage({
                 <WhatsAppLink
                   className={cn(
                     buttonVariants({ variant: "outline" }),
-                    "h-11 rounded-lg px-5 text-[15px]"
+                    "h-11 rounded-lg px-5"
                   )}
                 >
                   <WhatsAppIcon className="h-4.5 w-4.5 shrink-0 text-[#25d366]" />
@@ -183,7 +194,7 @@ export default async function AboutPage({
                   href={`tel:${siteConfig.phoneE164}`}
                   className={cn(
                     buttonVariants({ variant: "outline" }),
-                    "h-11 rounded-lg px-5 text-[15px]"
+                    "h-11 rounded-lg px-5"
                   )}
                 >
                   <Phone className="h-4 w-4 shrink-0 text-brand-accent" />
@@ -200,12 +211,16 @@ export default async function AboutPage({
             <Reveal>
               <div className="text-center">
                 <Eyebrow>{tVideo("eyebrow")}</Eyebrow>
-                <h2 className="mb-8 mt-5 text-2xl tracking-tight text-balance sm:text-3xl">
+                <h2 className="mb-8 mt-5 text-[1.7rem] text-balance sm:text-[2.1rem]">
                   {tVideo("title")}
                 </h2>
                 <MessageVideo
                   src={videoSrc("about")}
-                  poster={videos.about.poster}
+                  poster={posterSrc("about")}
+                  // null today — the Hebrew transcript for this clip is still
+                  // owed (docs/12 §C). Wired now so that landing a .vtt is a
+                  // one-line change in src/content/media.ts.
+                  captions={videos.about.captions}
                   trackAs="about_video_watch"
                   labels={{
                     playWithSound: tVideo("playWithSound"),
@@ -221,7 +236,7 @@ export default async function AboutPage({
 
             <div className="grid gap-4 sm:grid-cols-2">
               {credentials.map((text, i) => {
-                const Icon = credentialIcons[i] ?? Server;
+                const Icon = credentialIcons[i] ?? Award;
                 return (
                   <Reveal key={i} delay={i * 70}>
                     <div className="group h-full rounded-xl border border-foreground/[0.08] bg-foreground/[0.02] p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:bg-foreground/[0.04] hover:shadow-card">

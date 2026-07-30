@@ -4,11 +4,12 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
-import { createPortal } from "react-dom";
+import { Dialog } from "@base-ui/react/dialog";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { X } from "lucide-react";
@@ -48,10 +49,14 @@ export function LeadDialogProvider({ children }: { children: ReactNode }) {
   // becomes false on its own, so the overlay never lingers over the next page.
   const [openedOn, setOpenedOn] = useState<string | null>(null);
   const [source, setSource] = useState<LeadSource>("landing");
+  const openerRef = useRef<HTMLElement | null>(null);
   const isOpen = openedOn !== null && openedOn === pathname;
 
   const open = useCallback(
     (nextSource: LeadSource = "landing") => {
+      if (document.activeElement instanceof HTMLElement) {
+        openerRef.current = document.activeElement;
+      }
       setSource(nextSource);
       setOpenedOn(pathname);
       // Funnel: the popup was opened (intent), distinct from a submitted lead.
@@ -61,25 +66,26 @@ export function LeadDialogProvider({ children }: { children: ReactNode }) {
   );
   const close = useCallback(() => setOpenedOn(null), []);
 
-  // Lock body scroll + close on Escape while the popup is open.
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", onKey);
-    return () => {
-      document.body.style.overflow = prevOverflow;
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [isOpen, close]);
-
+  // No hand-rolled Escape handler or body-scroll lock here any more: the Base
+  // UI `Dialog` below owns both, and with them the focus trap and the return of
+  // focus to whichever button opened the popup — the reason the accessibility
+  // round replaced the hand-built portal.
+  //
+  // The sideways jump a scroll lock causes on classic-scrollbar platforms is
+  // still solved once, for the whole site, by `scrollbar-gutter: stable` on
+  // `html` (see the long note in globals.css). Read that note before adding a
+  // `padding-right` anywhere: it would move the document but not the fixed
+  // header or the floating WhatsApp button, which is a worse version of the
+  // same bug.
   return (
     <LeadDialogContext.Provider value={{ isOpen, open, close }}>
       {children}
-      <LeadDialog isOpen={isOpen} onClose={close} source={source} />
+      <LeadDialog
+        isOpen={isOpen}
+        onClose={close}
+        openerRef={openerRef}
+        source={source}
+      />
     </LeadDialogContext.Provider>
   );
 }
@@ -87,56 +93,71 @@ export function LeadDialogProvider({ children }: { children: ReactNode }) {
 function LeadDialog({
   isOpen,
   onClose,
+  openerRef,
   source,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  openerRef: RefObject<HTMLElement | null>;
   source: LeadSource;
 }) {
   const t = useTranslations("leadDialog");
 
-  // `isOpen` only becomes true from a user click on the client, so this never
-  // runs `createPortal` during SSR — no separate "mounted" gate is needed.
-  if (!isOpen) return null;
-
-  return createPortal(
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={t("title")}
-      className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto p-4"
+  return (
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
     >
-      {/* Backdrop — solid dark, NO backdrop-blur. A backdrop-filter re-rasterises
-          every frame while the panel above it animates; on phones that produced
-          visible tearing/ghosting (a detached, blurred copy of the panel mid-
-          animation). A flat translucent black fades in cleanly on any GPU. */}
-      {/* Click-to-dismiss, but NOT a labelled button. It used to be one, sharing
-          its accessible name with the real close button in the corner — so a
-          screen reader announced two identical "סגירה" buttons, and the first
-          one in the DOM was a full-viewport target whose centre is covered by
-          the panel. Escape and the corner button cover every keyboard and AT
-          path, so this layer is presentational. */}
-      <div
-        aria-hidden
-        onClick={onClose}
-        className="absolute inset-0 animate-in fade-in cursor-default bg-black/75 duration-200"
-      />
+      <Dialog.Portal>
+        {/* A flat backdrop avoids the mobile GPU tearing caused by a full-screen
+            backdrop-filter while the panel enters. */}
+        <Dialog.Backdrop className="fixed inset-0 z-[119] bg-black/75 transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+        <Dialog.Viewport className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto p-3 sm:p-4">
+          <Dialog.Popup
+            finalFocus={openerRef}
+            className="ring-shine glow-brand relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-2xl border border-brand/25 bg-surface-1 p-6 shadow-card outline-none transition-all duration-200 data-[ending-style]:translate-y-2 data-[ending-style]:opacity-0 data-[starting-style]:translate-y-2 data-[starting-style]:opacity-0 sm:max-h-[calc(100dvh-2rem)] sm:p-8"
+          >
+            <Dialog.Close
+              aria-label={t("close")}
+              className="absolute end-2.5 top-2.5 flex h-11 w-11 items-center justify-center rounded-lg text-muted-foreground outline-none transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:ring-3 focus-visible:ring-brand-accent/35"
+            >
+              <X aria-hidden className="h-5 w-5" />
+            </Dialog.Close>
 
-      {/* Panel — a single gentle fade + short rise. The earlier compound
-          fade+zoom+slide stacked three transforms that stuttered on mobile;
-          one small translate reads as a clean entrance and composites cheaply. */}
-      <div className="ring-shine glow-brand relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-2 overflow-hidden rounded-2xl border border-brand/25 bg-surface-1 p-6 shadow-card duration-200 sm:p-8 sm:slide-in-from-bottom-0">
-        <button
-          type="button"
-          aria-label={t("close")}
-          onClick={onClose}
-          className="absolute end-3.5 top-3.5 flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <ContactForm source={source} />
-      </div>
-    </div>,
-    document.body
+            <div className="mb-6 pe-12">
+              <Dialog.Title className="text-[1.3rem] text-foreground">
+                {t("title")}
+              </Dialog.Title>
+              {/* The default sentence advertises Pnina's optional open field,
+                  so the lecture variant — which hides that field — needs its
+                  own. Same rule as `simpleLead` / `simpleLeadNoQuestion` in the
+                  form itself: never point at a box that is not on screen. */}
+              <Dialog.Description className="mt-1.5 text-sm leading-6 text-muted-foreground">
+                {source === "lectures"
+                  ? t("descriptionNoQuestion")
+                  : t("description")}
+              </Dialog.Description>
+            </div>
+
+            {/* One exception to "the same form everywhere": a lecture booking
+                does not get Pnina's optional question. It asks a woman what she
+                would most want to happen after their conversation — the wrong
+                thing to put in front of a school counsellor booking a speaker
+                (Daniel, 2026-07-29). Derived from `source` rather than passed in
+                separately so there is no way for a lecture CTA to open the wrong
+                variant; the field itself, and the schema, are unchanged.
+                `showIntro={false}`: the dialog's own title and description above
+                say the same thing, and two headings would be read out twice. */}
+            <ContactForm
+              source={source}
+              showQuestion={source !== "lectures"}
+              showIntro={false}
+            />
+          </Dialog.Popup>
+        </Dialog.Viewport>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

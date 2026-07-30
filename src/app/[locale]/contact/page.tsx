@@ -4,7 +4,8 @@ import {
   ArrowUpRight,
   CalendarCheck,
   CheckCircle2,
-  Clock,
+  Feather,
+  Gift,
   Map,
   Mail,
   Route,
@@ -17,11 +18,19 @@ import { Eyebrow, PageShell } from "@/components/sections/marketing-sections";
 import { PageHero } from "@/components/sections/page-hero";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/ui/reveal";
+import { buttonVariants } from "@/components/ui/button";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { siteConfig } from "@/config/site";
 import { breadcrumbSchema, pageMetadata } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 
 const howItWorksIcons = [UserRound, Map, CalendarCheck, Route];
-const assuranceIcons = [Clock, ShieldCheck];
+// Matched by position to `pages.contact.assurances` in messages/he.json:
+// דיסקרטי · ללא עלות · ללא התחייבות. There were only TWO icons here for three
+// lines, so the array fell through to its `?? Clock` default: "discreet" wore a
+// clock, "no cost" wore a shield, and "no obligation" wore the clock again.
+const assuranceIcons = [ShieldCheck, Gift, Feather];
 
 export async function generateMetadata({
   params,
@@ -47,6 +56,7 @@ export default async function ContactPage({
   setRequestLocale(locale as "he" | "en");
   const t = await getTranslations({ locale: locale as "he" | "en", namespace: "pages.contact" });
   const tNav = await getTranslations({ locale: locale as "he" | "en", namespace: "nav" });
+  const tFooter = await getTranslations({ locale: locale as "he" | "en", namespace: "footer" });
   const whatYouGet = t.raw("whatYouGet") as string[];
   const howItWorks = t.raw("howItWorks") as { title: string; text: string }[];
   const assurances = t.raw("assurances") as string[];
@@ -137,7 +147,7 @@ export default async function ContactPage({
               <div className="rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
                 <ul className="space-y-3">
                   {assurances.map((text, i) => {
-                    const Icon = assuranceIcons[i] ?? Clock;
+                    const Icon = assuranceIcons[i] ?? ShieldCheck;
                     return (
                       <li
                         key={text}
@@ -149,14 +159,30 @@ export default async function ContactPage({
                     );
                   })}
                 </ul>
-                <a
-                  href={`mailto:${siteConfig.email}`}
-                  className="mt-5 inline-flex items-center gap-1.5 border-t border-foreground/[0.06] pt-4 text-sm text-brand-accent transition-colors hover:text-brand-hover"
-                >
-                  <Mail className="h-4 w-4" />
-                  {t("emailPrefix")} {siteConfig.email}
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </a>
+                {/* The page's own hero says "ואפשר לפנות ישירות בוואטסאפ", and
+                    until now there was nothing here to press — the only direct
+                    channel on the page was the mailto below. A woman who came
+                    for the option the copy promised had to find the floating
+                    corner button or scroll back to the footer. */}
+                <div className="mt-5 flex flex-col gap-3 border-t border-foreground/[0.06] pt-4">
+                  <WhatsAppLink
+                    className={cn(
+                      buttonVariants({ variant: "outline" }),
+                      "h-11 w-full rounded-lg px-5"
+                    )}
+                  >
+                    <WhatsAppIcon className="h-4.5 w-4.5 shrink-0 text-[#25d366]" />
+                    {tFooter("whatsapp")}
+                  </WhatsAppLink>
+                  <a
+                    href={`mailto:${siteConfig.email}`}
+                    className="inline-flex items-center gap-1.5 text-sm text-brand-accent transition-colors hover:text-brand-hover"
+                  >
+                    <Mail className="h-4 w-4" />
+                    {t("emailPrefix")} {siteConfig.email}
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
               </div>
             </aside>
           </Reveal>

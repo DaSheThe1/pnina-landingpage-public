@@ -5,13 +5,16 @@ import { expect, test } from "@playwright/test";
  * that matters: can a visitor with a real name and phone get through, and does
  * a mistake produce a message she can act on.
  *
- * The form intentionally collects name + phone ONLY. The assertion at the bottom
- * enforces that: if someone adds a "tell me what happened" field, this fails.
- * See src/lib/contact-schema.ts for why that boundary exists.
+ * The form collects name + phone + ONE optional free-text field (Pnina's own
+ * "מה הכי היית רוצה שיקרה בעקבות השיחה שלנו?"). Two assertions below hold that
+ * boundary: a lead that leaves the field blank must send a payload with exactly
+ * the original keys, and a filled one must add exactly `question` and nothing
+ * else. If someone adds a second free-text field, or turns this one into a
+ * "describe what happened" prompt, these fail. See src/lib/contact-schema.ts.
  */
 async function openForm(page: import("@playwright/test").Page) {
   await page.goto("/");
-  await page.getByRole("banner").getByRole("button", { name: /לשיחה ראשונה/ }).click();
+  await page.getByRole("banner").getByRole("button", { name: /לשיחת היכרות/ }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
   return dialog;
@@ -77,11 +80,46 @@ test("a valid lead posts name + phone and lands on the thank-you page", async ({
   await expect(page).toHaveURL(/\/thank-you$/);
   expect(body).toMatchObject({ name: "פנינה", phone: "050-1234567" });
 
-  // The payload must carry nothing beyond these keys — no free-text field about
-  // the visitor's situation, ever.
+  // Nothing beyond these keys. `question` is absent because she left it blank —
+  // a lead that skipped the optional field looks exactly like a lead sent
+  // before the field existed, which is the point.
   expect(Object.keys(body ?? {}).sort()).toEqual(
     ["company", "language", "name", "phone", "source"].sort()
   );
+});
+
+test("the optional question rides along only when she filled it in", async ({
+  page,
+}) => {
+  let body: Record<string, unknown> | null = null;
+  await page.route("**/api/contact", async (route) => {
+    body = route.request().postDataJSON();
+    await route.fulfill({ status: 202, json: { ok: true } });
+  });
+
+  const dialog = await openForm(page);
+  await dialog.getByLabel("שם").fill("פנינה");
+  await dialog.getByLabel("טלפון").fill("050-1234567");
+  await dialog
+    .getByLabel(/מה הכי היית רוצה שיקרה/)
+    .fill("שאפסיק לפחד להישאר לבד בבית");
+  await dialog.getByRole("button", { name: /שלחי/ }).click();
+
+  await expect(page).toHaveURL(/\/thank-you$/);
+  expect(body).toMatchObject({ question: "שאפסיק לפחד להישאר לבד בבית" });
+  // Exactly ONE extra key, and it is hers. Never a second free-text field.
+  expect(Object.keys(body ?? {}).sort()).toEqual(
+    ["company", "language", "name", "phone", "question", "source"].sort()
+  );
+});
+
+test("the optional question never blocks a submit", async ({ page }) => {
+  const dialog = await openForm(page);
+  const question = dialog.getByLabel(/מה הכי היית רוצה שיקרה/);
+  // No required marker, no error state, and nothing pre-filled that a visitor
+  // would have to clear.
+  await expect(question).toHaveValue("");
+  await expect(question).not.toHaveAttribute("required", /.*/);
 });
 
 test("the lectures CTA tags its leads as a lectures enquiry", async ({ page }) => {

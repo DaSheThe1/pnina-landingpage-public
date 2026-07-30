@@ -1,40 +1,73 @@
-import Script from "next/script";
+"use client";
 
-import { publicEnv } from "@/lib/env";
+import Script from "next/script";
+import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
+
+type ConsentState = {
+  ad_personalization: "denied" | "granted";
+  ad_storage: "denied" | "granted";
+  ad_user_data: "denied" | "granted";
+  analytics_storage: "denied" | "granted";
+};
 
 /**
- * Loads the Google Analytics 4 (gtag.js) tracker when — and only when — the
- * PUBLIC `NEXT_PUBLIC_GA_ID` env var is set. When it is missing — dev, test,
- * CI, preview — this renders nothing, so the site behaves exactly as before and
- * no analytics ships.
+ * Loads GA4 only after the consent owner explicitly enables it.
  *
- * GA4 auto-captures pageviews, including App Router client-side navigations:
- * "Enhanced measurement → Page changes based on browser history events" (on by
- * default) fires on the History API `pushState` calls Next's router uses, so
- * the /thank-you pageview and unique visitors need no extra code. Custom funnel
- * events are fired via `trackEvent()` in @/lib/analytics.
- *
- * Rendered alongside <Umami /> by the composing <Analytics /> — the two are
- * independent and each no-ops when its own env is unset.
+ * The initial `config` call sends the landing pageview. App Router navigation
+ * is tracked manually afterward so each page is counted once.
  */
-export function GoogleAnalytics() {
-  const gaId = publicEnv.gaId;
+export function GoogleAnalytics({
+  enabled,
+  measurementId,
+  consentDefaults,
+  consentUpdate,
+}: {
+  enabled: boolean;
+  measurementId?: string;
+  consentDefaults: ConsentState;
+  consentUpdate: ConsentState;
+}) {
+  const pathname = usePathname();
+  const isInitialLoad = useRef(true);
 
-  // Complete no-op unless configured.
-  if (!gaId) return null;
+  useEffect(() => {
+    if (!enabled || !measurementId) return;
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
+    if (typeof window.gtag !== "function") return;
+
+    window.gtag("event", "page_view", {
+      page_path: pathname,
+      page_location: window.location.href,
+      page_title: document.title,
+    });
+  }, [enabled, measurementId, pathname]);
+
+  if (!enabled || !measurementId) return null;
+
+  const measurementIdJson = JSON.stringify(measurementId);
+  const consentDefaultsJson = JSON.stringify(consentDefaults);
+  const consentUpdateJson = JSON.stringify(consentUpdate);
 
   return (
     <>
+      <Script id="ga4-init" strategy="afterInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('consent', 'default', ${consentDefaultsJson});
+          gtag('consent', 'update', ${consentUpdateJson});
+          gtag('js', new Date());
+          gtag('config', ${measurementIdJson});
+        `}
+      </Script>
       <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+        src={`https://www.googletagmanager.com/gtag/js?id=${measurementId}`}
         strategy="afterInteractive"
       />
-      <Script id="ga-init" strategy="afterInteractive">
-        {`window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', '${gaId}');`}
-      </Script>
     </>
   );
 }

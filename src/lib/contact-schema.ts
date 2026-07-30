@@ -6,12 +6,23 @@ import { z } from "zod";
  * build — all three MUST validate identically, so this file is the only place
  * the shape is defined.
  *
- * Deliberately tiny. The form asks for a name and a phone number and nothing
- * else. That is the lowest-friction lead capture, and on this site it is also
- * the right privacy posture: we do not ask a woman to type anything about what
- * happened to her into a web form. A "tell me a bit about yourself" textarea
- * would create a permanent record of the most sensitive thing she could write,
- * sitting in an n8n execution log. Do not add one — see AGENTS.md.
+ * Deliberately tiny: a name, a phone number, and ONE optional free-text field.
+ *
+ * ── THE RULE ON `question`, AND WHY IT IS DRAWN WHERE IT IS ──
+ * The field is Pnina's own question — "מה הכי היית רוצה שיקרה בעקבות השיחה
+ * שלנו?" — and it is **optional, forever**. It asks what she wants to HAPPEN
+ * NEXT, not what happened to her, and that distinction is the whole safety
+ * argument: a "tell me a bit about what you went through" box would create a
+ * permanent record of the most sensitive thing a woman could write, sitting in
+ * an n8n execution log, a spreadsheet and an inbox.
+ *
+ * So the boundary, restated (AGENTS.md rule 1 says the same):
+ *   - exactly ONE free-text field, carrying her exact question;
+ *   - never required, never validated into being filled, never nagged for;
+ *   - never re-worded into a prompt to describe the assault;
+ *   - never a second one, and never widened past 300 characters;
+ *   - never sent to analytics. `AnalyticsEvent` must not learn it exists.
+ * `.strict()` stays, so anything else the client invents is rejected outright.
  */
 
 /** Where the lead came from, so the two audiences can be told apart. */
@@ -105,6 +116,12 @@ export const contactSchema = z
      * route on this. Optional + defaulted so a stale cached client keeps working.
      */
     source: z.enum(leadSources).optional().default("landing"),
+    /**
+     * Her question, answered only if the visitor felt like it. Optional, capped
+     * at 300 characters, and never a condition of submitting — read the header
+     * of this file before touching it.
+     */
+    question: z.string().trim().max(300).optional(),
     // Locale the form was submitted in, so n8n can format the reply.
     language: z.enum(["he"]).optional().default("he"),
     /**

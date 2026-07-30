@@ -20,6 +20,19 @@ function parseOptionalHttpUrl(raw: string | undefined): string | undefined {
   }
 }
 
+/**
+ * Accept only the canonical GA4 web-stream id shape. Invalid values degrade to
+ * `undefined`, which keeps both the consent UI and Google code as no-ops.
+ */
+export function parseGa4MeasurementId(
+  raw: string | undefined
+): string | undefined {
+  const value = raw?.trim().toUpperCase();
+  if (!value) return undefined;
+
+  return /^G-[A-Z0-9]{10}$/.test(value) ? value : undefined;
+}
+
 export const publicEnv = {
   siteUrl: siteConfig.url,
 
@@ -53,8 +66,9 @@ export const publicEnv = {
   // var(s) are unset it is a complete no-op (no script rendered, trackEvent skips
   // it), so dev/test/CI/preview builds keep working unchanged.
 
-  // Google Analytics 4 measurement id (e.g. "G-XXXXXXXXXX").
-  gaId: process.env.NEXT_PUBLIC_GA_ID,
+  // Google Analytics 4 measurement id (e.g. "G-XXXXXXXXXX"). A valid id still
+  // loads only after opt-in consent; see the consent component.
+  ga4MeasurementId: parseGa4MeasurementId(process.env.NEXT_PUBLIC_GA_ID),
   // Umami: tracker script URL + the website UUID from its dashboard. Both are
   // required for Umami to load; either missing makes Umami a no-op.
   umamiScriptUrl: process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL,

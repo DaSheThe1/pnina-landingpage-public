@@ -102,6 +102,11 @@ export default defineConfig({
           // would. Without this every test after the fifth fails on a 429 that
           // has nothing to do with what it is asserting.
           CONTACT_RATE_LIMIT_MAX: "1000",
+
+          // A fake but shape-valid id enables the consent contract without
+          // touching the live GA4 property. The consent spec intercepts every
+          // googletagmanager request before it can leave the browser.
+          NEXT_PUBLIC_GA_ID: "G-PLAYWRIGHT",
         },
       },
 });

@@ -8,11 +8,18 @@
  */
 export const mainNavigation = [
   // The funnel lives on `/` — these jump into it rather than navigating away.
-  { key: "approach", href: "/#approach" },
+  // This slot used to be "הליווי" → `/#approach`, the services teaser. That
+  // section was removed from the home page on 2026-07-29 (it repeated the
+  // audience grid directly above it), so the slot now points at the section a
+  // hesitating reader actually needs: the eight things women arrive with.
+  { key: "audience", href: "/#audience" },
   { key: "process", href: "/#process" },
   { key: "about", href: "/about" },
-  // Different audience entirely (organisations booking a talk), so it gets a
-  // page and its own CTA rather than a section — see docs/02-site-structure.md.
+  // /lectures was unlinked and noindexed through Phase 0 because every word on
+  // it was placeholder copy written before Pnina confirmed she gives talks. Her
+  // real lecture content ("שכבות של פנינה", her seven audiences, 15-150
+  // participants) landed in Phase 1, so the page is linked, indexed and back in
+  // the sitemap — see docs/12-redesign-plan.md, D5.
   { key: "lectures", href: "/lectures" },
   // Reviews, not the FAQ. The FAQ section is still on the page (and still
   // linked from `#faq` anchors); what a header slot is worth is the section a
@@ -39,7 +46,9 @@ export const legalNavigation = [
 
 /** Anchor ids the header links into. Kept here so a rename breaks in one place. */
 export const sectionIds = {
-  approach: "approach",
+  // "למי הליווי מתאים". It IS in the header as of 2026-07-29 — see the note on
+  // `mainNavigation` above; `approach` was retired with the section it named.
+  audience: "audience",
   process: "process",
   testimonials: "testimonials",
   faq: "faq",

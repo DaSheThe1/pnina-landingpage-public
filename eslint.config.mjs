@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     // Default ignores of eslint-config-next:
     ".next/**",
     ".next-e2e/**",
+    ".next-e2e-*/**",
     ".next-edbg/**",
     "out/**",
     "build/**",
@@ -17,6 +18,9 @@ const eslintConfig = defineConfig([
     // Playwright artifacts
     "test-results/**",
     "playwright-report/**",
+    // Local agent worktrees may contain their own transient .next output. They
+    // are not part of this application and can disappear while ESLint scans.
+    ".claude/**",
   ]),
 ]);
 

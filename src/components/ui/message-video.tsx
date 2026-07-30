@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, Play, Volume2 } from "lucide-react";
 
+import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
 import { trackEvent, type AnalyticsEvent } from "@/lib/analytics";
 import { useFullscreenLetterbox } from "@/lib/use-fullscreen-letterbox";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,13 @@ export type MessageVideoLabels = {
   fullscreenAria: string;
   /** Optional chip pinned to the frame's top corner. */
   hint?: string;
+  /**
+   * Name shown in the browser's subtitle menu, e.g. "עברית". Only meaningful
+   * alongside a `captions` src. Left unset for now: `<track>` without a label
+   * still works (the UA falls back to the language), and inventing a message
+   * key before a single caption file exists is copy nobody has approved.
+   */
+  captionsLabel?: string;
 };
 
 /**
@@ -39,16 +47,29 @@ export type MessageVideoLabels = {
  * `src: null` is a fully supported state and renders a quiet poster panel with
  * no <video> element mounted at all — pointing a <video> at a file that does
  * not exist makes every visitor's browser issue a failing request on load.
+ *
+ * CAPTIONS. `captions` takes a WebVTT URL and is `null`/undefined everywhere
+ * today, which mounts no `<track>` at all — the same reasoning as `src: null`,
+ * since a `<track>` pointing at a missing .vtt makes the browser fetch and fail
+ * on every load. The hero clip carries burnt-in Hebrew captions in the picture,
+ * but the /about clip is a long spoken piece with none, so a Deaf or
+ * hard-of-hearing visitor currently gets nothing from it. The transcript is
+ * owed by Pnina (docs/12 §C); once it exists the VTT drops into
+ * `public/video/` and `captions` in src/content/media.ts points at it. Nothing
+ * else has to change.
  */
 export function MessageVideo({
   src,
   poster,
+  captions,
   labels,
   trackAs,
   className,
 }: {
   src: string | null;
   poster?: string;
+  /** WebVTT URL. `null` mounts no <track>. See the note above. */
+  captions?: string | null;
   labels: MessageVideoLabels;
   /** Analytics event fired once, on the first play-with-sound. */
   trackAs?: AnalyticsEvent;
@@ -58,6 +79,7 @@ export function MessageVideo({
   const [ready, setReady] = useState(false);
   const [started, setStarted] = useState(false);
   const trackedRef = useRef(false);
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   // Fullscreen shows the whole 9:16 clip with black bars, not a cropped zoom.
   useFullscreenLetterbox(videoRef);
@@ -68,14 +90,37 @@ export function MessageVideo({
     if (!src) return;
     const video = videoRef.current;
     if (!video) return;
-    if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
+    const readyState = shouldReduceMotion
+      ? HTMLMediaElement.HAVE_METADATA
+      : HTMLMediaElement.HAVE_FUTURE_DATA;
+    const readyEvent = shouldReduceMotion ? "loadedmetadata" : "canplay";
+
+    if (video.readyState >= readyState) {
       setReady(true);
       return;
     }
     const onCanPlay = () => setReady(true);
-    video.addEventListener("canplay", onCanPlay);
-    return () => video.removeEventListener("canplay", onCanPlay);
-  }, [src]);
+    video.addEventListener(readyEvent, onCanPlay);
+    return () => video.removeEventListener(readyEvent, onCanPlay);
+  }, [shouldReduceMotion, src]);
+
+  // The silent preview is decorative autoplay. Keep the manual play-with-sound
+  // control in every mode, but do not start or continue the preview when either
+  // reduced-motion preference is active.
+  useEffect(() => {
+    if (!src || started) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (shouldReduceMotion) {
+      video.pause();
+      return;
+    }
+
+    void video.play().catch(() => {
+      /* A blocked preview leaves the poster and manual play control in place. */
+    });
+  }, [shouldReduceMotion, src, started]);
 
   // Native controls only once it is really playing, or while fullscreen —
   // inline and pre-play it stays a clean frame.
@@ -134,7 +179,16 @@ export function MessageVideo({
         // The bleed is narrower on a phone on purpose: at the full -inset-x-14
         // this halo is 416px wide inside a 390px viewport, and on /about (whose
         // section does not clip) that alone gave the page horizontal scroll.
-        className="pointer-events-none absolute -inset-x-6 -top-8 bottom-0 rounded-[3rem] bg-brand/18 blur-[80px] sm:-inset-x-14"
+        //
+        // 18% → 10% in 0.12.1. `--brand` is a dark natural brown, so this halo is
+        // the only DARKENING decorative layer on the site, and an 80px blur off a
+        // `-top-8` edge carries it a long way up — far enough to sit behind the
+        // line above it. On /thank-you that line is "הפרטים הגיעו אליי בלבד", the
+        // site's tightest small-text pair, and the halo alone was costing it 0.44
+        // of a contrast ratio before the sand photograph was anywhere near it
+        // (4.94:1 without the halo, 4.50:1 with). At 10% the glow still reads as
+        // light behind the phone and the pair clears AA with the sand under it.
+        className="pointer-events-none absolute -inset-x-6 -top-8 bottom-0 rounded-[3rem] bg-brand/10 blur-[80px] sm:-inset-x-14"
       />
 
       <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_var(--shadow-strong)]">
@@ -142,7 +196,6 @@ export function MessageVideo({
           {src ? (
             <video
               ref={videoRef}
-              autoPlay
               muted
               loop
               playsInline
@@ -155,6 +208,18 @@ export function MessageVideo({
               )}
             >
               <source src={src} type="video/mp4" />
+              {captions ? (
+                <track
+                  kind="captions"
+                  src={captions}
+                  srcLang="he"
+                  label={labels.captionsLabel}
+                  // `default` so captions are ON without the visitor hunting
+                  // through a menu. On a site read on a phone, often quietly,
+                  // sound-off is the normal case rather than the exception.
+                  default
+                />
+              ) : null}
             </video>
           ) : null}
 
@@ -180,7 +245,7 @@ export function MessageVideo({
               aria-label={labels.playAria}
               className="group absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-black/25 via-black/35 to-black/60 transition-colors hover:from-black/35 hover:to-black/70"
             >
-              <span className="relative flex h-18 w-18 items-center justify-center rounded-full bg-brand-deep text-white shadow-[0_12px_44px_-6px_rgba(138,31,88,0.9)] transition-transform duration-300 group-hover:scale-110">
+              <span className="relative flex h-18 w-18 items-center justify-center rounded-full bg-brand-deep text-white shadow-[0_12px_44px_-6px_rgba(90,63,43,0.9)] transition-transform duration-300 group-hover:scale-110">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand/40" />
                 <Play className="relative ms-1 h-7 w-7 fill-current" />
               </span>

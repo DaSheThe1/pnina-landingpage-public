@@ -47,8 +47,7 @@ pnpm test:e2e        # ⚠ currently blocked — see docs/11-testing.md
 | Any visible text | `messages/he.json` |
 | Her name, phone, email, domain | `src/config/site.ts` |
 | Which images/videos exist | `src/content/media.ts` |
-| Prices in the funnel | `messages/he.json` → `offers.funnel` |
-| The stat numbers | `src/content/stats.ts` |
+| Prices on the offer ladder | `messages/he.json` → `offers` |
 | Colours, type, spacing | `src/app/globals.css` (tokens at the top) |
 | Header/footer links | `src/config/navigation.ts` |
 

@@ -1,58 +1,69 @@
 # Accessibility
 
-## The obligation
+The site uses native, testable accessibility features. The floating preferences
+button is a convenience layer; it does not replace semantic markup, keyboard
+support, testing, or human review.
 
-Israeli regulations — תקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות
-לשירות), which point at the ת"י 5568 standard (itself based on WCAG 2.0 AA) —
-require a business website serving the Israeli public to be accessible and to
-**publish an accessibility statement** naming a route for reporting problems.
+The engineering baseline is Israel Standard SI 5568 Part 1 at the applicable AA
+level, with WCAG 2.2 AA used as a stricter development and automated-test
+baseline. This is not a certification or legal guarantee.
 
-`/accessibility` exists for this. Its copy lives in `pages.accessibility` in
-`messages/he.json`.
+## Architecture
 
-> ⚠️ **The statement currently contains PLACEHOLDERs and must not go live as-is.**
-> An accessibility statement that overstates conformance is worse than none: it
-> tells a disabled visitor that the problem is theirs. State only what has
-> actually been verified, with the date it was verified and a real contact.
+- `src/components/accessibility/accessibility-provider.tsx` owns five
+  preferences: 100/115/130% text, enhanced contrast, comfortable spacing,
+  reduced motion, and emphasized links. It validates a versioned
+  `penina-accessibility` localStorage object and sends nothing to analytics or
+  the server.
+- `a11y-boot-script.ts` reads those preferences before first paint. It shares
+  its storage key and version with the provider, seeds reduced motion from the
+  operating system when no choice exists, and never persists that OS seed.
+- `accessibility-launcher.tsx` uses the installed Base UI dialog primitive for
+  focus containment, Escape, background inertness, and focus restoration.
+- `skip-link.tsx` targets `#main-content`; `PageShell` supplies that focusable
+  landmark on every route.
+- `src/components/motion/use-reduced-motion.ts` combines the operating-system
+  preference with the saved site choice. Imperative timers, rAF work, smooth
+  scrolling, carousel progression, and muted video previews use that result.
+- `src/app/globals.css` contains the attribute-driven visual preferences. The
+  high-contrast mode overrides tokens rather than filtering media, and Hebrew
+  spacing never forces letter spacing.
 
-## What the build already does
+## Underlying behavior
 
-- Semantic landmarks (`banner`, `main`, `contentinfo`, `navigation`) and a single
-  `<h1>` per page.
-- RTL throughout, with `lang="he"` and `dir="rtl"` set from the locale config.
-- `prefers-reduced-motion` honoured with **no exceptions** — no `!important`
-  escapes anywhere in `globals.css`. This matters more than usual here: an
-  audience that may include people with trauma-related vestibular or anxiety
-  symptoms is exactly who that media query exists for.
-- Colour tokens split by role so text never lands on a failing contrast: `--brand`
-  is decorative only, `--brand-accent` is the AA-safe rose for type. See the
-  header of `src/app/globals.css`.
-- The site follows the reader's **dark-mode preference** automatically
-  (`prefers-color-scheme`), with no in-page toggle to find. The same role split
-  holds in dark — every ink token was re-picked against the dark canvas and the
-  measured ratios are listed in the DARK block at the bottom of `globals.css`;
-  the AA floor is `--subtle-foreground` at 5.7:1. Reading a page like this one at
-  night, on a phone, is a normal way to arrive here, so this is an accessibility
-  feature and not a styling one.
-- Alt text required on every image via the `media.ts` registry.
-- Form fields have real `<label>`s, and errors are associated and announced.
-- Focus-visible rings on all interactive elements.
+- The lead dialog and gallery lightbox use Base UI modal behavior.
+- The closed mobile menu is `inert` and `aria-hidden`; Escape closes it and
+  restores focus to the menu button.
+- Form fields use native required state, `aria-invalid`, associated error
+  descriptions, and first-invalid-field focus.
+- WhatsApp and accessibility launchers are mirrored at the same 56px size and
+  bottom baseline on opposite logical sides. Both move together above the
+  cookie choice while it is visible; back-to-top is removed from that temporary
+  stack. Safe-area bottom spacing is preserved.
+- The preferences dialog is a compact bottom sheet on phones and a centered
+  modal on larger screens. Paired cards retain the same padding, pinned
+  line-height, and two-column geometry at ordinary phone widths. They reflow to
+  one column only at 320px-class widths or at 130% text on a phone, where the
+  rem-scaled stepper otherwise cannot fit without overlapping its neighbor.
+- Semantic landmarks, one `<h1>` per route, Hebrew `lang`/RTL direction, image
+  alternatives, and visible focus remain part of the baseline.
 
-## What still needs verifying before launch
+## Testing
 
-- [ ] Keyboard-only pass: every CTA, the mobile menu, the lead dialog (focus trap
-      and Escape), the testimonial carousel, the FAQ accordion.
-- [ ] Screen-reader pass in Hebrew (NVDA or VoiceOver), checking heading order
-      and that the dialog announces itself.
-- [ ] Automated audit (axe / Lighthouse) on every route.
-- [ ] Contrast re-check against the final palette, especially the rose on sand —
-      **in both schemes**.
-- [ ] Zoom to 200% without horizontal scrolling.
-- [ ] Then write the real conformance level and date into
-      `pages.accessibility.sections`, and name an accessibility contact.
-- [ ] Add the physical-access details (§ "הסדרי נגישות בשירות") — is the meeting
-      space accessible, is a remote session available.
+`e2e/accessibility.spec.ts` runs `@axe-core/playwright` against representative
+routes and covers skip focus, menu/modal keyboard behavior, form errors,
+preference persistence/reset/migration, reduced carousel motion, fixed-control
+alignment and overlap, pre-paint restoration, and 320px reflow at 130% text.
 
-The `smoke.spec.ts` e2e suite already asserts one `<h1>` per page and alt text on
-every image, so the structural basics stay honest once the harness runs again
-([11-testing.md](11-testing.md)).
+Automated tools cannot establish complete conformance. Record manual keyboard,
+zoom, contrast, forced-colors, and assistive-technology checks separately and
+name a screen reader only when it was actually used.
+
+## Known owner inputs
+
+- The public accessibility statement uses the real business email and phone.
+- A separately named accessibility coordinator has not been supplied; reports
+  currently go to Pnina.
+- Verified physical accessibility arrangements for in-person meetings have not
+  been supplied. The statement says so and directs visitors to ask for an
+  appropriate arrangement instead of inventing details.

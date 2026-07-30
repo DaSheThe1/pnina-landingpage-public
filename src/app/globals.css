@@ -2,39 +2,113 @@
 @import "tw-animate-css";
 
 /* ───────────────────────────────────────────────────────────
-   פנינה פאף — ליווי אישי | plum · teal · gold system
+   פנינה פאף — ליווי אישי | cream · gold · brown system  (v0.8.0)
 
-   The palette is built on a real complementary pair, not a single hue tinted
-   five ways. Plum-fuchsia (hue ≈ 332°) is the brand; deep teal (hue ≈ 176°)
-   sits almost exactly opposite it on the wheel and carries every "you are
-   safe here" signal — ticks, reassurance chips, confirmations. Warm gold
-   (hue ≈ 42°) is the third leg: a metal, used only for highlights, the free-
-   session badge and the price. Because plum and teal are complements, putting
-   them side by side is what makes the page read as *designed* rather than as
-   one colour smeared across a beige canvas.
+   The palette is Pnina's own: white, cream, beige, peach, gold, natural brown,
+   silver-blue — read off the two brand references in
+   `private-media/brand-reference/` (an open scallop shell holding a pearl, shot
+   at golden hour). It replaced a plum · teal scheme that belonged to the
+   template this site was scaffolded from and to nobody else.
 
-   Ratio discipline — roughly 60 / 30 / 10:
-     60%  blush-paper canvas + white cards
-     30%  plum (headings, CTAs, brand furniture)
-     10%  teal + gold, and never both in the same component.
+   The whole page therefore sits in ONE temperature. Warmth is the identity, so
+   there is no cool counterweight in the middle of a section: the single cool
+   note is a silver-blue used at low alpha, and it stays out of the way.
 
-   Contrast discipline (the audience reads on phones, often quickly):
-   - `--brand` (#c24a85) is DECORATIVE ONLY — hairlines, washes, rings, fills.
-     It does NOT pass AA as text on the canvas. Never use it for type.
-   - `--brand-accent` (#a32d6b) is the PLUM FOR TEXT — 6.3:1 on the canvas.
-   - `--brand-deep` (#8a1f58) is the FILLED-CTA background — 12.8:1, white ink.
-   Same split for teal (`--teal` decorative / `--teal-deep` 5.0:1 for text) and
-   for gold (`--gold` decorative / `--gold-deep` 5.4:1 for text). Gold at its
-   decorative value on a light canvas is roughly 2:1 — it is a highlight, never
-   a label.
+   Ratio discipline — roughly 70 / 20 / 10:
+     70%  cream canvas + white cards
+     20%  natural brown (headings, CTAs, brand furniture)
+     10%  gold and peach highlights; silver-blue as the one cool accent.
+
+   ── THE GOLD IS BRIGHT, THE TEXT GOLD IS AMBER (2026-07-29) ──
+   Daniel looked at the old readable gold (#7d6218) and said "I think it's gold
+   but what I see is green". He was right, and the fix is not more contrast — it
+   is that ONE hex cannot be both a metal and a label. So the family is split,
+   and the split is the rule:
+
+     DECORATIVE gold is BRIGHT. `--gold` #f0c440 and `--gold-line` #d9a92a sit at
+     hue 44-45°, high chroma, light — the #ffd700 family Daniel names as his
+     reference, tempered a few degrees warmer and a few points down in value so
+     it reads as metal on cream rather than as a highlighter. This is the gold
+     the eye is supposed to find: hairlines, the arrow, node rings, the spine,
+     dividers, panel edges, halos, icons. It is 1.55:1 on the canvas and is
+     NEVER allowed to carry a glyph.
+
+     TEXT gold is AMBER. `--gold-deep` #875a10 sits at hue 37° — honey, not
+     yellow — because #ffd700 measures 1.31:1 on this cream and a label has to
+     clear 4.5:1. The reason the old value read as moss is that it was the
+     BRIGHT gold's hue (44°) taken down to a label's lightness, and dark
+     desaturated yellow IS olive. Warming the hue is what buys back the metal
+     at a legible value.
+
+   So: if a small label does not strictly need to be gold, prefer brown type
+   with a bright-gold mark beside it — that way "gold" on this site is always
+   the bright thing, and nothing on the page is a dull yellow. Where gold is
+   large or purely decorative it may take a METALLIC GRADIENT (globals.css §9,
+   the arrow's SVG stroke and "ללא עלות"), because a flat fill never reads as
+   metal. Every stop of a gradient that lands inside TYPE is measured; see the
+   note on `.free-anchor__free`.
+
+   Contrast discipline (the audience reads on phones, often quickly). Every
+   number below was measured with the WCAG 2.x relative-luminance formula
+   against the LIGHT `--canvas` (#fbf7f1) unless stated otherwise:
+
+     --gold        #f0c440   1.55:1   DECORATIVE ONLY. A metal, never a label.
+     --gold-deep   #7a510e   6.54:1   the gold you may set TYPE in
+                                      (6.97:1 on white, 5.91:1 on --surface-2,
+                                      5.34:1 on the peach --surface-3, and 4.62:1
+                                      on the darkest footer pixel — the tightest
+                                      of the four, and the reason this value is
+                                      not lighter).
+                                      #875a10 (5.62) until 2026-07-30; darkened
+                                      with the rest of the ladder for the 55%
+                                      veil. The HUE is unchanged at 37° — that is
+                                      the whole point of this token, because 44°
+                                      taken down to a label's lightness is olive,
+                                      which is what "I think it's gold but what I
+                                      see is green" was about.
+     --gold-line   #d9a92a   2.04:1   HAIRLINES ONLY — a 1px decorative rule, so
+                                      1.4.11 does not apply. Never a glyph.
+     --teal        #7ea9c0   2.36:1   DECORATIVE ONLY (the silver-blue).
+     --teal-deep   #3f5c6b   6.66:1   the silver-blue for TYPE
+                                      (5.76:1 on --teal-soft).
+     --brand       #6b4f3a            natural brown. This one is BOTH the
+                                      filled-CTA background and the decorative
+                                      wash, so unlike the old plum it is not
+                                      "decorative only": --brand-ink (#fff8f2)
+                                      on it is 7.12:1.
+     --brand-accent #7d4b25  6.77:1   the bronze you set brand TYPE in
+                                      (6.13:1 on --surface-2, 7.23:1 on white,
+                                      4.79:1 on the darkest footer pixel).
+                                      #855128 (6.14) until 2026-07-30.
+     --brand-deep  #5a3f2b            the small filled badge that carries WHITE
+                                      ink in BOTH schemes — 9.63:1 here.
+
+   Ink ladder (warm brown, never pure black — black on cream glares).
+   THE BOTTOM TWO RUNGS WERE DARKENED ON 2026-07-30 to pay for the veil going
+   84% → 55%; the third column is what they measure on the worst background the
+   audit finds anywhere on the site, which is the footer's nav column:
+     --foreground        #3a2e27   12.30:1
+     --foreground-soft   #5a4a40    7.91:1
+     --muted-foreground  #655448    6.75:1   4.99  (was #6f5d51, 5.86 / 3.89 ✗)
+     --subtle-foreground #695749    6.43:1   4.66  (was #715e53, 5.74 / 3.76 ✗)
+                                     ← the floor. Do not lighten. It is set by
+                                     the WORST surface it lands on, not by the
+                                     canvas: 5.25:1 on --surface-3 and 4.66:1 on
+                                     the darkest pixel measured under any line
+                                     set in it.
+
+   Non-text contrast (WCAG 1.4.11, ≥3:1):
+     --input #8a7d70 — 3.75:1 on canvas, 4.00:1 on white, 3.39:1 on --surface-2.
+     --ring  #7d4b25 — 6.77:1 on canvas, 7.23:1 on white.
 
    DARK MODE lives in ONE place: the `@media (prefers-color-scheme: dark)` block
-   at the very bottom of this file. It re-points the same tokens at a deep
-   aubergine canvas — it does not introduce a second set of names. If you add a
+   at the very bottom of this file. It re-points the same tokens at a warm-dim
+   brown canvas — it does not introduce a second set of names. If you add a
    colour here, add its dark value there, and read the note at the top of that
    block first: several tokens invert their role (the "-soft"/"-wash" tints go
-   from pale backgrounds to deep ones; `--teal-deep`/`--gold-deep` are the
-   READABLE ends of their ladders, so on dark they become the LIGHT values).
+   from pale backgrounds to deep ones; `--brand-accent`/`--teal-deep`/
+   `--gold-deep` are the READABLE ends of their ladders, so on dark they become
+   the LIGHT values).
    ─────────────────────────────────────────────────────────── */
 
 :root {
@@ -46,94 +120,403 @@
      choice about this site in her browser storage. */
   color-scheme: light dark;
 
-  /* Surfaces — blush paper canvas; cards rise toward pure white.
-     `--canvas` is the real, solid base colour painted on <html>. `--background`
-     is intentionally TRANSPARENT: every `bg-background` section becomes a
-     window onto the site-wide drifting colour field (SiteBackground) behind the
-     whole site. Use `--canvas` (or `bg-canvas`) wherever a solid opaque fill is
-     genuinely needed (the sticky header backdrop, scrollbars, dialogs). */
-  --canvas: #fdf5ea;
-  --background: transparent;
+  /* Surfaces — warm cream paper canvas; cards rise toward pure white, and the
+     two tinted surfaces step down into beige and then soft peach.
+     `--canvas` is the real, solid base colour painted on <html>. Use it (or
+     `bg-canvas`) wherever a solid opaque fill is genuinely needed — the sticky
+     header backdrop, scrollbars, dialogs.
+
+     ── `--background` IS THE PAPER VEIL, AND IT IS LOAD-BEARING (0.12.1) ──
+     It used to be `transparent`, so every `bg-background` section was a plain
+     window onto whatever was behind the page. It is a translucent cream now, and
+     that one number decides how much of the sand photograph in §10 a visitor
+     actually sees between the hero and the footer. Every full-bleed band on the
+     site paints it (24 of them), so it is the ONLY lever that has to be pulled:
+     there is no per-page background anywhere, and there must not be one.
+
+     Read it together with §10. The sand is opaque and unblended, so it shows at
+     100% wherever nothing is laid over it — the hero, and a soft band at every
+     join between two sections (see `--paper-fade`). Where type sits, this veil is
+     the paper it sits on, and the darkest background a glyph can land on is
+
+         v × 247/255 (canvas)  +  (1−v) × 193/255 (the plate's floor)
+
+     which the ink ladder below is sized against.
+
+     ── 84 → 55 (2026-07-30). THE VEIL WAS THE "SINGLE COLOUR BACKGROUND" ──
+     Daniel, looking at 0.13.0: *"I like the sand currently that is in the
+     background but it is not on the entire site. For example if I scroll down past
+     where the video is (the first one) the background changes and it is no longer
+     the sand… on the presentation pages, on the header only, there is the
+     background and between the sections each section has a terrible one called
+     'one single colour background'."*
+
+     He was describing this token exactly. At 84% the photograph reaches the screen
+     at 16%, which is about eight levels of sRGB swing — enough to measure and not
+     enough to SEE. So below the hero the site was flat cream with a hairline of
+     sand at each section join, and the joins made it worse rather than better:
+     they proved there was a photograph back there and that the page was covering
+     it up. The fix is not another layer, it is this number.
+
+     At 55% the sand reads as sand — the ripples and the grain are plainly visible
+     behind every band on every route, which is what he asked for. 45% is visibly
+     sandier still and was rejected on contrast, not on looks: it puts the
+     tightest small-type pairs under 4.5:1 no matter how far the ink is darkened
+     without collapsing the ink ladder into one colour.
+
+     ── AND THE COST WAS PAID IN INK, NOT BY PUTTING THE VEIL BACK ──
+     Dropping 29 points of veil costs ~0.75 of a contrast ratio on the tightest
+     pairs. That was bought back in the ink ladder below (`--muted-foreground`,
+     `--subtle-foreground`, `--gold-deep`, `--brand-accent`, `--whatsapp-ink` all
+     darkened, each with its measured value beside it) and by taking the footer's
+     decorative brown wash from 8% to 4%, which was the single biggest spender on
+     the page — it sits directly under the footer's 12-14px nav column, the
+     smallest type on the site. Measured on the rendered pages, both schemes, 1440
+     and 390, on the pairs that actually bind:
+
+                                              veil 0.84   veil 0.55
+                                              (old ink)   (new ink)
+       footer column heading, 1440              3.76 ✗      4.6+
+       footer nav link, 1440                    3.87 ✗      4.6+
+       "הפרטים הגיעו אליי בלבד" /thank-you       4.55        4.6+
+       footer WhatsApp link                     3.99 ✗      4.6+
+
+     Note the first three: the footer was ALREADY failing at 84% before any of this
+     — the veil was hiding a photograph and still not protecting the one place on
+     the site where the type is smallest. Lowering it is what made that visible.
+
+     So if you want yet more sand under the TYPE, take it from here and re-run the
+     audit (method: docs/12 §J6). Do not take it from the plate: the photograph is
+     the point. And do not buy it back by raising this number — that is the change
+     Daniel has now rejected once.
+
+     ⚠️ The BODY must not paint this. `<body>` carries no `bg-background` class for
+     exactly that reason (see the locale layout): if it did, the veil would cover
+     the whole viewport including the hero, every section would paint it a second
+     time, and the sand would be back where it started. */
+  --canvas: #fbf7f1;
+  --background: color-mix(in srgb, var(--canvas) 55%, transparent);
   --surface-1: #ffffff;
-  --surface-2: #fbeee4;
-  --surface-3: #f6ded0;
+  --surface-2: #f4ebe0;
+  --surface-3: #f6dcd0;
 
-  /* Ink — deep aubergine, never pure black (pure black on blush glares). The
-     ink is tinted toward the brand hue so type and brand feel related. */
-  --foreground: #26141f;
-  --foreground-soft: #4a2e3e;
-  --muted-foreground: #6e5261;
-  /* The lightest ink in the ladder. It was #9a8290, which is 3.25:1 on the
-     cream canvas — a WCAG AA failure at the 12px it is actually used at (footer
-     labels, the copyright line, legal-page meta). Darkened to clear 4.5:1 with
-     margin while staying visibly lighter than --muted-foreground, so the
-     hierarchy is intact. Do not lighten it again without re-checking: this site
-     has to be able to claim AA (ת"י 5568) on its accessibility statement. */
-  --subtle-foreground: #7a6671; /* 4.9:1 on --canvas */
+  /* Ink — warm brown, never pure black (pure black on cream glares). The ink is
+     tinted toward the brand hue so type and brand feel related. */
+  --foreground: #3a2e27;
+  --foreground-soft: #5a4a40;
+  /* DARKENED 2026-07-30 from #6f5d51 (5.86:1 on the canvas) with the veil going
+     84% → 55%. It measured 3.89:1 on the footer's nav links once the photograph
+     was reading through the paper — and 4.30:1 even with the footer's brown wash
+     taken out, i.e. it was already the thinner half of a pair that only ever
+     passed because the sand was covered up. #655448 is 6.75:1 on the canvas and
+     4.99:1 on the darkest pixel any line set in it actually lands on. */
+  --muted-foreground: #655448;
+  /* The lightest ink in the ladder, and the one that decides whether this site
+     can claim AA (ת"י 5568) on its accessibility statement — it is used at 12px
+     for footer labels, the copyright line, legal-page meta and the "הפרטים
+     נשמרים אצלי בלבד" line under the lead form. Do not lighten it.
 
-  /* Brand — plum-fuchsia. See the contrast note above before using these. */
-  --brand: #c24a85;
-  --brand-accent: #a32d6b;
-  --brand-deep: #8a1f58;
-  --brand-hover: #74184a;
-  --brand-soft: #f7d6e6;
-  --brand-wash: #fdeef5;
-  /* The label that sits ON a filled plum CTA. Its own token (not
+     DARKENED TWICE, and for the same reason both times: this ink is measured
+     against the WORST surface it can land on, and the page kept growing new
+     worse ones.
+
+     2026-07-29, #7a675a → #715e53. The old value was checked only against
+     --canvas (5.03:1) and passed there, but under the final CTA it sits on a
+     `surface-2/80` card that a gold aurora is washing from above, and a
+     pixel-level audit measured the real pair at 4.18:1 — a fail, on the sentence
+     that tells a woman what happens to her phone number.
+
+     2026-07-30, #715e53 → #695749, with the paper veil going 84% → 55% so the
+     sand photograph is visible on every route (see `--background`). At 84% this
+     ink already measured 3.76:1 on the footer's 14px column headings, which is
+     the smallest type on the site; the veil drop is what made that impossible to
+     keep ignoring. #695749 clears 4.5:1 on every surface this ink can reach:
+       --canvas 6.43  ·  white 6.86  ·  --surface-2 5.82  ·  --surface-3 5.25
+       and 4.66:1 on the darkest background any rendered pixel of it actually
+       sits on — the footer nav at 1440, with the sand at 45% through the paper
+     and is still visibly lighter than --muted-foreground (6.75:1). */
+  --subtle-foreground: #695749;
+
+  /* Brand — natural brown, the darkest warm note in her palette. Unlike the
+     plum this replaced, `--brand` is NOT decorative-only: it is the filled-CTA
+     background (see the `brand` variant in button.tsx) as well as every soft
+     wash, which is why it has to be dark enough to carry --brand-ink. */
+  --brand: #6b4f3a;
+  /* The bronze you set brand TYPE in — 6.77:1 on the canvas. #855128 (6.14)
+     until 2026-07-30; darkened with the rest of the ink ladder to pay for the
+     paper veil going 84% → 55%, which is what put the sand photograph back on
+     every route. 4.79:1 on the darkest footer pixel. */
+  --brand-accent: #7d4b25;
+  /* The small filled badge (the "free" pill, the play button) that has WHITE
+     ink baked into the component in both schemes. */
+  --brand-deep: #5a3f2b;
+  /* Hover colour for brand LINK TEXT — darker here, lighter on dark. */
+  --brand-hover: #6b3f1c;
+  --brand-soft: #f0dcc4;
+  --brand-wash: #faf0e4;
+  /* The label that sits ON the filled CTA. Its own token (not
      `--primary-foreground`) because the two diverge in dark mode: the default
-     button inverts to a light pill with dark ink, while the plum CTA keeps its
-     dark plum fill and near-white label in BOTH schemes. Identical to
-     `--primary-foreground` here, so light mode is unaffected. */
-  --brand-ink: #fff8f5;
-  /* The filled CTA's hover fill. Same value as `--brand-hover` in light mode —
-     it is a separate token only because `--brand-hover` is also the hover
-     colour for plum LINK TEXT, and that one has to go light in dark mode while
-     a fill carrying a near-white label has to stay dark. */
-  --brand-cta-hover: #74184a;
+     button inverts to a light pill with dark ink, while the brand CTA keeps a
+     saturated fill and a contrasting label in BOTH schemes. */
+  --brand-ink: #fff8f2;
+  /* The filled CTA's hover fill. A separate token from `--brand-hover` because
+     that one is the hover colour for brand LINK TEXT, and text and fill move in
+     opposite directions in dark mode. */
+  --brand-cta-hover: #57402e;
 
-  /* Complement — deep teal, directly opposite the brand. This is the colour of
-     reassurance on this site: ticks, "no obligation" chips, success states. */
-  --teal: #1b9b90;
-  --teal-deep: #0f6e66;
-  --teal-soft: #d4efec;
+  /* The one cool note — silver-blue, off the wet sand in her reference image.
+     It carries the "you are safe here" signals: ticks, reassurance chips,
+     confirmations. `--teal` is decorative; `--teal-deep` is the readable one.
+     (The token names are inherited from the plum·teal scheme and deliberately
+     left alone: renaming ~30 utility classes for a hue change is churn.) */
+  --teal: #7ea9c0;
+  --teal-deep: #3f5c6b;
+  --teal-soft: #dfe9ee;
 
-  /* Metal — warm gold. Highlights and the price only; never body text. */
-  --gold: #e0a93f;
-  --gold-deep: #8a5d0c;
-  --gold-soft: #fbecc9;
+  /* Metal — TWO golds doing two different jobs. See "THE GOLD IS BRIGHT, THE
+     TEXT GOLD IS AMBER" in the header before changing either. */
+  --gold: #f0c440; /* BRIGHT gold, hue 45° — decorative only, 1.55:1 */
+  --gold-deep: #7a510e; /* AMBER, hue 37° — the readable one, 6.54:1 on canvas.
+                           #875a10 (5.62) until 2026-07-30. Same hue, darker
+                           value: it measured 3.97:1 on the footer once the sand
+                           was visible through the paper. */
+  --gold-soft: #fcefd3; /* golden cream — the wash --gold-deep sits on, 5.26:1 */
+  /* Hairline-only gold: the bright gold taken down just far enough that a 1px
+     rule still registers on cream (2.04:1). Dividers and 1px rules, never type
+     and never an icon — on the dark canvas its value (#cfa33a) is 5.82:1 on an
+     elevated surface, which is a legal border and would be an illegal label. */
+  --gold-line: #d9a92a; /* hue 44° */
+
+  /* ── THE PINK — THE ACCENT, as of 0.11.4, ACTUALLY PINK as of 0.12.x ──
+     Daniel, 2026-07-30, after looking at all three side by side: "pink again
+     looks better as contrast", and pink ships.
+
+     ⚠️ READ THIS BEFORE DESATURATING ANYTHING BELOW. The family shipped at hue
+     348-352° and saturation 30-43%, which was a mauve: on the cream canvas
+     `--rose-deep` (#8a4855) read as a brownish plum, and Daniel said three
+     separate times that he could not see any pink on the buttons. He was right.
+     A colour that has to be explained is the wrong colour, so the whole family
+     moved to a saturated pink that a non-designer calls "pink" without being
+     told — first to hue 339-344° at 48-62% saturation (0.13.0), and then to
+     where it is now.
+
+     ── AND THEN IT MOVED AGAIN, TO THE LIVE SITE'S PINK (2026-07-30) ──
+     Daniel, with peninaphaff.com open beside the redesign: *"I think the pink
+     colour is nicer on the version that is currently live. Can you check that out
+     to see if it looks better?"* The live site runs a cooler ORCHID/MAGENTA at
+     **hue 327-333°**, and the difference from the 342° rose is not subtle at the
+     dark end: 342° at 33% lightness goes toward wine, 330° stays pink.
+
+     Three rungs are the live site's own values, unchanged, because they are the
+     ones a visitor actually reads — the filled CTA (#8a1f58), its hover
+     (#74184a) and the pink you set type in (#a32d6b). The rest of the family was
+     hue-shifted 342° → 330° at its EXISTING lightness and saturation rather than
+     copied, for two reasons: the decorative rungs here do jobs the live site has
+     no equivalent of (`--halo` is a wash behind a whole panel, `--rose-line` is a
+     1px hairline), and copying its much darker decorative pink into those would
+     have put a heavy magenta bloom across the free-call panel.
+
+     The dark scheme is hue-shifted the same way and deliberately does NOT take
+     the live site's dark values: those pair a DARK fill (#a8336d) with white ink
+     and then hover to a near-white pink, which would erase the label on hover.
+     Dark keeps this site's own inversion — a lit pink fill carrying near-black
+     ink — because a dark fill on a dark canvas is a hole rather than a button.
+
+     The move is nearly free and mostly a gain: the filled CTA went from 5.18:1
+     with its ink to **8.27:1**, and the loud `.cta-hot` gradient's lightest stop
+     from 4.79:1 to **7.16:1** — so the "there is no headroom at the light end"
+     warning that governed the old family no longer binds.
+
+     It is still dusty and still unmistakably pink (it is nowhere near bubblegum,
+     which lives at 85%+ saturation and would be wrong on this site for the
+     reasons rule 4 in CLAUDE.md gives).
+
+     It still pairs with — it does not replace — the bright gold: the gold stays
+     on the hairlines, the arrow, the node rings and the eyebrow marks, which is
+     the rose-gold pairing rather than two accents arguing.
+
+     ⚠️ PENDING PNINA. Her own palette list says cream, peach, gold, natural
+     brown, silver-blue. Pink is adjacent to her "אפרסק עדין" and Daniel has
+     chosen it, but blessing a new brand colour is hers. docs/12 §D records it as
+     open. `?accent=amber` (globals.css §11) is the pre-0.11.4 rendering if she
+     says no.
+
+     The rungs, measured against the light `--canvas` (#fbf7f1) unless stated, on
+     the same discipline as the gold family above:
+
+       --rose       #e28fb9   2.22:1   DECORATIVE ONLY. Never a glyph.
+                                       hsl(330 59% 72%) — the 342° rose turned to
+                                       the new hue at the same value, because this
+                                       is `--halo` and a panel-wide wash cannot
+                                       take the live site's much darker pink.
+       --rose-line  #dd7fae   2.55:1   HAIRLINES ONLY — a 1px decorative rule.
+       --rose-ink   #a32d6b   6.26:1   the pink you may set TYPE in — the live
+                                       site's own value (5.66 on --surface-2,
+                                       5.11 on the peach --surface-3, 5.00 on
+                                       --rose-soft — the tightest, and the reason
+                                       this value is not lighter). Every one of
+                                       those four is BETTER than the 342° rose it
+                                       replaced (5.86 / 5.30 / 4.78 / 5.25) and
+                                       far better than the mauve before that.
+       --rose-soft  #f7d6e6            the blush wash --rose-ink sits on; the
+                                       live site's, and a touch more saturated
+                                       than the #fbe6ec it replaced.
+       --rose-deep  #8a1f58            the filled CTA, hsl(328 63% 33%), the live
+                                       site's own fill. --cta-ink (#fff8f5) on it
+                                       is 8.27:1, up from 5.18:1 — this is the
+                                       rung Daniel was looking at when he said the
+                                       live pink was nicer.
+       --rose-cta-hover #74184a        the pressed/hover fill, 10.14:1 with the
+                                       same ink. Hover goes DARKER in light and
+                                       LIGHTER after dark; both directions read
+                                       as "pressed" on their own canvas. */
+  --rose: #e28fb9;
+  --rose-line: #dd7fae;
+  --rose-ink: #a32d6b;
+  --rose-soft: #f7d6e6;
+  --rose-deep: #8a1f58;
+  --rose-cta-hover: #74184a;
+
+  /* ── THE ACCENT ROLES (see §11, the `?accent=` switcher) ────────────
+     The filled CTA's variables and the colour of warm light on a panel, split out
+     of `--brand` and `--gold` so that the accent of this site can be changed
+     without touching the ink ladder or a single surface.
+
+     Why these are separate names at all: `--brand` is the filled-CTA background
+     AND ~40 low-alpha decorative washes (`bg-brand/10`, `border-brand/30`), and
+     `--gold` is every hairline on the site. Re-pointing either to a rose would
+     drag all of that with it, which is precisely the "hue-rotated whole page" an
+     accent must not be. The CTA is an accent; a wash behind a paragraph is not.
+
+     `--cta-image` is `none` here and a gradient only in the gold mode, because a
+     bright metal cannot be a flat fill while a pigment can (see the header).
+     `.btn-cta` in §9 is what reads these, and the two shadow pairs are the `brand`
+     variant's own literals moved out of button.tsx so an accent can re-point them
+     rather than fight a Tailwind arbitrary value.
+
+     `--halo` is the one that keeps the free-call panel coherent: the wash behind
+     the panel, the light under the action column and the bloom behind the button
+     all read it, so the light around a rose button is rose light. */
+  --cta-fill: var(--rose-deep);
+  /* The live site's near-white, a hair pinker than the #fff8f2 this replaced.
+     8.27:1 on --cta-fill. */
+  --cta-ink: #fff8f5;
+  --cta-fill-hover: var(--rose-cta-hover);
+  --cta-image: none;
+  --cta-image-hover: none;
+  /* These four are the rose family written out as rgba() because a shadow needs
+     an alpha. They MUST be re-derived whenever the family moves, or the button's
+     rim and bloom stay on the old hue while its fill leaves — which is exactly
+     the drift `--headline-accent` exists to prevent. Edge is
+     --rose-cta-hover (#74184a), glow is --rose-deep (#8a1f58), and the hover
+     edge is --rose (#e28fb9). */
+  --cta-edge: rgba(116, 24, 74, 0.42);
+  --cta-glow: rgba(138, 31, 88, 0.5);
+  --cta-edge-hover: rgba(226, 143, 185, 0.7);
+  --cta-glow-hover: rgba(138, 31, 88, 0.72);
+  --halo: var(--rose);
+
+  /* ── THE HEADLINE ACCENT (0.12.x) ─────────────────────────────────
+     The colour of the highlighted half of a two-part heading: the hero h1's
+     second line ("דווקא בזכות מה שעברת"), `.text-gradient` on the section
+     headings, and `.text-shimmer` on the thank-you page.
+
+     Daniel, 2026-07-30: the pink he asked for has to be in the buttons AND in
+     the header's second line. It was `--brand-accent` — the bronze — which is
+     why the headline read brown next to a pink button. So this is not a NEW
+     colour: it is literally `--rose-deep`, the filled CTA's own fill, promoted
+     to a role name so the headline and the button can never drift apart again.
+
+     Measured as TYPE, in both schemes:
+       light  #8a1f58  8.14:1 on --canvas, 7.36:1 on --surface-2,
+                       6.64:1 on the peach --surface-3
+       dark   #e28fb9  7.32:1 on --canvas, 5.57:1 on the elevated --surface-3
+
+     Every one of those clears 4.5:1 now, which the 342° rose did not: it landed
+     at 4.17:1 on the peach surface and survived only because every call site is
+     display type at 2xl and up (33.6px+), where WCAG's floor is 3:1. That
+     licence is no longer being used, and it should not be reclaimed. If you
+     reach for this token at body size, use `--rose-ink` (6.26 / 5.66 / 5.11)
+     instead — that is exactly what it is for. */
+  --headline-accent: var(--rose-deep);
+
+  /* ── THE ACCENT'S INK (0.12.0) ────────────────────────────────────
+     The colour of a small letterspaced label that belongs to the accent — the
+     `NodeLabel` line above each offer block ("הצעד הראשון", "חודש", "שלושה
+     חודשים"). It is a fourth accent ROLE, next to `--cta-fill` and `--halo`, so
+     that when the accent moves the labels move with it instead of being left
+     behind in the previous scheme's colour.
+
+     WHY IT EXISTS AT ALL — Daniel, 2026-07-30: "review the colours used, mostly
+     for the text and the backgrounds of the stuff around the text; I don't think
+     they are complementary." He was right about this pair specifically. Those
+     labels were `--gold-deep`, a honey AMBER at hue 37°, and since 0.11.4 they
+     sit on a wash whose light is the PINK at hue ~342°. Warm orange type
+     on a pink ground is the classic muddy pair: neither colour is wrong, they
+     just argue, and at label size the argument reads as dirt.
+
+     Pink ink on pink light is complementary by construction, and it ties the
+     label to the button it is standing next to. It also follows a rule this file
+     already states, rather than inventing one: "if a small label does not
+     strictly need to be gold, prefer brown type with a bright-gold mark beside
+     it". Every one of these labels ALREADY has a bright-gold mark beside it (the
+     shell/pearl node), so the gold on that line was always meant to be the mark,
+     not the letters.
+
+     Measured, on the surfaces these labels actually land on, after the pink
+     correction: 5.86:1 on `--canvas`, 5.25:1 on `--rose-soft`, 5.30:1 on
+     `--surface-2`, and 5.5:1 on the pink-washed free-call panel. The amber it
+     replaced measured 5.62 / 5.26, so this is a like-for-like swap and not a
+     contrast trade — and it is now slightly ROOMIER than the mauve that shipped
+     before (5.55 / 5.01 / 5.03).
+
+     NOT the same thing as shadcn's `--accent` / `--accent-foreground` pair three
+     blocks down, which is a component background and its label. This is type on
+     the page. */
+  --accent-ink: var(--rose-ink);
 
   /* Mapped shadcn-style tokens */
   --card: #ffffff;
-  --card-foreground: #26141f;
+  --card-foreground: #3a2e27;
   --popover: #ffffff;
-  --popover-foreground: #26141f;
-  /* Primary = aubergine ink (default buttons are dark with blush label). The
-     plum CTA uses --brand-deep; both put near-white ink on top. */
-  --primary: #26141f;
-  --primary-foreground: #fff8f5;
-  --secondary: rgba(38, 20, 31, 0.05);
-  --secondary-foreground: #26141f;
-  --muted: #fbeee4;
-  --accent: #a32d6b;
+  --popover-foreground: #3a2e27;
+  /* Primary = the ink itself (default buttons are dark with a cream label). The
+     brand CTA uses --brand; both put near-white ink on top. */
+  --primary: #3a2e27;
+  --primary-foreground: #fff8f2;
+  --secondary: rgba(58, 46, 39, 0.05);
+  --secondary-foreground: #3a2e27;
+  --muted: #f4ebe0;
+  --accent: #855128;
   --accent-foreground: #ffffff;
   --destructive: #b3261e;
-  --success: #0f6e66;
+  --success: #3f5c6b;
 
-  --border: rgba(38, 20, 31, 0.12);
-  --border-subtle: rgba(38, 20, 31, 0.07);
-  --input: rgba(38, 20, 31, 0.2);
-  --ring: #a32d6b;
+  --border: rgba(58, 46, 39, 0.12);
+  --border-subtle: rgba(58, 46, 39, 0.07);
+  /* Form-field boundaries. SOLID, not an alpha of the ink: this is the one
+     border on the site that has a contrast requirement (WCAG 1.4.11 wants 3:1
+     for the edge of a control), and an alpha value quietly fails it the moment
+     the field sits on a tinted surface. 3.75:1 on --canvas, 4.00:1 on white,
+     3.39:1 on --surface-2. Every input and textarea uses `border-input`. */
+  --input: #8a7d70;
+  --ring: #7d4b25; /* follows --brand-accent */
   --radius: 0.75rem;
 
   /* The colour of a heavy drop shadow (the video frames, the hover lift on
      cards). On paper a shadow is tinted ink; on a dark canvas ink-coloured
      shadows are invisible, so dark swaps in real black. */
-  --shadow-strong: rgba(38, 20, 31, 0.5);
+  --shadow-strong: rgba(58, 46, 39, 0.5);
 
   /* WhatsApp's brand green (#25d366) is ~2:1 on this canvas — fine as a fill,
      unreadable as type. This is the readable green for WhatsApp LABELS in each
-     scheme; the #25d366 fills themselves stay literal. */
-  --whatsapp-ink: #1c7a3f;
-  --whatsapp-ink-hover: #155c30;
+     scheme; the #25d366 fills themselves stay literal.
+     #1c7a3f (5.04:1 on the canvas) until 2026-07-30: it measured 3.67:1 on the
+     footer's WhatsApp link with the sand reading through the 55% veil, and it
+     was the single worst pair on the site. #186c37 is 6.07:1 on the canvas and
+     4.92:1 there. */
+  --whatsapp-ink: #186c37;
+  --whatsapp-ink-hover: #12522b;
 }
 
 @theme inline {
@@ -169,6 +552,22 @@
   --color-brand-wash: var(--brand-wash);
   --color-brand-ink: var(--brand-ink);
   --color-brand-cta-hover: var(--brand-cta-hover);
+  /* The accent-role CTA pair, so the `brand` button variant can be written in
+     utilities (`bg-cta-fill text-cta-ink`) and still follow `?accent=`. */
+  --color-rose: var(--rose);
+  --color-rose-line: var(--rose-line);
+  --color-rose-ink: var(--rose-ink);
+  --color-rose-soft: var(--rose-soft);
+  --color-rose-deep: var(--rose-deep);
+  --color-cta-fill: var(--cta-fill);
+  --color-cta-ink: var(--cta-ink);
+  --color-cta-fill-hover: var(--cta-fill-hover);
+  /* `text-accent-ink` — the accent's LABEL colour. Distinct from `text-accent`,
+     which is the shadcn component token. See the note in `:root`. */
+  --color-accent-ink: var(--accent-ink);
+  /* `text-headline-accent` — the highlighted half of a two-part heading. Same
+     pink as the filled CTA by construction; see the note in `:root`. */
+  --color-headline-accent: var(--headline-accent);
   --color-whatsapp-ink: var(--whatsapp-ink);
   --color-whatsapp-ink-hover: var(--whatsapp-ink-hover);
   --color-teal: var(--teal);
@@ -177,6 +576,7 @@
   --color-gold: var(--gold);
   --color-gold-deep: var(--gold-deep);
   --color-gold-soft: var(--gold-soft);
+  --color-gold-line: var(--gold-line);
 
   --color-border: var(--border);
   --color-border-subtle: var(--border-subtle);
@@ -202,6 +602,80 @@
   --animate-spin-slow: spin 30s linear infinite;
 }
 
+/* ───────────────────  THE TYPE SCALE  (0.12.0)  ───────────────────
+   Daniel, 2026-07-30: "text on most pages is too small to read comfortably."
+   A rendered-size sweep of all eight pages agreed with him, loudly. The site
+   was shipping 278 separate runs of text at 14px on a 390px phone — 203 of them
+   inside a link or a button — plus 54 runs at 12px and 55 more between 13 and
+   13.5px. `text-sm` had quietly become the body size of this website.
+
+   THIS IS NOT A COSMETIC PREFERENCE ON THIS SITE. The reader is often on a
+   phone, often in distress, sometimes in a hurry and sometimes crying. Type she
+   has to lean in for is type she stops reading.
+
+   So the FIVE BOTTOM RUNGS of Tailwind's scale are re-pointed, once, here —
+   rather than by editing ~300 call sites — and every `text-xs`/`text-sm`/
+   `text-base`/`text-lg`/`text-xl` on the site moves with them. The floors this
+   is built to, from the review brief:
+
+     body / paragraph copy   ≥16px on a phone, ≥17px on a desktop
+     secondary / meta        ≥14px everywhere
+     anything interactive    ≥14px everywhere (was 12.8px in the header CTA)
+
+   The result, and the whole scale in one table (px):
+
+     step    before        <640px    ≥640px    who uses it
+     xs      12            14        14        footer meta, legal notes, © line
+     sm      14            16        17        card copy, FAQ answers, nav, forms
+     base    16            17.5      18.5      section descriptions, lead paras
+     lg      18            19.5      21        hero subtitle, /about story
+     xl      20            21.5      23        card titles set in the body face
+     2xl+    unchanged — those rungs are HEADINGS, and the display face got its
+             own +12% compensation at each call site (see the h1/h2 note below).
+
+   HOW IT WORKS, AND WHY IT IS SAFE: Tailwind 4 compiles `text-sm` to
+   `font-size: var(--text-sm)`, so re-pointing the variable moves the utility.
+   The line-heights are RATIOS in v4 (`calc(1.25 / 0.875)`), so they have to be
+   restated whenever the size moves or the leading silently tightens — every one
+   below is written out for that reason, and the small rungs get slightly MORE
+   leading than the ratio would give, because a 16px line of Hebrew at 1.43 is
+   cramped.
+
+   Why a `min-width: 640px` block rather than `clamp()`: the codebase already
+   writes its responsive type as `sm:` steps, `sm:` is where this design's
+   columns change, and a two-value scale is something a person can read off the
+   table above and predict. A fluid scale would make every one of the ~40
+   `text-x sm:text-y` pairs on the site interpolate against an invisible curve.
+
+   ⚠️ This block must stay AFTER `@import "tailwindcss"` (line 1) — it is
+   overriding variables that import declares on `:root`. Moving it above the
+   import silently reverts the whole scale. */
+:root {
+  --text-xs: 0.875rem; /* 14px */
+  --text-xs--line-height: calc(1.25 / 0.875);
+  --text-sm: 1rem; /* 16px */
+  --text-sm--line-height: calc(1.5 / 1);
+  --text-base: 1.09375rem; /* 17.5px */
+  --text-base--line-height: calc(1.6875 / 1.09375);
+  --text-lg: 1.21875rem; /* 19.5px */
+  --text-lg--line-height: calc(1.8125 / 1.21875);
+  --text-xl: 1.34375rem; /* 21.5px */
+  --text-xl--line-height: calc(1.875 / 1.34375);
+}
+
+@media (min-width: 640px) {
+  :root {
+    --text-sm: 1.0625rem; /* 17px */
+    --text-sm--line-height: calc(1.625 / 1.0625);
+    --text-base: 1.15625rem; /* 18.5px */
+    --text-base--line-height: calc(1.8125 / 1.15625);
+    --text-lg: 1.3125rem; /* 21px */
+    --text-lg--line-height: calc(1.9375 / 1.3125);
+    --text-xl: 1.4375rem; /* 23px */
+    --text-xl--line-height: calc(2 / 1.4375);
+  }
+}
+
 @layer base {
   * {
     border-color: var(--border);
@@ -209,13 +683,41 @@
 
   html {
     scroll-behavior: smooth;
-    /* The solid base canvas. Everything above it (body, sections) is
-       transparent, so the SiteBackground colour field shows through. */
+    /* The solid base canvas, and the fallback for everyone the sand plate never
+       reaches: `prefers-contrast: more`, a failed image, a browser that will not
+       decode WebP. Everything above it — body, sections — is transparent or a
+       translucent veil, so the sand floor and the colour field show through. */
     background-color: var(--canvas);
+    /* ── WHY THE GUTTER IS ALWAYS RESERVED ──
+       The lead dialog locks the page behind it with `body { overflow: hidden }`
+       (lead-dialog.tsx). On any platform with CLASSIC scrollbars — Windows and
+       most Linux desktops, i.e. what Pnina's visitors are on — that removes the
+       viewport scrollbar, the content column instantly grows by its width, and
+       the whole page jumps sideways the moment the popup opens and jumps back
+       when it closes. A woman deciding whether to leave her phone number should
+       not watch the page twitch at her.
+
+       `scrollbar-gutter: stable` reserves that strip permanently, so locking and
+       unlocking changes nothing: the header, the floating WhatsApp button and
+       every line of type stay exactly where they were. It costs nothing on
+       overlay-scrollbar platforms (macOS, iOS, Android), where the gutter is
+       zero wide, and it also kills the same jump between a long page and a short
+       one. It is declared HERE, on the root element, because the viewport
+       scrollbox takes its gutter from the root — putting it on `body` does
+       nothing once `overflow: hidden` propagates up.
+
+       Do NOT "fix" this instead by adding padding to the body while the dialog
+       is open: that compensates the document but not `position: fixed` children,
+       so the header and the WhatsApp button would still move. */
+    scrollbar-gutter: stable;
   }
 
   body {
-    background: var(--background);
+    /* NOT `var(--background)`. That token is the paper veil the SECTIONS paint
+       (see the note beside it in `:root`); painting it here as well would lay it
+       over the whole viewport, hero included, and hide the sand floor the veil
+       exists to make possible. The body is a window. */
+    background: transparent;
     color: var(--foreground);
     font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
@@ -227,19 +729,68 @@
     color: var(--foreground);
   }
 
-  /* Display headlines wear Suez One — a heavy Hebrew slab-serif with real
-     presence. Body, labels and card titles (h3+) stay on Heebo, a Hebrew-native
-     sans with a full weight range. Suez One ships ONE weight (400) and is
-     already heavy by design, so never set a font-weight on it: asking for 600
-     or 700 makes the browser synthesise a smeared faux-bold. The previous pair
-     (Frank Ruhl Libre at weight 500) is what made every heading read thin and
-     templated. */
+  /* Display headlines wear BONA NOVA AT A REAL 700 — a Hebrew serif with an
+     actual bold master. Body, labels and card titles (h3+) stay on Assistant.
+
+     WEIGHT: 700, and it is a real one. Daniel asked three times for bold
+     headlines ("make the text bold… either choose a bold font or just choose a
+     font which has boldness"), and 0.12.0's answer — Bellefair, a single-master
+     display face, plus a 0.4px `-webkit-text-stroke` standing in for the weight
+     it does not have — was rejected. That stroke and its two exclusion rules are
+     GONE from this file: they were compensation for a missing bold, and a face
+     with a bold does not need compensating. Do not re-add them; if a headline
+     needs more weight now, it has `font-weight` like everything else.
+
+     WHY BONA NOVA and not the other four candidates: the note at the head of
+     `src/app/[locale]/layout.tsx` records the rendered comparison. Short version
+     — it is the only one of the five that is heavy at 700 and still elegant
+     rather than blunt (Frank Ruhl), enormous (Noto Serif Hebrew), office-default
+     (David Libre) or simply the body face again (Assistant 800).
+
+     LETTER-SPACING: -0.008em. Zero was tuned for Bellefair, which is narrow and
+     needed every bit of its sidebearing. Bona Nova at 700 sets wider and a whisker
+     of negative tracking stops the long Hebrew hero line from feeling loose; it
+     is deliberately HALF the -0.012em Frank Ruhl needed, because closing this
+     face further starts to fill the counters of ה, ע and ק.
+
+     LINE-HEIGHT 1.15 is unchanged and still right: Bona Nova has short
+     descenders and a tall waist, exactly like the face it replaced.
+
+     ⚠️ NUMERALS — `lining-nums` IS MANDATORY, NOT A REFINEMENT. Bona Nova sets
+     OLDSTYLE figures by default, so without this line "₪990" and the
+     process-spine "01" ride up and down off the baseline mid-word. It used to be
+     a special-case rule for the `?font=bonanova` variant in §8; now that this IS
+     the face, it belongs on the base rule. Deleting it breaks every number set
+     in a heading.
+     (Assistant's own digits share one advance width by design and it ships no
+     `tnum` feature, which is why there is deliberately no `tabular-nums` class
+     anywhere on this site.)
+
+     SIZE: the ~+12% compensation added in 0.12.0 for Bellefair's small-on-the-em
+     letters is KEPT, and it was re-judged rather than assumed — Bona Nova's
+     Hebrew sits at almost exactly the same optical size, and rendered side by
+     side at 1440 and 390 the current display sizes still fill their measure
+     without overflowing or breaking badly. The sizes in page-hero.tsx,
+     marketing-sections.tsx, quote-reveal.tsx, pearl-reveal-section.tsx and
+     brand-mark.tsx are a set and were judged together. */
   h1,
   h2 {
     font-family: var(--font-display), Georgia, "Times New Roman", serif;
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-weight: 700;
+    letter-spacing: -0.008em;
     line-height: 1.15;
+    font-variant-numeric: lining-nums;
+  }
+
+  /* `.font-display` opts a non-heading element into the same face, so it needs
+     the same weight and the same figures — otherwise a `.font-display` element
+     renders Bona Nova at 400 with oldstyle numerals, which is how the
+     process-spine "01" and the quote pull-outs would silently drift off the
+     headline treatment. `.free-anchor__free` overrides both in §9 on purpose:
+     it is re-pointed to the BODY face. */
+  .font-display {
+    font-weight: 700;
+    font-variant-numeric: lining-nums;
   }
 
   /* Themed scrollbar — quiet, ink-on-paper */
@@ -251,12 +802,12 @@
     background: var(--surface-2);
   }
   ::-webkit-scrollbar-thumb {
-    background: rgba(38, 20, 31, 0.18);
+    background: rgba(58, 46, 39, 0.18);
     border-radius: 9999px;
     border: 2px solid var(--surface-2);
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(163, 45, 107, 0.5);
+    background: rgba(133, 81, 40, 0.5);
   }
 }
 
@@ -318,11 +869,11 @@
 @keyframes pulse-step {
   0%,
   100% {
-    border-color: rgba(38, 20, 31, 0.1);
+    border-color: rgba(58, 46, 39, 0.1);
     background: rgba(255, 255, 255, 0.5);
   }
   50% {
-    border-color: rgba(194, 74, 133, 0.55);
+    border-color: rgba(107, 79, 58, 0.55);
     background: var(--brand-wash);
   }
 }
@@ -333,47 +884,12 @@
   }
 }
 
-/* The struck price's X "stamps" in once when it scrolls into view (see
-   PriceCrossout). */
-@keyframes price-x-stamp {
-  from {
-    opacity: 0;
-    transform: scale(1.3) rotate(-4deg);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
-/* Zoom in / zoom out on the struck prices and on the "בלי עלות" payoff.
-   Requested by the client, who then asked for it faster: 3.4s read as barely
-   moving. At 2s the pulse is legible as a pulse. Depth stays shallow (≤ 7%) so
-   it is the number breathing rather than a flashing discount badge, and it stops
-   completely under prefers-reduced-motion via the global block at the bottom of
-   this file. */
-@keyframes price-breathe {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.07);
-  }
-}
-
-/* The free-session card's halo, easing in and out. */
-@keyframes glow-breathe {
-  0%,
-  100% {
-    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.28),
-      0 18px 60px -30px rgba(138, 31, 88, 0.35);
-  }
-  50% {
-    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.55),
-      0 26px 80px -26px rgba(138, 31, 88, 0.5);
-  }
-}
+/* GONE, and not coming back: `price-x-stamp`, `price-breathe` and
+   `glow-breathe`. They animated the offer section's struck prices, the "בלי
+   עלות" payoff and the halo around the free card — a perpetual pulse attached
+   to a price, which is the pressure mechanic AGENTS.md rule 4 rules out. The
+   whole struck-price funnel they belonged to was replaced by the calm ladder
+   in OffersSection; nothing on this site animates a number. */
 
 @keyframes beam-spin {
   to {
@@ -400,9 +916,10 @@
 
 /* ──────────────  Site-wide drifting colour field  ──────────────
    One fixed layer behind the whole site (see SiteBackground). Very slow, very
-   faint rose/sage washes over the paper canvas — closer to watercolour bleed
-   than to a gradient mesh. Scrolling lifts it a touch via the JS-written
-   `--bg-scroll` (0 → 1). If you can clearly "see" this layer, it is too strong. */
+   faint gold/peach washes over the cream canvas — closer to watercolour bleed
+   than to a gradient mesh, and closer still to light coming off wet sand.
+   Scrolling lifts it a touch via the JS-written `--bg-scroll` (0 → 1). If you
+   can clearly "see" this layer, it is too strong. */
 
 @keyframes bg-drift-1 {
   0% {
@@ -440,6 +957,25 @@
   }
 }
 
+/* ── THE COLOUR FIELD IS NOW THE LIGHT, NOT THE GROUND (0.12.1) ──
+   Until 0.12.0 this field WAS the page's background and the sand was a faint wash
+   laid over it. §10 inverted that: the sand photograph is the floor (z-index -11)
+   and this field sits on top of it, so every value in this block is now something
+   the sand is seen THROUGH.
+
+   That is why the blobs below are so much weaker than they read in the history.
+   `rgba(244,235,224,0.8)` on the central cream mass was a fine base colour and is a
+   dust sheet over a photograph; the vignette's `rgba(255,255,255,0.85)` was the
+   light pooling on paper and would have bleached the sand out of the hero — which
+   is the one place the photograph is at full strength and the first thing anybody
+   sees. Every alpha here was cut to the point where the field still does its job —
+   gold at the top, peach and silver-blue arguing gently across the middle — while
+   the ripples stay legible through it.
+
+   If the palette ever needs to come forward again, take it from the DECORATIVE
+   blobs one at a time and look at the hero after each; do not reach for the
+   vignette, which covers the whole viewport uniformly and is the one thing here
+   that can flatten the photograph. */
 .site-bg {
   position: fixed;
   inset: 0;
@@ -477,11 +1013,20 @@
   position: absolute;
   border-radius: 9999px;
   filter: blur(80px);
-  opacity: 0.85;
+  /* 0.85 until 0.12.0, when this field was the page's base colour. It is warm
+     light falling on a photograph now — see the note on `.site-bg`.
+
+     This one number also buys the audit its stability. The blobs DRIFT, on 34-52s
+     loops, so a line of type does not have one background — it has a range of
+     them, and the sand made every excursion cost more than it used to. At 0.42 the
+     spread between a blob's near and far phase is under a hundredth of a contrast
+     ratio, which is the difference between a measurement and a coin toss. */
+  opacity: 0.42;
   will-change: transform;
 }
 
-/* Plum — top, anchoring the palette to the hero. */
+/* Gold — top, anchoring the palette to the hero. This is the sun in her
+   reference photograph, blurred until it is only a temperature. */
 .site-bg__blob--1 {
   top: -14%;
   left: -6%;
@@ -489,13 +1034,16 @@
   height: 46rem;
   background: radial-gradient(
     circle at center,
-    rgba(194, 74, 133, 0.2),
+    rgba(228, 182, 72, 0.12),
     transparent 68%
   );
   animation: bg-drift-1 34s ease-in-out infinite alternate;
 }
 
-/* Gold — top-right. The warm metal, opposite corner from the teal. */
+/* Peach — top-right, opposite corner from the silver-blue. Carried at 0.20
+   until 2026-07-29; "אפרסק עדין" is the sanctioned warm lever in her palette and
+   the field was reading as tea rather than as low sun, so the peach masses were
+   allowed forward. It is still decorative: peach never carries type here. */
 .site-bg__blob--2 {
   top: -8%;
   right: -10%;
@@ -503,15 +1051,16 @@
   height: 40rem;
   background: radial-gradient(
     circle at center,
-    rgba(224, 169, 63, 0.18),
+    rgba(232, 160, 120, 0.13),
     transparent 68%
   );
   animation: bg-drift-2 42s ease-in-out infinite alternate;
 }
 
-/* Teal — lower right, where the eye lands mid-scroll. This is the blob that
-   makes the field read as a complementary scheme rather than a pink wash: it
-   is the only cool mass on the page, so it has to survive. */
+/* Silver-blue — lower right, where the eye lands mid-scroll. This is the only
+   cool mass on the page and the reason the field reads as a beach at golden
+   hour rather than as a flat wash of tea; it has to survive. Kept weaker than
+   the warm blobs so it never turns the section grey. */
 .site-bg__blob--3 {
   bottom: 2%;
   right: 4%;
@@ -519,13 +1068,13 @@
   height: 44rem;
   background: radial-gradient(
     circle at center,
-    rgba(27, 155, 144, 0.16),
+    rgba(126, 169, 192, 0.13),
     transparent 70%
   );
   animation: bg-drift-3 38s ease-in-out infinite alternate;
 }
 
-/* Blush — lower left, balancing the teal. */
+/* Warm sand — lower left, balancing the silver-blue. */
 .site-bg__blob--4 {
   bottom: -10%;
   left: 2%;
@@ -533,13 +1082,13 @@
   height: 38rem;
   background: radial-gradient(
     circle at center,
-    rgba(194, 74, 133, 0.14),
+    rgba(222, 168, 124, 0.11),
     transparent 70%
   );
   animation: bg-drift-1 46s ease-in-out infinite alternate-reverse;
 }
 
-/* Soft blush wash — large and central, knits the others together. */
+/* Soft cream wash — large and central, knits the others together. */
 .site-bg__blob--5 {
   top: 30%;
   left: 32%;
@@ -547,7 +1096,7 @@
   height: 52rem;
   background: radial-gradient(
     circle at center,
-    rgba(251, 238, 228, 0.8),
+    rgba(244, 235, 224, 0.2),
     transparent 72%
   );
   animation: bg-drift-2 52s ease-in-out infinite alternate;
@@ -555,30 +1104,37 @@
 
 /* Inverse vignette — the page is brightest where the content sits and settles
    into a faint warm shade at the very edges, like light falling on paper. On a
-   light canvas a darkening vignette would read as dirt, so this stays subtle. */
+   light canvas a darkening vignette would read as dirt, so this stays subtle.
+
+   Both stops were cut hard in 0.12.1. This layer covers the ENTIRE viewport with
+   no drift and no gaps, so it is the one thing in this block that can flatten the
+   sand out of the hero — at 0.85 the white radial was doing exactly that. 0.30 is
+   as far as it can go and still read as light pooling toward the top. */
 .site-bg__vignette {
   position: absolute;
   inset: 0;
   background: radial-gradient(
       130% 100% at 50% -10%,
-      rgba(255, 255, 255, 0.85) 30%,
+      rgba(255, 255, 255, 0.3) 30%,
       transparent 70%
     ),
     linear-gradient(
       to bottom,
       transparent 0%,
-      transparent 74%,
-      rgba(246, 222, 208, 0.4) 100%
+      transparent 72%,
+      rgba(246, 216, 202, 0.18) 100%
     );
 }
 
 /* Ultra-fine grain — gives the flat cream a printed, tactile quality. Multiply
    (not overlay) is what reads as paper fibre on a light surface. Near-invisible
-   by design; if you can see individual speckles, drop the opacity. */
+   by design; if you can see individual speckles, drop the opacity.
+   Halved in 0.12.1: it now falls on a photograph that has grain of its own, and
+   two grains at once read as noise rather than as paper. */
 .site-bg__noise {
   position: absolute;
   inset: 0;
-  opacity: 0.035;
+  opacity: 0.018;
   mix-blend-mode: multiply;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 160px 160px;
@@ -587,24 +1143,41 @@
 /* ─────────────────────────  Utilities  ───────────────────────── */
 
 @layer utilities {
-  /* Scroll reveal — toggled by the Reveal component. `will-change` is scoped to
-     ONLY the pending (not-yet-revealed) state: once the one-shot fade-in is
-     done we drop it back to `auto` so the element is no longer pinned as its
-     own compositor layer. Leaving `will-change` on permanently made every
-     revealed element a standing GPU layer; on mobile GPUs those layer tiles get
-     evicted during scroll and, with nothing invalidating them, never re-raster,
-     so content blanks out and stays blank. Do not move it to the base rule. */
-  [data-reveal] {
-    opacity: 0;
-    transform: translateY(14px);
-    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Scroll reveal — driven by src/components/ui/reveal.tsx.
+   *
+   * THIS FAILS OPEN. A bare `[data-reveal]` element is fully visible: there is
+   * deliberately no `opacity: 0` on the base rule. It used to be there, which
+   * meant JavaScript was load-bearing for the page being readable at all — no
+   * JS, a failed bundle, a hydration error or a browser without
+   * IntersectionObserver each produced a blank page rather than an unanimated
+   * one. On this site of all sites, content wins over choreography.
+   *
+   * The hidden state exists only between the component ARMING an element
+   * (`data-reveal-ready`, which it does only for elements still below the fold)
+   * and RELEASING it (`data-reveal-shown`). Read the header comment in
+   * reveal.tsx before changing either selector.
+   *
+   * `will-change` is scoped to ONLY the armed-but-not-yet-shown state: once the
+   * one-shot fade is done we drop it back to `auto` so the element is no longer
+   * pinned as its own compositor layer. Leaving `will-change` on permanently
+   * made every revealed element a standing GPU layer; on mobile GPUs those
+   * layer tiles get evicted during scroll and, with nothing invalidating them,
+   * never re-raster, so content blanks out and stays blank. Do not move it to
+   * the base rule. */
+  /* 620ms / 16px / the same ease as the scroll-driven version in the MOTION
+     SYSTEM block at the bottom of this file. 800ms read as the page being slow
+     rather than as the page being calm. Keep the two paths matched. */
+  [data-reveal][data-reveal-ready] {
+    transition: opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--reveal-delay, 0ms);
   }
-  [data-reveal]:not(.is-visible) {
+  [data-reveal][data-reveal-ready]:not([data-reveal-shown]) {
+    opacity: 0;
+    transform: translateY(16px);
     will-change: opacity, transform;
   }
-  [data-reveal].is-visible {
+  [data-reveal][data-reveal-shown] {
     opacity: 1;
     transform: none;
     will-change: auto;
@@ -612,10 +1185,77 @@
 
   .bg-dot {
     background-image: radial-gradient(
-      rgba(38, 20, 31, 0.07) 1px,
+      rgba(58, 46, 39, 0.07) 1px,
       transparent 1px
     );
     background-size: 22px 22px;
+  }
+
+  /* The golden aurora behind the first screen of a page — the home hero
+     (`.aurora-hero`) and every sub-page header (`.aurora-page`).
+     Named utilities rather than `bg-[radial-gradient(…)]` arbitrary values,
+     because the alpha has to differ between the two colour schemes and an
+     arbitrary value has nowhere to be overridden. On the cream canvas these
+     read as low sun; carried unchanged onto the dark canvas the same alphas
+     stack into a heavy haze with a visible edge where the blur runs out, so the
+     dark block below cuts both back.
+
+     ── ALL FIVE WASHES IN THIS GROUP CAME DOWN IN 0.12.1 ──
+     They were tuned to give a flat cream page some weather. The page is a sand
+     photograph now (globals.css §10), so the warmth is in the picture and these
+     are a second helping of it — and an expensive one, because gold
+     (226·168·96) is far darker than cream in green and blue, so a bloom that
+     cost almost nothing over #fbf7f1 costs real contrast over the plate. The
+     sub-page header was the proof: its muted description measured 5.86:1 on
+     bare canvas, 5.18:1 once this aurora was over it, and 3.69:1 once the sand
+     was under that. Dimmed, and with the paper veil under them, the same line is
+     4.96:1 and the sand reads through the bloom instead of being cooked by it. */
+  .aurora-hero {
+    background: radial-gradient(
+      circle at center,
+      rgba(226, 168, 96, 0.2),
+      transparent 64%
+    );
+  }
+  .aurora-page {
+    background: radial-gradient(
+      circle at center,
+      rgba(226, 168, 96, 0.22),
+      transparent 62%
+    );
+  }
+
+  /* The hero's two side washes and the final CTA's bloom. Same reasoning as the
+     auroras above, and they are utilities for the same reason: they used to be
+     `bg-[radial-gradient(…)]` arbitrary values, which have nowhere to be
+     overridden per scheme.
+     That mattered. Every one of these sits inside a section with
+     `overflow-hidden`, so wherever the wash is still visible when it reaches the
+     section's edge it gets CUT — and on the dark canvas an alpha tuned for cream
+     was still clearly visible there, drawing a hard horizontal seam across the
+     page at the bottom of the hero and again under the final CTA. The dark
+     values below are roughly half strength with a later falloff, so the wash has
+     faded to nothing before the clip happens. */
+  .wash-warm {
+    background: radial-gradient(
+      circle at center,
+      rgba(232, 160, 120, 0.19),
+      transparent 60%
+    );
+  }
+  .wash-cool {
+    background: radial-gradient(
+      circle at center,
+      rgba(126, 169, 192, 0.14),
+      transparent 62%
+    );
+  }
+  .aurora-cta {
+    background: radial-gradient(
+      circle at center,
+      rgba(226, 168, 96, 0.2),
+      transparent 78%
+    );
   }
 
   /* Radial fade mask for backdrops */
@@ -642,41 +1282,42 @@
     font-family: var(--font-display), Georgia, serif;
   }
 
-  /* Gradient headline text — charcoal ink sinking into muted rose. Both ends
-     are AA-legible on the canvas, so the headline stays readable if the
-     gradient fails to paint. */
-  .text-gradient {
-    background: linear-gradient(
-      170deg,
-      var(--foreground) 0%,
-      #7b2a58 62%,
-      var(--brand-accent) 120%
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
+  /* Highlighted headline text — the second half of a two-part heading.
+   *
+   * THIS IS NOT A GRADIENT ANY MORE, and the class name is kept only so that
+   * ~six call sites do not have to churn. It used to be `background-clip: text`
+   * + `color: transparent`, i.e. letters painted by a background image, which
+   * fails in the nastiest possible way: anything that replaces the background
+   * (Dark Reader rewrites them wholesale) leaves invisible ink, and the h1 on
+   * four pages vanished for exactly that reason. Phase 0 patched it with a
+   * `color` fallback declared first; v0.8.0 removes the mechanism instead.
+   *
+   * A flat, measured accent also reads better against the new palette: a
+   * gradient from ink to bronze over two Hebrew words looked like a rendering
+   * artefact, not like emphasis. Do not "restore" the gradient.
+   *
+   * THE COLOUR IS `--headline-accent`, i.e. the filled CTA's own pink, not the
+   * bronze `--brand-accent` it used to be (Daniel, 2026-07-30: the pink has to
+   * be in the buttons AND in the headline). See the token's note in `:root` for
+   * the measured ratios and for why 4.17:1 on the peach surface is legal here. */
+  .text-gradient,
   .text-gradient-brand {
-    background: linear-gradient(
-      90deg,
-      var(--brand-accent),
-      var(--brand),
-      var(--brand-accent)
-    );
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--headline-accent);
   }
 
-  /* A very slow warm sweep for a single hero word. Deliberately low-contrast
-     between stops so it reads as light moving over ink, not as a neon effect. */
+  /* A very slow warm sweep for a single hero word (the thank-you page). This
+     one IS still a clipped gradient, deliberately: it is one word, the stops
+     are low-contrast so it reads as light crossing the letters rather than as a
+     neon effect, and `color` is declared FIRST so a browser or extension that
+     drops the background paints readable bronze instead of nothing. Reduced
+     motion freezes it via the global block at the bottom of this file. */
   .text-shimmer {
+    color: var(--headline-accent);
     background: linear-gradient(
       100deg,
       var(--foreground) 18%,
-      #8a2f60 42%,
-      var(--brand-accent) 54%,
+      #7d2745 42%,
+      var(--headline-accent) 54%,
       var(--foreground) 80%
     );
     background-size: 220% auto;
@@ -686,31 +1327,7 @@
     animation: text-shine 11s linear infinite;
   }
 
-  /* The struck-price X stamps in on scroll (see PriceCrossout). Renders fully
-     visible without the class, so no-JS is fine. Reduced motion drops it. */
-  .price-x-stamp {
-    transform-origin: center;
-    animation: price-x-stamp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-  }
-
-  /* Continuous zoom in / zoom out on a price. Applied to a WRAPPER, never to
-     the element that also carries a hover transform — otherwise the two
-     `transform`s overwrite each other and the hover tilt silently dies. */
-  /* No per-element animation-delay anywhere: the prices are deliberately in
-     lockstep. They were staggered by 1.1s to avoid a metronome effect, but
-     reading down the funnel the offset just looked like a glitch. Every element
-     carrying this class starts its animation in the same frame, so they stay in
-     phase for the life of the page. */
-  .price-breathe {
-    transform-origin: center;
-    animation: price-breathe 2s ease-in-out infinite;
-  }
-
-  .glow-breathe {
-    animation: glow-breathe 5s ease-in-out infinite;
-  }
-
-  /* Rotating gradient border (beam) — rose over paper, kept faint. */
+  /* Rotating gradient border (beam) — gold over paper, kept faint. */
   .beam {
     position: relative;
     isolation: isolate;
@@ -726,8 +1343,8 @@
     background: conic-gradient(
       from 0deg,
       transparent 0 58%,
-      rgba(194, 74, 133, 0.55) 74%,
-      rgba(224, 169, 63, 0.4) 84%,
+      rgba(240, 196, 64, 0.6) 74%,
+      rgba(232, 160, 120, 0.4) 84%,
       transparent 92%
     );
     animation: beam-spin 12s linear infinite;
@@ -738,7 +1355,7 @@
   /* Translucent card — white frost over the paper canvas */
   .glass {
     background: rgba(255, 255, 255, 0.72);
-    border: 1px solid rgba(38, 20, 31, 0.08);
+    border: 1px solid rgba(58, 46, 39, 0.08);
     backdrop-filter: blur(10px);
   }
 
@@ -754,7 +1371,7 @@
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(194, 74, 133, 0.7),
+      rgba(226, 178, 54, 0.85),
       transparent
     );
   }
@@ -771,9 +1388,9 @@
     padding: 1px;
     background: linear-gradient(
       120deg,
-      rgba(38, 20, 31, 0.1),
-      rgba(194, 74, 133, 0.45),
-      rgba(38, 20, 31, 0.04)
+      rgba(58, 46, 39, 0.1),
+      rgba(238, 194, 66, 0.62),
+      rgba(58, 46, 39, 0.04)
     );
     -webkit-mask: linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -783,18 +1400,18 @@
   }
 
   /* Brand emphasis ring. On a light canvas "glow" is the wrong metaphor —
-     this is a soft rose halo + lift instead of a light bloom. */
+     this is a soft gold halo + lift instead of a light bloom. */
   .glow-brand {
-    box-shadow: 0 0 0 1px rgba(194, 74, 133, 0.35),
-      0 10px 34px -12px rgba(138, 31, 88, 0.28);
+    box-shadow: 0 0 0 1px rgba(240, 196, 64, 0.5),
+      0 10px 34px -12px rgba(107, 79, 58, 0.28);
   }
 
   /* Card elevation — light needs real, soft shadows to separate layers, where
      dark could get away with a 1px inset highlight. Two stops: a tight contact
      shadow plus a wide soft one. */
   .shadow-card {
-    box-shadow: 0 1px 2px 0 rgba(38, 20, 31, 0.04),
-      0 14px 36px -18px rgba(38, 20, 31, 0.16);
+    box-shadow: 0 1px 2px 0 rgba(58, 46, 39, 0.04),
+      0 14px 36px -18px rgba(58, 46, 39, 0.16);
   }
 
   /* Marquee fade edges */
@@ -818,15 +1435,15 @@
   .anim-shimmer {
     background: linear-gradient(
       90deg,
-      rgba(38, 20, 31, 0.03) 0%,
-      rgba(38, 20, 31, 0.07) 50%,
-      rgba(38, 20, 31, 0.03) 100%
+      rgba(58, 46, 39, 0.03) 0%,
+      rgba(58, 46, 39, 0.07) 50%,
+      rgba(58, 46, 39, 0.03) 100%
     );
     background-size: 200% 100%;
     animation: shimmer 3.2s linear infinite;
   }
 
-  /* ── CTA sheen ── A diagonal light sweep across the filled (dark/rose) CTAs
+  /* ── CTA sheen ── A diagonal light sweep across the filled (brown/amber) CTAs
      on hover/focus. Baked into the `brand` button variant (see button.tsx).
      Only ever used on dark fills — a white sweep over a light surface is
      invisible. */
@@ -858,6 +1475,86 @@
      a micro-rise; reduced motion disables it via the global block below. */
   .page-enter {
     animation: page-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  /* ══════════  Offer nodes — OffersSection only  ══════════
+     The three shapes of "מהצדפה אל הפנינה": an open shell for the free call, a
+     hollow circle for מסלול צדפה, a pearl for מסלול פנינה.
+
+     They were beads threaded onto a vertical gold spine until 2026-07-29, which
+     is why this used to carry a `--spine-inset` variable and absolute
+     positioning: a bead was pulled back out of the text column by exactly the
+     ladder's inline padding plus half its own width. The ladder is gone (the
+     free call is a panel now, and the two tracks are side-by-side columns), so
+     each node is simply an inline icon sitting on its block's label line and
+     the geometry is one line long. `position: relative` is kept because the
+     shell node draws an `inset-0` SVG arc inside it. */
+  .offer-node {
+    --node-size: 1rem;
+    position: relative;
+    display: inline-block;
+    flex: none;
+    width: var(--node-size);
+    height: var(--node-size);
+    border-radius: 999px;
+    background: var(--canvas);
+  }
+
+  /* The shell is drawn as an SVG arc inside the node, so it gets a little more
+     room than the two geometric ones. */
+  .offer-node--shell {
+    --node-size: 1.25rem;
+  }
+
+  /* ── THE PEARL SPHERE ──
+     One drawing of a pearl. It paints מסלול פנינה's node in the offers section
+     (`.offer-node--pearl`, the only filled shape there). It used to paint a second
+     object too — a bead that followed the cursor across the sand — and that one was
+     removed in 0.11.4 at Daniel's request; see §3.
+
+     Two stacked radial gradients: the body (warm white core → faintly cool
+     silver → a peach turn at the far edge) with a specular highlight laid over
+     it, placed up-and-toward-the-START, i.e. the upper RIGHT in RTL, so the
+     light falls the same way as in her reference photographs. It is a drawing of
+     an object, so it is STATIC: no shimmer, no rotation, no animation of any
+     kind, in any scheme.
+
+     ── EVERY colour here is a local custom property, on purpose ──
+     A pearl is not brown, silver-blue or gold, so none of the site's tokens
+     describe it and it has no token of its own yet. Declaring the four hues by
+     name at the top of the rule means the palette pass re-points four lines and
+     touches no geometry. Do not inline a literal back into the gradients.
+     Calibrated against private-media/brand-reference/pearl-ref-2-beach-916.jpeg:
+     the pearls there read cream-warm with a peach rim, NOT lavender — at 15px a
+     cool body just looks like a blue dot on the cream canvas. */
+  .pearl-sphere {
+    --pearl-spec: rgba(255, 255, 255, 0.92); /* specular highlight */
+    --pearl-core: #fffdf8; /* warm white, lit side */
+    --pearl-body: #e9e6ea; /* silver with the faintest blue in it */
+    --pearl-edge: #dfa87c; /* peach at the turn, away from the light */
+    border-radius: 999px;
+    background:
+      radial-gradient(
+        circle at 70% 24%,
+        var(--pearl-spec) 0%,
+        rgba(255, 255, 255, 0) 40%
+      ),
+      /* `farthest-side` and not the default `farthest-corner`: the element is
+         clipped to a circle, so with `farthest-corner` the 100% stop sits out
+         at a box corner that is never painted and the peach turn never
+         actually arrives — the bead reads as a plain grey dot. */
+      radial-gradient(
+        farthest-side circle at 62% 32%,
+        var(--pearl-core) 0%,
+        var(--pearl-body) 44%,
+        var(--pearl-edge) 100%
+      );
+  }
+
+  /* The offers-section bead. Geometry only — the sphere comes from
+     `.pearl-sphere`, which the markup sets alongside this class. */
+  .offer-node--pearl {
+    --node-size: 1.0625rem;
   }
 }
 
@@ -900,98 +1597,226 @@
    exists, and nothing here is behind a class or a toggle — it follows the
    reader's OS/browser preference and nothing else.
 
-   The canvas is a deep aubergine (#170b12), not black: it is the light
-   canvas's ink, and the same plum · teal · gold triad still sits on it. Pure
-   black would make the plum read as neon.
+   WARM-DIMMED, NOT INVERTED. The canvas is #1c1611 — a very dark warm brown,
+   the light canvas's ink taken down rather than a neutral grey taken up. The
+   metaphor is "the lamps are low in the same room", not "a different room".
+   Pure black would make the gold read as neon and the peach as highlighter.
 
    Three rules govern how the ladders flip, and getting them wrong is what
    makes a dark theme look broken:
 
    1. The READABLE end of each colour ladder swaps sides. On paper the readable
-      plum/teal/gold are the DARK values (`--brand-accent`, `--teal-deep`,
-      `--gold-deep`); on this canvas they must be the LIGHT ones. The token
-      NAMES do not change — `--teal-deep` still means "the teal you may set
-      type in", it is just light now. Do not "fix" the names.
+      bronze/silver-blue/gold are the DARK values (`--brand-accent`,
+      `--teal-deep`, `--gold-deep`); on this canvas they must be the LIGHT ones.
+      The token NAMES do not change — `--teal-deep` still means "the silver-blue
+      you may set type in", it is just light now. Do not "fix" the names.
    2. The tints (`--*-soft`, `--*-wash`) are backgrounds that carry ink on top.
       Pale on paper, deep here — same contrast job, opposite direction.
    3. Anything that has WHITE ink baked into a component stays dark here.
-      `--brand-deep` (the filled plum badges and the CTA fill) is therefore
-      roughly as dark as it is in light mode, so `text-white` keeps working
-      without a single component-level `dark:` variant.
+      `--brand-deep` (the small filled badges) is therefore roughly as dark as
+      it is in light mode, so `text-white` keeps working without a single
+      component-level `dark:` variant.
 
-   Contrast on the dark canvas (all measured against #170b12):
-     --foreground #fbeaf2 ......... 17.9:1
-     --muted-foreground #bda2b1 .... 8.2:1
-     --subtle-foreground #9d8593 ... 5.7:1   (the floor — do not darken)
-     --brand-accent #f0a6c9 ....... 10.1:1
-     --teal-deep #6fdccf .......... 12.0:1
-     --gold-deep #f0ce85 .......... 12.4:1
-   Filled surfaces: white on --brand-deep #a8336d is 6.3:1; dark ink
-   (--primary-foreground) on --primary #f3e3ec is 15.6:1.
+   GOLD IS SPLIT THREE WAYS HERE, which is the one thing this scheme adds, and
+   the bright/amber split described at the top of this file holds after dark too
+   — except that dark is where the bright gold can finally be ITSELF. On cream,
+   #ffd700 has to be pulled down or it glares; on a warm-dim brown canvas it is
+   simply the metal, at 12.6:1:
+     --gold      #ffd44f   BRIGHT, decorative — icons, rings, hairline glows,
+                           the arrow. 12.61:1 on canvas, 9.61:1 on the elevated
+                           surface. Daniel's #ffd700 with a hair of warmth so it
+                           belongs to the room rather than lighting it.
+     --gold-deep #e5bd82   AMBER, the gold you may set TYPE in (10.18:1 on
+                           canvas, 9.12:1 on a card, 7.76:1 on the elevated
+                           surface). Still amber and not bright, for the same
+                           reason as in light: it is a label, not a metal.
+     --gold-line #cfa33a   HAIRLINES ONLY. 5.82:1 on the elevated surface — a
+                           legal 1px border, and still not a label: the rule is
+                           about ROLE, not about whether a ratio happens to
+                           clear. Never put type or an icon in it.
+     --gold-soft #3c2d16   a deep tint, not a pale one: it is a BACKGROUND here.
+                           --foreground on it is 10.0:1, --gold-deep 7.3:1.
+
+   Contrast on the dark canvas (measured against #1c1611 unless stated):
+     --foreground        #e5dfd6 ... 13.53:1  (deliberately not white — #fff on
+                                               this canvas glares at night)
+     --foreground-soft   #d0cabf ... 10.99:1
+     --muted-foreground  #b8b0a5 .... 8.35:1
+     --subtle-foreground #a29a8f .... 6.45:1, and 4.91:1 on the ELEVATED
+                                      surface (#352c25) — which is the real
+                                      floor. Nothing smaller than 14px there.
+     --brand-accent (peach) #eab59d . 9.89:1  (7.54:1 on elevated)
+     --teal-deep    #aecee2 ........ 10.86:1  (8.27:1 on elevated)
+     --gold-deep    #e5bd82 ........ 10.18:1  (7.76:1 on elevated)
+   Filled surfaces: --brand-ink #1d140d on the CTA fill --brand #c3873f is
+   5.92:1; white on --brand-deep #7a5738 is 6.47:1; --primary-foreground
+   #221b15 on --primary #ede6db is 13.71:1.
+   Non-text (WCAG 1.4.11, ≥3:1): --input #83786f is 4.16 / 3.73 / 3.95 / 3.17:1
+   on canvas / surface-1 / sunken / elevated — the ONE border value that clears
+   3:1 on every surface, which is why every form field uses it. --ring #e0b771
+   is 9.54:1 on canvas and 7.27:1 on elevated.
+   --border (22% of the ink) is 1.82 / 1.84 / 1.83 / 1.82:1 on the same four.
+   That is a dividing hairline between two surfaces, not a component edge, and
+   the note on the token itself explains why 3:1 neither applies to it nor is
+   reachable by any alpha of #e5dfd6 on this canvas.
    ═══════════════════════════════════════════════════════════ */
 
 @media (prefers-color-scheme: dark) {
   :root {
-    /* Surfaces — deep aubergine paper. `--background` stays transparent for
-       exactly the same reason it is transparent in light mode: every section is
-       a window onto the SiteBackground field. `--canvas` is the solid base. */
-    --canvas: #170b12;
-    --surface-1: #26151f;
-    --surface-2: #1f1018;
-    --surface-3: #33202c;
+    /* Declare, at OS-dark, that this page IS already dark.
+     *
+     * `:root` above says `color-scheme: light dark` — "I support both" — which
+     * is true but tells a reading-comfort extension nothing about the page it
+     * is currently looking at. Dark Reader treats a page that resolves to
+     * `color-scheme: dark` as natively dark and stands down; without this it
+     * inverts an already-dark page on top of itself, which is where the muddy
+     * washed-out result and the vanishing gradient headlines came from.
+     *
+     * This is NOT `darkreader-lock`, and we deliberately still do not ship one:
+     * a reader who needs her extension's exact settings keeps them. This only
+     * stops the extension doing work that is already done. */
+    color-scheme: dark;
 
-    /* Ink — warm near-white, tinted toward the brand hue like its light-mode
-       counterpart. Never pure white: #ffffff on this canvas glares. */
-    --foreground: #fbeaf2;
-    --foreground-soft: #e0c8d5;
-    --muted-foreground: #bda2b1;
-    /* Same AA floor as light mode, from the other side. Do not darken. */
-    --subtle-foreground: #9d8593; /* 5.7:1 on --canvas */
+    /* Surfaces — warm-dim brown paper. `--canvas` is the solid base, and
+       `--background` is the paper veil over the sand, inverted with the scheme:
+       the same 55% of the canvas (ONE number for both schemes — this block
+       re-points `--canvas`, not `--background`), which after dark DARKENS the
+       plate instead of lightening it. The direction flips but the job does not — light ink needs
+       its background held DOWN, so the veil protects `--subtle-foreground`
+       (#a29a8f, which needs ≤52/255) against the plate's 49/255 crests exactly as
+       the cream one protects #715e53 on paper. The token's own note in `:root`
+       has the arithmetic.
+       Note the light-mode order is inverted here on purpose: `--surface-2` is
+       the SUNKEN surface (darker than the canvas) and `--surface-3` is the
+       ELEVATED one, because a tint that steps up from cream has to step down
+       from brown to keep meaning the same thing. */
+    --canvas: #1c1611;
+    --surface-2: #221b15; /* sunken */
+    --surface-1: #27201a; /* cards */
+    --surface-3: #352c25; /* elevated */
 
-    /* Brand. `--brand` is unchanged: it is the CTA fill and every decorative
-       wash, and at #c24a85 it already clears 4.5:1 against white ink while
-       sitting 4.1:1 clear of this canvas — so the primary CTA is deliberately
-       identical in both schemes. `--brand-accent` is the one that inverts,
-       because it is the plum you set TYPE in. */
-    --brand: #c24a85;
-    --brand-accent: #f0a6c9;
-    --brand-deep: #a8336d;
-    --brand-hover: #f9cfe1;
-    --brand-soft: #4a1c31;
-    --brand-wash: #2a1120;
-    --brand-ink: #fff8f5;
-    --brand-cta-hover: #a8336d;
+    /* Ink — warm off-white, tinted toward the brand hue like its light-mode
+       counterpart. Deliberately NOT white: #ffffff on this canvas glares, and
+       #e5dfd6 still clears 13.5:1. */
+    --foreground: #e5dfd6;
+    --foreground-soft: #d0cabf;
+    --muted-foreground: #b8b0a5;
+    /* The floor, and it is set by the ELEVATED surface, not the canvas: 6.45:1
+       on --canvas but 4.91:1 on --surface-3. Do not darken, and do not use it
+       below 14px on an elevated card. */
+    --subtle-foreground: #a29a8f;
 
-    /* Complement — teal. `--teal-deep` is the readable one, so it goes light. */
-    --teal: #2fb9ac;
-    --teal-deep: #6fdccf;
-    --teal-soft: #10403b;
+    /* Brand. `--brand` is the CTA fill and every decorative wash. On paper it
+       is a natural brown carrying cream ink; here it inverts to a lit amber
+       carrying near-black warm ink, because a brown fill on a brown canvas is
+       a hole rather than a button. `--brand-accent` is the peach you set TYPE
+       in — the light-mode bronze seen by lamplight. */
+    --brand: #c3873f;
+    --brand-accent: #eab59d;
+    --brand-deep: #7a5738;
+    --brand-hover: #f3cdb8;
+    --brand-soft: #4a3524;
+    --brand-wash: #2a2018;
+    --brand-ink: #1d140d;
+    --brand-cta-hover: #d1954b;
 
-    /* Metal — gold. Same split: `--gold` decorative, `--gold-deep` readable. */
-    --gold: #e0a93f;
-    --gold-deep: #f0ce85;
-    --gold-soft: #3a2b12;
+    /* The cool note — silver-blue. `--teal-deep` is the readable one, so it
+       goes light; `--teal` stays decorative. */
+    --teal: #90b7cf;
+    --teal-deep: #aecee2;
+    --teal-soft: #22323d;
 
-    --card: #26151f;
-    --card-foreground: #fbeaf2;
-    --popover: #26151f;
-    --popover-foreground: #fbeaf2;
+    /* Metal — gold, split three ways here. See the header note above: `-deep`
+       is for type, plain `--gold` is decorative, `--gold-line` is hairlines
+       only and must never carry a glyph. */
+    --gold: #ffd44f; /* BRIGHT — essentially Daniel's #ffd700, warmed a hair */
+    --gold-deep: #e5bd82; /* AMBER, the readable one, hue 36° */
+    --gold-soft: #3c2d16; /* a deep tint: a BACKGROUND here, not a wash */
+    --gold-line: #cfa33a; /* hue 42° */
+
+    /* The pink, by lamplight — and it moved to the same hue 339-344° the light
+       block did, for the same reason: the mauve read brown-ish on paper and
+       washed-out grey-pink after dark. The readable rung goes LIGHT, exactly as
+       `--gold-deep` does: --rose-ink is 10.48:1 on this canvas and 7.98:1 on the
+       elevated --surface-3. --rose-soft inverts from a pale wash to a deep tint,
+       i.e. a BACKGROUND here. --rose-deep is the CTA fill and carries
+       near-black warm ink (--cta-ink #1d0f15 on it is 7.72:1), because a pink
+       dark enough to hold cream ink is a maroon hole on this canvas. Hover goes
+       LIGHTER here and darker in light; both read as "pressed" on their own
+       canvas. */
+    --rose: #e9a3c6;
+    --rose-line: #d98bb2;
+    --rose-ink: #f0a6c9; /* the live site's dark pink type — 9.39:1 here */
+    --rose-soft: #4a1c31; /* the live site's dark tint */
+    --rose-deep: #e28fb9;
+    --rose-cta-hover: #e79cc2;
+
+    /* The accent roles, after dark. `--cta-fill` and `--halo` follow the rose
+       tokens above on their own (they are `var()`s), but the INK flips: the CTA
+       inverts from a deep rose carrying cream to a lit rose carrying near-black,
+       for the same reason the brown CTA always has (a dark fill on a dark canvas
+       is a hole, not a button). */
+    --cta-ink: #1d0f15; /* 7.83:1 on --rose-deep */
+    --cta-edge: rgba(29, 15, 21, 0.5);
+    --cta-glow: rgba(226, 143, 185, 0.32); /* = --rose-deep #e28fb9 */
+    --cta-edge-hover: rgba(29, 15, 21, 0.6);
+    --cta-glow-hover: rgba(226, 143, 185, 0.48);
+
+    --card: #27201a;
+    --card-foreground: #e5dfd6;
+    --popover: #27201a;
+    --popover-foreground: #e5dfd6;
     /* Primary fully inverts — the default button becomes a light pill with
-       dark ink. The plum CTA does NOT follow it; it wears `--brand-ink`. */
-    --primary: #f3e3ec;
-    --primary-foreground: #1c0d15;
-    --secondary: rgba(251, 234, 242, 0.07);
-    --secondary-foreground: #fbeaf2;
-    --muted: #241521;
-    --accent: #a8336d;
-    --accent-foreground: #fff8f5;
+       dark ink. The brand CTA does NOT follow it; it wears `--brand-ink`. */
+    --primary: #ede6db;
+    --primary-foreground: #221b15;
+    --secondary: rgba(229, 223, 214, 0.07);
+    --secondary-foreground: #e5dfd6;
+    --muted: #241d17;
+    --accent: #7a5738;
+    --accent-foreground: #fff8f2;
     --destructive: #ff9d93;
-    --success: #6fdccf;
+    --success: #aecee2;
 
-    --border: rgba(251, 234, 242, 0.14);
-    --border-subtle: rgba(251, 234, 242, 0.07);
-    --input: rgba(251, 234, 242, 0.22);
-    --ring: #f0a6c9;
+    /* ── The dividing hairline, and why 14% was not enough ──
+       This is the boundary between a card and what is behind it, and after dark
+       it was 14% of the ink — 1.45:1 against `--surface-1`, which on a phone at
+       night is an outline you have to hunt for rather than one you see. The
+       light scheme's 12% of #3a2e27 does the same job at a much bigger step in
+       perceived lightness, so the two schemes were never actually matched; the
+       dark one just looked plausible in a token list.
+
+       At 22% (measured, composited over each surface):
+         --border  vs --canvas #1c1611 ....... 1.82:1
+                   vs --surface-2 #221b15 .... 1.83:1  (sunken)
+                   vs --surface-1 #27201a .... 1.84:1  (cards)
+                   vs --surface-3 #352c25 .... 1.82:1  (elevated)
+       Up from 1.42 / 1.44 / 1.45 / 1.46:1 at 14%.
+
+       ⚠️ THIS DOES NOT REACH 3:1, AND IT IS NOT SUPPOSED TO. WCAG 1.4.11 asks
+       3:1 of a boundary that is the ONLY thing identifying a component — and no
+       alpha of the ink can get there on this canvas (3:1 needs ~45%, which is a
+       drawn box, not a hairline). The rule does not bite here because these
+       cards are also a different SURFACE from the page behind them: the outline
+       is a refinement of an edge that already exists. The one border on this
+       site that genuinely is the only boundary is the form field's, and that is
+       why `--input` below is a SOLID value chosen to clear 3:1 everywhere.
+       If a control ever appears whose only edge is `--border`, it needs
+       `--input`, not a bigger number here.
+
+       `--border-subtle` stays where it is (1.17-1.20:1): it is the hairline
+       between two things that are already obviously separate, and lifting it
+       would put a visible grid over pages that are meant to read as paper. */
+    --border: rgba(229, 223, 214, 0.22);
+    --border-subtle: rgba(229, 223, 214, 0.07);
+    /* SOLID, and the single most load-bearing value in this block: the form is
+       what this site exists for, and an alpha-of-the-ink border disappears on
+       the elevated surface the lead dialog sits on. #83786f is the one value
+       that clears 3:1 against the canvas, the card, the sunken and the elevated
+       surface at once (4.16 / 3.73 / 3.95 / 3.17:1). Do not swap it back for an
+       rgba(). */
+    --input: #83786f;
+    --ring: #e0b771;
 
     /* Ink-tinted shadows vanish on a dark canvas; only real black separates. */
     --shadow-strong: rgba(0, 0, 0, 0.72);
@@ -1004,51 +1829,58 @@
      Same five blobs, same drift. Over near-black the washes need more alpha to
      survive at all, and blob 5 — the pale cream mass that knits the others
      together on paper — becomes a warm lift instead of a bright one. If you can
-     clearly "see" this layer, it is still too strong. */
+     clearly "see" this layer, it is still too strong.
+
+     Blob 5's alpha came down from 0.9 in 0.12.1 for the same reason its light-mode
+     twin did: this field is no longer the page's base colour, it is light falling
+     on the sand photograph below it (globals.css §10), and a near-opaque mass
+     across the middle of the viewport is a lid on the picture rather than a wash
+     over it. It still darkens the centre, which is where the type is — it just no
+     longer erases the ripples while doing it. */
   .site-bg__blob--1 {
     background: radial-gradient(
       circle at center,
-      rgba(194, 74, 133, 0.2),
+      rgba(236, 186, 80, 0.15),
       transparent 68%
     );
   }
   .site-bg__blob--2 {
     background: radial-gradient(
       circle at center,
-      rgba(224, 169, 63, 0.12),
+      rgba(220, 152, 128, 0.16),
       transparent 68%
     );
   }
   .site-bg__blob--3 {
     background: radial-gradient(
       circle at center,
-      rgba(27, 155, 144, 0.17),
+      rgba(144, 183, 207, 0.13),
       transparent 70%
     );
   }
   .site-bg__blob--4 {
     background: radial-gradient(
       circle at center,
-      rgba(194, 74, 133, 0.13),
+      rgba(177, 120, 50, 0.14),
       transparent 70%
     );
   }
   .site-bg__blob--5 {
     background: radial-gradient(
       circle at center,
-      rgba(58, 30, 45, 0.9),
+      rgba(53, 44, 37, 0.4),
       transparent 72%
     );
   }
 
   /* The light-mode vignette pools WHITE light on the centre. Here that would
-     grey the whole page out, so the top pool becomes a faint plum bloom and the
-     bottom settles into black — the same "light falling on a surface" idea,
+     grey the whole page out, so the top pool becomes a faint amber bloom and
+     the bottom settles into black — the same "light falling on a surface" idea,
      read from the dark side. */
   .site-bg__vignette {
     background: radial-gradient(
         130% 100% at 50% -10%,
-        rgba(194, 74, 133, 0.07) 30%,
+        rgba(216, 158, 72, 0.07) 30%,
         transparent 70%
       ),
       linear-gradient(
@@ -1070,10 +1902,10 @@
 @layer base {
   @media (prefers-color-scheme: dark) {
     ::-webkit-scrollbar-thumb {
-      background: rgba(251, 234, 242, 0.16);
+      background: rgba(229, 223, 214, 0.16);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(240, 166, 201, 0.45);
+      background: rgba(224, 183, 113, 0.45);
     }
   }
 }
@@ -1085,31 +1917,59 @@
   @media (prefers-color-scheme: dark) {
     .bg-dot {
       background-image: radial-gradient(
-        rgba(251, 234, 242, 0.08) 1px,
+        rgba(229, 223, 214, 0.08) 1px,
         transparent 1px
       );
     }
 
-    /* The headline gradient runs ink → plum. Both ends still have to be legible
-       on their own, so on dark it runs near-white → light plum. */
-    .text-gradient {
-      background: linear-gradient(
-        170deg,
-        var(--foreground) 0%,
-        #e79ec0 62%,
-        var(--brand-accent) 120%
+    /* Cut right back on the dark canvas. A wash that reads as low sun on cream
+       reads as fog over brown, and the two page heroes were running at 0.3 and
+       0.4 — enough that the blur's outer edge showed as a seam across the top of
+       every sub-page. */
+    .aurora-hero,
+    .aurora-page {
+      background: radial-gradient(
+        circle at center,
+        rgba(216, 158, 72, 0.14),
+        transparent 62%
       );
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
     }
 
+    /* Half strength, later falloff — see the note on the light-mode rules. */
+    .wash-warm {
+      background: radial-gradient(
+        circle at center,
+        rgba(220, 152, 128, 0.15),
+        transparent 72%
+      );
+    }
+    .wash-cool {
+      background: radial-gradient(
+        circle at center,
+        rgba(144, 183, 207, 0.1),
+        transparent 74%
+      );
+    }
+    .aurora-cta {
+      background: radial-gradient(
+        circle at center,
+        rgba(216, 158, 72, 0.16),
+        transparent 82%
+      );
+    }
+
+    /* `.text-gradient` needs no dark override any more — it is a flat
+       `var(--headline-accent)` in both schemes, and that token resolves through
+       `--rose-deep`, which already flips to the lit pink in this block. See the
+       light-mode rule for why the clipped gradient was removed. */
+
     .text-shimmer {
+      color: var(--headline-accent);
       background: linear-gradient(
         100deg,
         var(--foreground) 18%,
-        #dd93b6 42%,
-        var(--brand-accent) 54%,
+        #f0bcd6 42%,
+        var(--headline-accent) 54%,
         var(--foreground) 80%
       );
       background-size: 220% auto;
@@ -1120,16 +1980,16 @@
 
     /* Frost, from the dark side. */
     .glass {
-      background: rgba(38, 21, 31, 0.72);
-      border: 1px solid rgba(251, 234, 242, 0.1);
+      background: rgba(39, 32, 26, 0.72);
+      border: 1px solid rgba(229, 223, 214, 0.1);
     }
 
     .ring-shine::after {
       background: linear-gradient(
         120deg,
-        rgba(251, 234, 242, 0.1),
-        rgba(240, 166, 201, 0.4),
-        rgba(251, 234, 242, 0.04)
+        rgba(229, 223, 214, 0.1),
+        rgba(207, 163, 58, 0.6),
+        rgba(229, 223, 214, 0.04)
       );
     }
 
@@ -1137,43 +1997,2127 @@
        has nothing to darken, so a card is lifted by a hairline of light at its
        edge PLUS a deep black pool for depth. */
     .shadow-card {
-      box-shadow: 0 0 0 1px rgba(251, 234, 242, 0.05),
+      box-shadow: 0 0 0 1px rgba(229, 223, 214, 0.05),
         0 14px 36px -18px rgba(0, 0, 0, 0.8);
     }
 
     .glow-brand {
-      box-shadow: 0 0 0 1px rgba(240, 166, 201, 0.4),
-        0 10px 34px -12px rgba(194, 74, 133, 0.5);
+      box-shadow: 0 0 0 1px rgba(255, 212, 79, 0.42),
+        0 10px 34px -12px rgba(207, 163, 58, 0.5);
     }
 
     .anim-shimmer {
       background: linear-gradient(
         90deg,
-        rgba(251, 234, 242, 0.04) 0%,
-        rgba(251, 234, 242, 0.09) 50%,
-        rgba(251, 234, 242, 0.04) 100%
+        rgba(229, 223, 214, 0.04) 0%,
+        rgba(229, 223, 214, 0.09) 50%,
+        rgba(229, 223, 214, 0.04) 100%
       );
       background-size: 200% 100%;
     }
   }
 }
 
+/* ────────────────  Accessibility preferences  ────────────────
+   These stable html attributes are owned by AccessibilityProvider. The rules
+   are unlayered and come after Tailwind, so they override utility declarations
+   without `!important` escapes. */
+
+html[data-a11y-text-scale="115"] {
+  font-size: 115%;
+}
+
+html[data-a11y-text-scale="130"] {
+  font-size: 130%;
+}
+
+/* At 320px, enlarged type needs the header's duplicated wordmark and social
+   shortcuts to step aside. The logo, menu, CTA destinations, floating
+   WhatsApp action and footer links remain available. */
+@media (max-width: 27.5rem) {
+  html[data-a11y-text-scale="115"] .a11y-compact-header-item,
+  html[data-a11y-text-scale="130"] .a11y-compact-header-item {
+    display: none;
+  }
+}
+
+/* A deliberate high-contrast palette. Filters are forbidden here because they
+   would also invert portraits, testimonial screenshots and videos. */
+html[data-a11y-enhanced-contrast="true"] {
+  --canvas: #000000;
+  --background: transparent;
+  --surface-1: #080808;
+  --surface-2: #121212;
+  --surface-3: #1c1c1c;
+  --foreground: #ffffff;
+  --foreground-soft: #f5f5f5;
+  --muted-foreground: #e1e1e1;
+  --subtle-foreground: #cecece;
+  --brand: #d84f94;
+  --brand-accent: #ff9bc9;
+  --brand-deep: #8a1f58;
+  --brand-hover: #ffc3de;
+  --brand-soft: #5a1839;
+  --brand-wash: #260b18;
+  --brand-ink: #ffffff;
+  --brand-cta-hover: #a82c6d;
+  --teal: #3dd8cc;
+  --teal-deep: #7ff5eb;
+  --teal-soft: #123d39;
+  --gold: #f3c95e;
+  --gold-deep: #ffdc82;
+  --gold-soft: #4a3710;
+  --card: #080808;
+  --card-foreground: #ffffff;
+  --popover: #121212;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: rgba(255, 255, 255, 0.14);
+  --secondary-foreground: #ffffff;
+  --muted: #121212;
+  --accent: #ff9bc9;
+  --accent-foreground: #000000;
+  --destructive: #ff8f87;
+  --success: #7ff5eb;
+  --border: rgba(255, 255, 255, 0.5);
+  --border-subtle: rgba(255, 255, 255, 0.32);
+  --input: rgba(255, 255, 255, 0.65);
+  --ring: #ffffff;
+  --shadow-strong: rgba(0, 0, 0, 0.9);
+  --whatsapp-ink: #8af5ae;
+  --whatsapp-ink-hover: #c3ffd7;
+}
+
+html[data-a11y-enhanced-contrast="true"] .site-bg {
+  display: none;
+}
+
+html[data-a11y-enhanced-contrast="true"] :where(.text-gradient, .text-shimmer) {
+  background: none;
+  color: var(--foreground);
+}
+
+html[data-a11y-enhanced-contrast="true"] :focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 3px;
+}
+
+/* Hebrew receives more room between words and lines, never forced spacing
+   between letters, which can make Hebrew glyphs and marks harder to read. */
+/* ── The redesign's own tokens, in the high-contrast palette ──
+   The block above was written against the palette this site wore before the
+   2026-07 redesign. Everything the redesign added has to be re-pointed here as
+   well, or the CTA, its halo and the accent labels keep their paper-mode values
+   on a black canvas and quietly fail the very contrast this option promises.
+   The rose ladder inverts the way the dark scheme's does: pale for type, deep
+   for fills, and the filled CTA carries near-black ink on a bright rose. */
+html[data-a11y-enhanced-contrast="true"] {
+  --rose: #ff9bc9;
+  --rose-line: #ffc3de;
+  --rose-ink: #ff9bc9;
+  --rose-soft: #260b18;
+  --rose-deep: #ffc3de;
+  --rose-cta-hover: #ffffff;
+  --gold-line: #f3c95e;
+
+  --cta-fill: #ffc3de;
+  --cta-ink: #12060b;
+  --cta-fill-hover: #ffffff;
+  --cta-image: none;
+  --cta-image-hover: none;
+  --cta-edge: rgba(255, 255, 255, 0.7);
+  --cta-glow: rgba(255, 155, 201, 0.45);
+  --cta-edge-hover: rgba(255, 255, 255, 0.9);
+  --cta-glow-hover: rgba(255, 155, 201, 0.65);
+  --halo: #ff9bc9;
+  --accent-ink: #ff9bc9;
+}
+
+/* The sand photograph goes, exactly as it does for `prefers-contrast: more`
+   (§10). What is left is the solid `--canvas` painted on <html>, which is what
+   the paper veil in `--background` mixes toward anyway — and `--background` is
+   `transparent` in this palette, so the section gradients simply reveal it. */
+html[data-a11y-enhanced-contrast="true"] .sand-floor {
+  display: none;
+}
+
+/* The film grain over the whole page. Harmless on cream, a contrast loss on
+   black — and `.site-bg` itself is already hidden by the rule above it. */
+html[data-a11y-enhanced-contrast="true"] .site-bg__noise {
+  display: none;
+}
+
+html[data-a11y-comfortable-spacing="true"]
+  :where(p, li, dd, dt, blockquote, figcaption, label) {
+  line-height: 1.75;
+  word-spacing: 0.08em;
+}
+
+html[data-a11y-comfortable-spacing="true"] p + p {
+  margin-block-start: 1.25em;
+}
+
+/* Button-like and complex-card links opt out with data-a11y-no-underline. */
+html[data-a11y-emphasize-links="true"]
+  :where(main, header, footer)
+  a:not([data-a11y-no-underline]) {
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.12em;
+  text-underline-offset: 0.2em;
+}
+
+/* Fixed-control stack (lowest to highest): site controls 50–70, cookie choice
+   90, application dialogs 120, accessibility dialog 130, skip link 200.
+   WhatsApp uses inline-start; accessibility/back-to-top use inline-end. */
+.floating-whatsapp-control {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  inset-inline-start: 1.25rem;
+}
+
+.accessibility-launcher {
+  bottom: calc(1.25rem + env(safe-area-inset-bottom));
+  inset-inline-end: 1.25rem;
+}
+
+.back-to-top-control {
+  bottom: calc(8.75rem + env(safe-area-inset-bottom));
+  inset-inline-end: 1.25rem;
+}
+
+/* vanilla-cookieconsent adds this class to <html> while its bottom notice is
+   visible. Lift both launchers above it and remove the nonessential back-to-top
+   button from the stack until the choice closes. */
+html.show--consent :where(.floating-whatsapp-control, .accessibility-launcher) {
+  bottom: calc(8rem + env(safe-area-inset-bottom));
+}
+
+html.show--consent .back-to-top-control {
+  display: none;
+}
+
+/* The alignment guide keeps compact preference groups in two columns on
+   phones. At the narrowest supported width, however, the rem-scaled 130%
+   stepper cannot physically fit beside another card without overlapping it.
+   Preserve the paired geometry at ordinary phone widths and reflow only at
+   320px-class widths or when 130% text is active on a phone. */
+@media (max-width: 22rem) {
+  .accessibility-compact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 30rem) {
+  html[data-a11y-text-scale="130"] .accessibility-compact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* ────────────────  Reduced motion  ────────────────
-   Honoured without exceptions. Everything decorative on this site is allowed to
-   stop: there is no animation here that carries meaning, and an audience that
-   may include people with trauma-related vestibular or anxiety symptoms is
-   exactly who this media query exists for. Do not add `!important` escapes. */
+   Honoured without exceptions, and now from TWO directions:
+
+     • `@media (prefers-reduced-motion: reduce)` — the device's own setting;
+     • `html[data-a11y-reduce-motion="true"]` — the "הפחתת תנועה" switch in the
+       site's accessibility panel, stamped on <html> before the first paint by
+       the boot script and kept in step afterwards by `AccessibilityProvider`.
+
+   Everything decorative on this site is allowed to stop: there is no animation
+   here that carries meaning, and an audience that may include people with
+   trauma-related vestibular or anxiety symptoms is exactly who this exists for.
+
+   ── WHY `!important` IS HERE, AND WHY IT IS NOT THE THING CLAUDE.md FORBIDS ──
+   The rule in CLAUDE.md is that nothing may `!important` its way PAST reduced
+   motion. This block is reduced motion. It has to outrank the MOTION SYSTEM
+   rules below, several of which are more specific than a `*` selector
+   (`[data-reveal]:not([data-reveal-ready])` and friends) and all of which come
+   later in the file. Without the flag those rules would keep animating for a
+   woman who just asked the panel to stop them. Never add `!important` to
+   anything that MOVES.
+
+   The `:not([data-motion="force"])` prefix is the ONE exception, and it is not
+   an escape either: it is the evaluation override described in §7 at the bottom
+   of this file, which a person can only switch on by typing `?motion=force`
+   into the URL bar. With no such parameter the attribute never exists, the
+   `:not()` always matches, and every rule below applies exactly as it did. */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  :root:not([data-motion="force"]) *,
+  :root:not([data-motion="force"]) *::before,
+  :root:not([data-motion="force"]) *::after {
     animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
-  [data-reveal] {
+  :root:not([data-motion="force"]) [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+  }
+}
+
+/* The same, for the panel's own switch — outside the media query, so it works
+   on a device that has asked for nothing. */
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *,
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *::before,
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) [data-reveal] {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+/* ── Process scrub (the pearl reveal inside #process) ─────────────────────
+   State classes toggled from `src/components/sections/process-scrub.tsx`. The
+   text cards are a directional carousel that follows the Hebrew reading flow:
+   a beat waits off-screen on the physical RIGHT, slides to centre when its
+   station settles, and leaves to the physical LEFT once the visitor scrolls
+   past it.
+
+   ── WHY THERE IS NO `prefers-reduced-motion: no-preference` GATE HERE ──
+   The branch this came from wrapped the transitions in that media query. It is
+   removed on purpose, and this is not a weakening:
+
+     • the component NEVER MOUNTS for a visitor who has asked for less motion
+       or less data — `ProcessExperience` renders the static four-card section
+       for her instead, and no frame is fetched (see that file's header);
+     • the global reduced-motion block a few rules above already freezes every
+       transition and keyframe on the page, and it is the only place that reads
+       all three inputs at once (the device setting, the panel's "הפחתת תנועה"
+       switch, and the `?motion=force` escape);
+     • a media-query gate here would ALSO have to be mirrored by hand into §7
+       at the bottom of this file, the way §1/§2/§5/§6 are, or the evaluation
+       view would silently drift from the real one.
+
+   One gate, in one place, is the whole point of that block. */
+.scrub-beat {
+  opacity: 0;
+  transform: translateX(70vw);
+  pointer-events: none;
+  transition:
+    opacity 0.55s ease,
+    transform 0.75s cubic-bezier(0.22, 0.8, 0.3, 1);
+}
+.scrub-beat.scrub-gone {
+  opacity: 0;
+  transform: translateX(-70vw);
+}
+.scrub-beat.scrub-on {
+  opacity: 1;
+  transform: translateX(0);
+}
+.scrub-pill {
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+.scrub-pill.scrub-on {
+  opacity: 1;
+}
+.scrub-arrow {
+  animation: scrub-bob 1.6s ease-in-out infinite;
+}
+@keyframes scrub-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translateY(6px);
+    opacity: 1;
+  }
+}
+
+/* ══════════════════  MOTION SYSTEM (Phase 4)  ══════════════════
+   One appended block, on purpose: everything the motion layer needs lives
+   between this banner and the end of the file, so it can be read — or removed —
+   as a unit, and so it does not collide with edits to the token blocks above.
+
+   Three rules govern everything here, and none of them are stylistic:
+
+   1. NOTHING here may be load-bearing for content being visible. Every effect
+      is additive over markup that already renders correctly with no CSS
+      animation support, no JavaScript, and no network. Read the fail-open note
+      on `[data-reveal]` further up this file before touching the reveal rules.
+   2. Every animated block is gated on BOTH `@supports (animation-timeline:
+      view())` and `@media (prefers-reduced-motion: no-preference)`. The
+      reduced-motion rendering is a complete design, not a broken one: the
+      spine is simply already drawn, the quote is simply already legible, the
+      cursor layers simply never mount.
+   3. Colours come from tokens (`var(--gold)`, `var(--canvas)`, …) and never
+      from hex literals, so a palette change repoints this file for free.
+
+   No `!important` anywhere below. The global reduced-motion block above still
+   has the last word.
+   ─────────────────────────────────────────────────────────────── */
+
+/* ── 1. Scroll-driven reveal ──────────────────────────────────────
+   The calm version of the JS reveal in src/components/ui/reveal.tsx: same
+   gesture (fade + 16px rise), driven by the browser's own view-progress
+   timeline instead of an IntersectionObserver, so it tracks the scroll
+   linearly instead of firing a fixed-duration transition at a threshold.
+
+   `Reveal` feature-detects this and skips its observer entirely when it is
+   supported, which is why the selector excludes `[data-reveal-ready]` — that
+   attribute only ever appears on the JS path, and the two must never drive the
+   same element at once.
+
+   `both` fill (not `forwards`) is deliberate: without the backwards fill the
+   element would render fully opaque for the first few pixels of its entry and
+   then blink out as the range starts. A timeline that cannot resolve at all —
+   a detached subtree, no scroll container anywhere — is INACTIVE, and an
+   inactive timeline applies no effect, so the element keeps its base (visible)
+   style. That is the safe failure.
+
+   ⚠️ THE UNSAFE ONE, AND IT IS NOT RARE: `view()` resolves against the NEAREST
+   SCROLL CONTAINER, not against the viewport, and `overflow: hidden` makes an
+   element a scroll container. A `[data-reveal]` under such an ancestor gets a
+   perfectly valid, perfectly ACTIVE timeline measured against a box that never
+   scrolls — so it freezes at whatever progress that fixed geometry happens to
+   give it, which is usually somewhere half-faded, forever. It is not inactive
+   and `both` does not save it. Same for a `position: fixed` subtree.
+
+   So: no [data-reveal] may sit inside `overflow-hidden` (or `-x-`/`-y-`, or
+   `auto`/`scroll`, or a fixed subtree). This bit the testimonials section, the
+   home hero, the process section, `PageHero` (so every inner page) and the
+   thank-you hero, all swept on 2026-07-30.
+
+   There are two ways out, and both are in the tree:
+     • `overflow: clip` instead of `hidden` — clips the identical box and is
+       NOT a scroll container. One word, no markup, and it still catches bleed
+       coming from CONTENT rather than from decoration (the home hero needs
+       exactly that: the hero video's halo hangs 4rem outside its frame). It is
+       inside this project's browser baseline — Safari 16, below Tailwind 4's
+       own floor of 16.4. This is the default choice.
+     • move the clip onto a wrapper holding ONLY the decorative bleed. What
+       testimonials.tsx does, and the long version of this whole argument lives
+       in its comment. Reach for it when the bleed is purely decorative and you
+       want the reason for the clip sitting next to the thing being clipped. */
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-reveal]:not([data-reveal-ready]) {
+      animation: reveal-rise linear both;
+      animation-timeline: view();
+      /* Staggered items get their whole range shifted a few percent later by
+         the component (`--reveal-range`), which is what a stagger IS on a
+         scroll timeline — a delay in milliseconds means nothing here. */
+      animation-range: var(--reveal-range, entry 8% cover 26%);
+    }
+  }
+}
+
+/* ── 2. Process spine ─────────────────────────────────────────────
+   A gold hairline down the inline-start margin of the process steps (the RIGHT
+   edge in Hebrew — it is placed with logical properties, so it follows the
+   document direction without a single RTL override) that draws itself as the
+   section scrolls through.
+
+   ⚠️ PHONES ONLY. The line carries one bead per step, spaced down its length,
+   which draws "these four things happen in this order" — a claim that is only
+   true while the steps are a single stacked column. The grid goes two-up at
+   `sm` and a four-across ROW at `lg`, and at 1440 this rendered as a vertical
+   gold line at the edge of the section connecting nothing. The component
+   carries `sm:hidden` for that reason; see the layout note in
+   src/components/motion/process-spine.tsx before re-widening it.
+
+   `pathLength="1"` normalises the path so `stroke-dasharray: 1` is exactly one
+   full stroke and `stroke-dashoffset` runs 1 → 0 regardless of the pixel
+   height the line ends up at. The base state below is the DRAWN line: no
+   support, no JS, reduced motion and an inactive timeline all land on a
+   finished, deliberate hairline rather than on an invisible one.
+
+   The timeline is a NAMED one declared on the process <section>
+   (`.process-spine-scope`) rather than a bare `view()`, because the progress
+   the line should track is the SECTION's — a bare `view()` on the hairline
+   would measure the 2px-wide overlay it is drawn in, which enters and leaves
+   the viewport on a completely different schedule. If the spine ever stops
+   drawing, check first that `.process-spine-scope` is still on an ancestor of
+   <ProcessSpine>: out of scope, the name resolves to nothing.
+
+   This note used to say the name was needed because that section set
+   `overflow: hidden` for its blur wash. It still clips — it has to, the wash is
+   48rem wide — but with `overflow: clip`, changed on 2026-07-30 because
+   `hidden` was freezing every [data-reveal] in the section (see §1). The named
+   timeline never depended on either: `view-timeline-name` measures its own
+   element against the page scroller, not against a clip on itself. */
+.process-spine {
+  --spine-color: var(--gold);
+}
+
+.process-spine__svg {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  width: 2px;
+  height: 100%;
+  overflow: visible;
+  /* ── The line has to END, not stop ──
+     A hairline that runs to a hard edge at both ends reads as scaffolding: a
+     pole someone left standing next to the cards. Fading the last few percent
+     of it out at the top and the bottom is what turns it into a drawn line,
+     and it costs one declaration. The mask is on the SVG rather than on the
+     path so it applies to the stroke as it is drawn, at any section height. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 7%,
+    #000 93%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 7%,
+    #000 93%,
+    transparent 100%
+  );
+}
+
+.process-spine__line {
+  fill: none;
+  stroke: var(--spine-color);
+  stroke-width: 1;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0; /* drawn — see the note above */
+  /* 0.5 sat at the weight of a UI divider. This is meant to be the faintest
+     mark on the page — you should notice it only after the cards. */
+  opacity: 0.38;
+}
+
+/* A designed bead, not a bullet: a ring of the page canvas so the line does not
+   show through, a gold hairline around it, and a small gold pip at its centre.
+   The pip is what stops it reading as an empty checkbox — at 7px a hollow ring
+   alone is just a hole in the line. Sized in whole pixels: at 8px+ the ring
+   starts to look like a control someone could click. */
+.process-spine__dot {
+  --dot-size: 7px;
+  position: absolute;
+  /* ── THE DOTS HAVE TO SIT *ON* THE LINE ──
+     They did not. The rule used to be `inset-inline-start: 0` plus
+     `translate: -50% -50%`, and `translate` is PHYSICAL: it always pulls left,
+     including in RTL, where the dot then landed ~6px to the side of a stroke
+     that logical positioning had put on the right. Four little beads floating
+     beside the hairline instead of threaded onto it is most of why this read as
+     scaffolding rather than as a drawing.
+     So: anchor 1px in from the container's inline-start edge — which is exactly
+     where the SVG puts the stroke's centre — and pull back by half the dot with
+     a LOGICAL margin, which does flip. `translate` is left doing the vertical
+     half only. */
+  inset-inline-start: 1px;
+  margin-inline-start: calc(var(--dot-size) / -2);
+  width: var(--dot-size);
+  height: var(--dot-size);
+  translate: 0 -50%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at center,
+      var(--spine-color) 0 1.5px,
+      transparent 1.6px
+    ),
+    var(--canvas);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--spine-color) 55%, transparent);
+  opacity: 0.9;
+}
+
+@keyframes spine-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes spine-dot-bloom {
+  from {
+    opacity: 0.25;
+    scale: 0.5;
+  }
+  to {
+    /* Must match the base `opacity` on `.process-spine__dot` — the animation
+       ends where the un-animated design already is. */
+    opacity: 0.9;
+    scale: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .process-spine__line {
+      animation: spine-draw linear both;
+      animation-timeline: --pnina-process;
+      animation-range: entry 20% cover 70%;
+    }
+    .process-spine__dot {
+      animation: spine-dot-bloom linear both;
+      animation-timeline: --pnina-process;
+      /* Each dot lights up as the line reaches it — the component writes the
+         range, because the offsets depend on how many steps there are. */
+      animation-range: var(--dot-range, entry 20% cover 70%);
+    }
+  }
+}
+
+.process-spine-scope {
+  view-timeline-name: --pnina-process;
+}
+
+/* ── 3. Cursor layers (evaluation switcher — see hover-layer.tsx) ──
+   TEMPORARY. Four candidates for D7, chosen with
+   `?hover=sand|glow|grid|pearl|off`. `sand` is the DEFAULT and the one Daniel
+   asked for in words ("we have a beautiful sand background… when the mouse moves
+   there is a pearl on it that follows"); the other three are kept only so he can
+   compare. Whichever he keeps, the losers get DELETED — component, styles and
+   the switcher itself. Nothing here ships dormant.
+
+   NOTE (0.11.4): the sand itself is no longer one of these variants. It is the
+   real photograph in §10, mounted for everyone including touch devices, and it
+   does its own stirring under the pointer. `?hover=sand` is now just the pearl
+   that rests on it, which is why that variant has no background layer of its own.
+
+   All of them are decorative: `pointer-events: none`, transform-only animation,
+   and they never mount at all on touch devices or under reduced motion. The
+   background layers sit at a negative z-index (behind every card and every line
+   of type, above the sand floor and the drifting field); the sand variant's PEARL
+   is the one thing that sits above content, because a cursor follower that
+   disappears behind every card is not a cursor follower. It is 20px, it never
+   takes a pointer event, and it is offset away from the point of the cursor. */
+.cursor-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* glow — "pearl-light": one soft warm radial that lazily follows the cursor. */
+.cursor-glow__orb {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 400px;
+  height: 400px;
+  border-radius: 9999px;
+  /* Plain-rgba fallback first for anything without color-mix(); the token
+     version below wins wherever it parses. */
+  background: radial-gradient(
+    circle at center,
+    rgba(240, 196, 64, 0.5),
+    transparent 68%
+  );
+  background: radial-gradient(
+    circle at center,
+    color-mix(in srgb, var(--gold) 45%, transparent),
+    color-mix(in srgb, var(--surface-3) 25%, transparent) 45%,
+    transparent 70%
+  );
+  opacity: 0;
+  /* The gradient already falls off softly; the blur only takes the last edge
+     off it. 40px was paying for a full-screen blur nobody could see. */
+  filter: blur(24px);
+  transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.cursor-glow__orb[data-lit] {
+  /* THE knob for this variant. D7 specified 0.05-0.08 alpha; measured on the
+     real canvas that is an 8/255 shift — less than the drifting colour field
+     moves on its own, i.e. invisible, which is not a variant anyone can judge.
+     0.28 landed around 0.13 alpha of gold, which was still on the edge of
+     nothing on a bright cream canvas; 0.38 (≈0.17 alpha of gold at the orb's
+     centre, falling to nothing by 70% of its radius) is clearly a warm light
+     that moved into the room, and still a wash you notice rather than look at.
+     Raised 2026-07-29 at Daniel's request. Turn this ONE number down to make it
+     calmer — do not touch the gradient. */
+  opacity: 0.38;
+}
+
+/* grid — "sand-shimmer": a static CSS dot field, with the canvas painting only
+   the brightened dots near the cursor on top of it. Repainting 2,000+ dots per
+   frame to change 100 of them is the version this replaced. */
+.cursor-grid__field {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--foreground) 9%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 30px 30px;
+  background-position: 0 0;
+}
+.cursor-grid__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* pearl — the brand mark, alive. A CSS sphere: a white specular highlight that
+   tracks the cursor angle, a peach edge, and up to ~10px of lean. Hero region
+   only, and only on wide screens, so it can never sit under a line of type. */
+.cursor-pearl {
+  position: absolute;
+  z-index: -4;
+  pointer-events: none;
+}
+.cursor-pearl__orb {
+  width: 10rem;
+  height: 10rem;
+  border-radius: 9999px;
+  background: radial-gradient(
+      circle at var(--pearl-hx, 34%) var(--pearl-hy, 28%),
+      color-mix(in srgb, var(--surface-1) 92%, transparent),
+      color-mix(in srgb, var(--surface-1) 30%, transparent) 14%,
+      transparent 34%
+    ),
+    radial-gradient(
+      circle at 70% 76%,
+      color-mix(in srgb, var(--surface-3) 75%, transparent),
+      transparent 62%
+    ),
+    radial-gradient(
+      circle at 42% 38%,
+      var(--surface-1) 0%,
+      var(--surface-2) 40%,
+      color-mix(in srgb, var(--foreground) 20%, var(--surface-3)) 74%,
+      color-mix(in srgb, var(--gold) 70%, var(--surface-3)) 100%
+    );
+  box-shadow: 0 24px 60px -30px var(--shadow-strong);
+  opacity: 0;
+  transition: opacity 900ms cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+.cursor-pearl__orb[data-lit] {
+  /* Pale enough to stay a background object, defined enough to read as a sphere
+     rather than as a smudge of light. Below ~0.5 it stopped being a pearl. */
+  opacity: 0.62;
+}
+
+/* ══════ sand — THE DEFAULT ══════
+   There is nothing here any more, and that is the design.
+
+   0.11.3 shipped this variant as two objects: a procedural sand floor and a small
+   pearl that followed the cursor across it, trailed by two ghosts of itself. Both
+   are gone. The sand became the real photograph in §10 — a page background for
+   everybody, not a cursor effect — and Daniel's verdict on the follower, on
+   2026-07-30, was "remove that fucking pearl from the mouse". So the default hover
+   experience IS the sand: it moves under the pointer (`SandFloor`'s WebGL layer)
+   and nothing rides on top of it.
+
+   `?hover=sand` therefore mounts NOTHING, and `HoverLayer` says so. The pearl
+   drawing itself (`.pearl-sphere`, above) stays — it is the offers-section node and
+   the `?hover=pearl` comparison variant, neither of which is a cursor follower.
+
+/* ── 4. Paper grain ───────────────────────────────────────────────
+   The grain already exists — `.site-bg__noise` above is an feTurbulence
+   fractalNoise tile on the background layer, which is exactly the layer it
+   belongs on. So this does not stack a second tile over it (two grains read as
+   dirt, not as paper); it lifts the light-mode tile into the 0.04-0.06 band and
+   adds the one thing it was missing: it disappears for a reader who has asked
+   the OS for more contrast, where a texture over type is noise in the literal
+   sense. Monochrome alpha, so it works over any palette. */
+.site-bg__noise {
+  opacity: 0.05;
+}
+@media (prefers-contrast: more) {
+  .site-bg__noise {
+    display: none;
+  }
+}
+
+/* ── 5. Scroll sequence (src/components/motion/scroll-sequence.tsx) ──
+   The canvas stays invisible until its first frame is painted: the context is
+   `alpha: false`, so an unpainted canvas is a black rectangle. */
+.scroll-seq__canvas {
+  opacity: 0;
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.scroll-seq__canvas[data-drawn] {
+  opacity: 1;
+}
+
+/* Caption beats over the sticky stage. The text is in the DOM and legible at
+   all times without this — the animation only decides WHEN it fades up. */
+.scroll-seq__beat {
+  opacity: 1;
+}
+.scroll-seq__track {
+  view-timeline-name: --pnina-seq;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-seq__beat {
+      animation: reveal-rise linear both;
+      animation-timeline: --pnina-seq;
+      animation-range: var(--beat-range, contain 10% contain 30%);
+    }
+  }
+}
+
+/* ── 6. Word-reveal quote (src/components/motion/quote-reveal.tsx) ──
+   The full sentence is always in the DOM as ordinary text; the words simply
+   arrive in reading order as it scrolls past. No support, reduced motion, or an
+   inactive timeline: it is a plain, fully legible pull-quote. */
+@keyframes quote-word-in {
+  from {
+    opacity: 0.12;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .quote-reveal__word {
+      animation: quote-word-in linear both;
+      animation-timeline: view();
+      animation-range: var(--word-range, entry 20% cover 45%);
+    }
+  }
+}
+
+/* ── 7. Evaluation override: `?motion=force` ──────────────────────
+   ⚠️ TEMPORARY. Delete this whole block, `src/lib/eval-flags.ts` and
+   `src/components/eval/eval-overrides.tsx` at the end of the 2026-07 redesign
+   round, the same way the `?hover=` switcher in §3 goes.
+
+   WHY IT EXISTS: Daniel reviews this site on a machine with "reduce motion"
+   switched on at the OS level. The site then correctly renders its
+   reduced-motion design — spine already drawn, reveals already visible, no
+   cursor layer — which means he cannot see the motion work he is being asked
+   to judge. This turns the motion back on FOR HIS TAB ONLY, and only when he
+   types `?motion=force` into the URL bar.
+
+   IT IS NOT A LOOPHOLE IN RULE 5. Nothing here changes a single computed style
+   for a visitor who has not typed that parameter: `EvalOverrides` writes the
+   `data-motion` attribute in an effect and only when the parameter is present,
+   so the attribute simply does not exist on anybody else's document, and every
+   rule below is inert. A real reduced-motion preference is still absolute.
+
+   Two halves:
+     a) the global reduced-motion block above already excludes a forced root
+        (`:root:not([data-motion="force"])`), which un-freezes the keyframe
+        animations, the transitions and the page-enter fade;
+     b) the four scroll-timeline effects are each gated on `@media
+        (prefers-reduced-motion: no-preference)`, which a selector cannot
+        satisfy — so their declarations are repeated here, unchanged, behind
+        the attribute. Any edit to §1, §2, §5 or §6 has to be mirrored here or
+        the evaluation view silently drifts from the real one. */
+@supports (animation-timeline: view()) {
+  /* §1 — scroll-driven reveal */
+  :root[data-motion="force"] [data-reveal]:not([data-reveal-ready]) {
+    animation: reveal-rise linear both;
+    animation-timeline: view();
+    animation-range: var(--reveal-range, entry 8% cover 26%);
+  }
+
+  /* §2 — process spine */
+  :root[data-motion="force"] .process-spine__line {
+    animation: spine-draw linear both;
+    animation-timeline: --pnina-process;
+    animation-range: entry 20% cover 70%;
+  }
+  :root[data-motion="force"] .process-spine__dot {
+    animation: spine-dot-bloom linear both;
+    animation-timeline: --pnina-process;
+    animation-range: var(--dot-range, entry 20% cover 70%);
+  }
+
+  /* §5 — scroll-sequence caption beats */
+  :root[data-motion="force"] .scroll-seq__beat {
+    animation: reveal-rise linear both;
+    animation-timeline: --pnina-seq;
+    animation-range: var(--beat-range, contain 10% contain 30%);
+  }
+
+  /* §6 — word-reveal quote */
+  :root[data-motion="force"] .quote-reveal__word {
+    animation: quote-word-in linear both;
+    animation-timeline: view();
+    animation-range: var(--word-range, entry 20% cover 45%);
+  }
+}
+
+/* ── 8. Evaluation override: `?font=` ─────────────────────────────
+   ⚠️ TEMPORARY, and it goes with §7.
+
+   Daniel found the old headlines wrong, so the display face is swappable from
+   the URL bar while he decides:
+
+     ?font=bonanova   Bona Nova 700 — WHAT THE SITE SHIPS as of 0.12.x (the
+                      parameter is only needed to switch BACK inside a tab)
+     ?font=bellefair  Bellefair 400 — the 0.12.0 rendering, the one-weight
+                      display face the bold complaint retired
+     ?font=frank      Frank Ruhl Libre 700 — the 0.11.4 rendering
+     ?font=noto       Noto Serif Hebrew
+     ?font=david      David Libre
+     ?font=sans       no serif at all: Assistant, the body face, set heavier so a
+                      headline still carries
+
+   Every alternate is declared in the locale layout with `preload: false`, so its
+   files are only fetched when one of these rules actually applies the family to
+   rendered text. A visitor who never types `?font=` downloads exactly the bytes
+   the shipped face needs and nothing else.
+
+   `--font-display` is the single token every headline resolves through (the
+   `h1, h2` rule and `.font-display`), so re-pointing it here is the whole swap.
+
+   ⚠️ THE WEIGHT HAS TO TRAVEL WITH THE FACE. The `h1, h2` rule now sets a real
+   700, which is right for the shipped face and for the three text serifs below,
+   and WRONG for Bellefair — it has a single 400 master, so leaving it at 700
+   would render a browser-synthesised faux bold and stop being an honest picture
+   of the 0.12.0 site. That is what the `bellefair` weight rule underneath is
+   for. Assistant needs 800 for the opposite reason: a text sans at 700 reads
+   soft at headline size. */
+:root[data-eval-font="bellefair"] {
+  --font-display: var(--font-eval-bellefair);
+}
+:root[data-eval-font="frank"] {
+  --font-display: var(--font-eval-frank);
+}
+:root[data-eval-font="noto"] {
+  --font-display: var(--font-eval-noto);
+}
+:root[data-eval-font="david"] {
+  --font-display: var(--font-eval-david);
+}
+:root[data-eval-font="sans"] {
+  --font-display: var(--font-sans-hebrew);
+}
+
+/* Bellefair has ONE master at 400. The base rule's 700 would be synthesised on
+   it — the exact smeared outline 0.12.0's notes warned about — so this variant
+   has to hand the weight back, along with the zero tracking that face was tuned
+   with. Its digits are lining figures already, so `lining-nums` is harmless
+   here and is left inherited rather than restated. */
+:root[data-eval-font="bellefair"] :is(h1, h2, .font-display) {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* The three text serifs, at the weight they were designed to carry a headline
+   with, and with the tracking the 0.11.4 site tuned for them. */
+:root:is(
+    [data-eval-font="frank"],
+    [data-eval-font="noto"],
+    [data-eval-font="david"]
+  )
+  :is(h1, h2, .font-display) {
+  font-weight: 700;
+  letter-spacing: -0.012em;
+}
+
+/* Assistant is a text sans: at the 700 the serifs are set in, a headline reads
+   soft rather than set. This is the one variant that needs a weight of its own. */
+:root[data-eval-font="sans"] :is(h1, h2, .font-display) {
+  font-weight: 800;
+  letter-spacing: -0.022em;
+}
+
+
+/* ── 9. The free call: ₪490 → ללא עלות → the button ──────────────
+   The page's conversion moment, and the ONE place on this site that is allowed
+   to be loud. Component + the full argument for why it may exist at all, and
+   exactly where the licence stops: src/components/motion/free-call-anchor.tsx.
+
+   ── READ THIS BEFORE CHANGING ANY VALUE BELOW ──
+   1. THE BASE STYLES ARE THE FINISHED DESIGN, AT FULL VOLUME. Warm panel, value
+      line present, curve fully drawn (`stroke-dashoffset: 0`), arrowhead solid,
+      "ללא עלות" at full size, button hot. Reduced motion, no JS and a dead
+      bundle all render exactly this. A reduced-motion visitor gets the loud
+      design; she just does not get the show. Nothing here may start hidden
+      without the component having armed it first.
+   2. NO `prefers-reduced-motion` GATE IS NEEDED HERE, and none should be added.
+      The gate is in JavaScript (`prefersReducedMotion()`), which is also the
+      only helper that knows about `?motion=force` — which is why, unlike §1,
+      §2, §5 and §6, this block needs no mirrored copy in §7. One gate, one
+      place.
+   3. NOTHING BELOW MAY LOOP. Not `infinite`, not `alternate`, not a re-arm on
+      re-entry, and not a sheen on a timer. Every loud thing happens once, on
+      arrival, and then the panel is still. Loud once is enthusiasm; loud
+      forever is pressure, and pressure aimed at this audience is what rule 4
+      exists to stop.
+
+   The `armed` state is not a second set of styles: it is the same animations,
+   paused on their first frame. There is therefore no way for the two to drift. */
+
+/* ── The panel ──
+   Warmer and more lit than anything else on the page: a gold bloom coming in
+   over the inline-start shoulder (the top RIGHT in Hebrew, where the reading
+   starts) and fading out well before the body copy, which stays on near-white
+   at its measured contrast. The halo underneath is warm rather than neutral, so
+   the panel reads as glowing rather than as merely raised. */
+.offer-free-panel {
+  background-image:
+    radial-gradient(
+      125% 155% at 100% 0%,
+      color-mix(in srgb, var(--halo) 30%, transparent) 0%,
+      color-mix(in srgb, var(--halo) 10%, transparent) 32%,
+      transparent 60%
+    ),
+    /* The opposite corner is PEACH rather than brown (2026-07-29). The two-tone
+       amber-over-brown panel read as one flat warm rectangle; peach is the
+       palette's own "אפרסק עדין" and it is what gives the panel its second
+       temperature. `--surface-3` is that peach on paper and the elevated warm
+       brown after dark, so the same declaration lifts the corner in both
+       schemes without a `dark:` override. Decorative only — the body copy on
+       this panel is measured against the mixed result, not against white. */
+      radial-gradient(
+        95% 125% at 0% 100%,
+        color-mix(in srgb, var(--surface-3) 62%, transparent) 0%,
+        color-mix(in srgb, var(--brand) 9%, transparent) 46%,
+        transparent 72%
+      );
+  box-shadow:
+    0 1px 2px 0 rgba(58, 46, 39, 0.05),
+    /* A pale metal edge along the top of the panel. One inset hairline is what
+       separates "a card with a gold border" from "a card with a gold EDGE" —
+       the same trick a gilded frame uses, and it costs one shadow stop. */
+      inset 0 1px 0 0 color-mix(in srgb, #ffd97a 60%, transparent),
+    0 28px 70px -30px color-mix(in srgb, var(--gold) 62%, transparent);
+}
+
+/* ── The dark panel's wash is WEAKER, and that is not a taste call ──
+   `--gold` after dark is a near-#ffd700 metal, so the same 30% corner that reads
+   as a warm bloom on cream turns the top of this panel into a lit gold plate —
+   and "הצעד הראשון", which sits in exactly that corner in `--gold-deep`, was
+   measured at 4.17:1 on it. A fail, in the panel the whole page is aimed at. At
+   18% the same corner is 5.6:1 for that label and 7.5:1 for body copy, and it
+   still reads as the brightest thing in the section. If you brighten `--gold`
+   again, re-measure this corner before touching this number. */
+@media (prefers-color-scheme: dark) {
+  .offer-free-panel {
+    background-image:
+      radial-gradient(
+        125% 155% at 100% 0%,
+        color-mix(in srgb, var(--halo) 22%, transparent) 0%,
+        color-mix(in srgb, var(--halo) 8%, transparent) 32%,
+        transparent 60%
+      ),
+      radial-gradient(
+        95% 125% at 0% 100%,
+        color-mix(in srgb, var(--surface-3) 62%, transparent) 0%,
+        color-mix(in srgb, var(--brand) 9%, transparent) 46%,
+        transparent 72%
+      );
+    /* ── THE ACID CORNER ──
+       The base rule's shadow stack was inherited whole by dark mode, and its
+       last stop is `--gold` at 62% cast 28px DOWNWARD — i.e. outside the panel,
+       onto the canvas, under its bottom corner. On cream that is a warm bloom.
+       After dark `--gold` is #ffd44f, a near-#ffd700 metal, and 62% of it over
+       #1c1611 composites to roughly #6f5f26: a yellow-GREEN, and the exact
+       "I think it's gold but what I see is green" Daniel called out in 0.11.3,
+       here leaking out from under the one panel the whole page is aimed at.
+       It also collided with the peach bottom-corner wash above, so the corner
+       read as acid rather than as light.
+
+       So the outer glow is re-cast for this scheme: `--gold-line` (#cfa33a,
+       hue 44° — the same amber family the readable gold lives in, not the
+       bright metal) at less than half the alpha, and pulled tighter (48px
+       instead of 70px) so it stays a bloom under the corner rather than a haze
+       across the section. The panel keeps its lit top EDGE — that is the inset
+       stop, it is inside the border and it is what makes the thing look gilded
+       — but it is warmed down from #ffd97a to the same amber for the same
+       reason. Nothing about the panel's own gradients changes; this is only
+       what it throws onto the canvas. */
+    box-shadow:
+      0 1px 2px 0 rgba(0, 0, 0, 0.5),
+      inset 0 1px 0 0 color-mix(in srgb, var(--gold-line) 55%, transparent),
+      0 20px 48px -30px color-mix(in srgb, var(--gold-line) 28%, transparent);
+  }
+}
+
+/* The action column carries its own warm light, so the half of the panel that
+   holds the gift and the button is the brightest part of it. Painted as the
+   column's own background rather than as another corner gradient on the panel:
+   a corner is a physical position and would land on the wrong side of an LTR
+   page, whereas this simply follows the column wherever the grid puts it. */
+.free-anchor {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Drawn on a box deliberately much larger than the column, with a
+   `closest-side` gradient, so the wash reaches full transparency long before
+   its own edges: a radial that is still tinted where its box stops paints a
+   visible RECTANGLE, which is exactly the artifact this shape avoids. The
+   overspill is clipped by the panel's own `overflow: hidden`. */
+.free-anchor::before {
+  content: "";
+  position: absolute;
+  inset: -34% -42%;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--halo) 24%, transparent) 0%,
+    color-mix(in srgb, var(--halo) 9%, transparent) 42%,
+    transparent 72%
+  );
+}
+
+/* Weaker after dark, for the same reason the panel's own corner is — see the
+   note on the dark `.offer-free-panel` above. `--halo` here is the lit pink (and
+   a near-#ffd700 metal under `?accent=gold`), and this wash sits directly under
+   "ללא עלות" and the button. Re-measured off the rendered panel after the pink
+   correction: "הצעד הראשון" sits at 8.63:1 on the pink here and 7.78:1 on the
+   gold (5.96:1 / 5.67:1 in light).
+   Declared HERE rather than up with the panel override because it has the same
+   specificity as the base rule and would otherwise lose to it. */
+@media (prefers-color-scheme: dark) {
+  .free-anchor::before {
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--halo) 18%, transparent) 0%,
+      color-mix(in srgb, var(--halo) 7%, transparent) 42%,
+      transparent 72%
+    );
+  }
+}
+
+/* ── The value line ──
+   It stays a quiet fact: this is the number the page is giving away, not the
+   number it is selling. */
+.free-anchor__value {
+  font-weight: 500;
+}
+
+/* ── The arrow ──
+   Heavier than the process spine (2px against 1px) because this one is a
+   gesture, not a margin rule, and a whisper-thin line under a 37px word reads
+   as an accident. The drop shadow is a warm bloom rather than a shadow: it
+   makes the gold feel lit on the pale panel. */
+.free-anchor__arrow {
+  display: block;
+  /* Sits in the gutter between the two lines, indented a little from the text
+     edge so the curve starts under the value rather than beside it. */
+  margin-block: 0.15rem -0.35rem;
+  margin-inline-start: 0.4rem;
+  /* The stroke would otherwise be clipped by the viewBox at the arrowhead. */
+  overflow: visible;
+  filter: drop-shadow(
+    0 1px 5px color-mix(in srgb, var(--gold) 45%, transparent)
+  );
+}
+
+/* ── The arrow's METAL ──
+   The stroke is painted from an SVG `<linearGradient>` declared inside the arrow
+   itself (free-call-anchor.tsx), not from a flat token, because a flat fill can
+   only ever be a colour — the light-dark-light banding is the whole difference
+   between "a gold line" and "a line made of gold". `stroke: var(--gold)` stays
+   as the declaration underneath so that anything which cannot resolve the
+   gradient reference paints the bright gold instead of black (SVG's default
+   stroke is `none`, but a mis-resolved `url()` falls back to the previous
+   declaration in the cascade, which is the point of keeping it). It is
+   decorative and `aria-hidden`, so it is free to be as bright as it likes. */
+.free-anchor__line,
+.free-anchor__head {
+  fill: none;
+  stroke: var(--gold);
+  stroke: url(#free-anchor-metal);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.free-anchor__line {
+  /* pathLength="1" on the element, so this is exactly one full stroke and the
+     resting state is the drawn line. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* ── "ללא עלות" ──
+   The second-largest thing in the section, after its h2: display serif, set in
+   the warmest gold that is legal for type (`--gold-deep`, 5.62:1 on the canvas
+   and 5.26:1 on the gold wash this panel puts behind it — measured, not
+   guessed). `width: fit-content` + `margin-inline-start: auto` sets the box to
+   the word and parks it at the inline END, which is what puts it under the
+   arrowhead and what gives the shine below something exactly the width of the
+   word to cross. */
+/* ⚠️ THE ONE PLACE THE DISPLAY FACE IS DELIBERATELY NOT USED (0.12.0).
+   This word wants weight — it is the panel's punchline and the second-biggest
+   thing in the section — and Bellefair has exactly one master at 400, so asking
+   for 700 here would hand the browser a synthesised faux bold on the largest
+   gold word on the site. Screenshotted both ways: Bellefair at 400 goes airy and
+   loses the panel's argument, and a faked bold goes furry at the joins where the
+   metal gradient shows every flaw.
+   So this word wears the BODY face at a real 700 — Assistant ships that weight —
+   which is the rule from the h1/h2 note applied rather than dodged: if a display
+   element needs weight, move it to the face that has some. The element still
+   carries `.font-display` in the JSX for the section's own bookkeeping; this
+   declaration is what actually decides, and it must stay AFTER the family
+   Tailwind's utility sets. */
+.free-anchor__free {
+  width: fit-content;
+  margin-inline-start: auto;
+  position: relative;
+  isolation: isolate;
+  font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
+  font-size: 2.3rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--gold-deep);
+}
+
+/* ── The word's METAL, and the two rules it obeys ──
+   Daniel wants the big gold to read as actual metal, and a flat fill never
+   will. So the glyphs are painted from a gradient. Two constraints, both hard:
+
+   1. THERE IS ALWAYS A SOLID COLOUR UNDERNEATH. The `color: var(--gold-deep)`
+      above is declared on the base rule, outside this block; the transparent
+      fill only ever exists inside `@supports`. A browser without
+      `background-clip: text` — or an extension that strips the background,
+      which is exactly how the old `.text-gradient` made four h1s vanish — keeps
+      a fully readable word. This is the "gradient text needs a fallback"
+      lesson, applied properly rather than by declaring `color` twice and hoping.
+
+   2. NO STOP IS LIGHTER THAN `--gold-deep`. The bright metal Daniel calibrated
+      against (#ffd700 and friends) measures 1.3-1.6:1 on this cream and would
+      make the section's second-biggest word illegible. So the banding runs
+      light-to-deep WITHIN the amber that already passed: the lightest stop IS
+      the token (5.26:1 on the wash), and everything else is darker. The word
+      can therefore only ever be MORE legible than the number documented above,
+      whatever the panel's wash does underneath it. That is also why the sweep in
+      `::before` stays BEHIND the letters rather than being clipped into them.
+      The genuinely bright metal on this panel lives in the arrow, the border
+      and the halo, where nothing has to be read. */
+@supports (
+  (-webkit-background-clip: text) or (background-clip: text)
+) {
+  .free-anchor__free {
+    background-image: linear-gradient(
+      104deg,
+      var(--gold-deep) 0%,
+      #6c480c 26%,
+      var(--gold-deep) 48%,
+      #77500f 72%,
+      var(--gold-deep) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+}
+
+/* After dark the constraint relaxes completely: on a warm-dim brown panel the
+   bright end of the metal measures 12:1 and the deep end 6.3:1, so this is the
+   real thing — a pale highlight running through the word and out the other
+   side. Same shape, same angle, no compromise needed. */
+@media (prefers-color-scheme: dark) {
+  @supports (
+    (-webkit-background-clip: text) or (background-clip: text)
+  ) {
+    .free-anchor__free {
+      background-image: linear-gradient(
+        104deg,
+        var(--gold-deep) 0%,
+        #ffe6b0 24%,
+        var(--gold-deep) 46%,
+        #d3a662 74%,
+        #f2d59d 100%
+      );
+    }
+  }
+}
+
+@media (min-width: 640px) {
+  .free-anchor__free {
+    font-size: 2.63rem;
+  }
+}
+
+/* The shine: soft warm light crossing BEHIND the letters, once. Behind, not
+   clipped into the glyphs, because a gradient inside the type would move the
+   word off its measured contrast for the length of the sweep. `z-index: -1`
+   inside the isolated stacking context puts it above the panel and under the
+   text, where light belongs. Invisible at rest — the resting design does not
+   have a highlight parked on it. */
+.free-anchor__free::before {
+  content: "";
+  position: absolute;
+  inset-block: -0.6em;
+  inset-inline-start: -32%;
+  width: 62%;
+  z-index: -1;
+  opacity: 0;
+  border-radius: 999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--gold) 52%, transparent) 0%,
+    color-mix(in srgb, var(--gold) 20%, transparent) 48%,
+    transparent 80%
+  );
+  filter: blur(9px);
+  pointer-events: none;
+}
+
+/* ── The button's halo ──
+   A warm bloom behind the CTA, drawn as a pseudo-element rather than as another
+   box-shadow stop so the entrance can swell it once without touching the
+   button's own shadow (and without animating a custom property). At rest it is
+   a steady glow. */
+.free-anchor__cta {
+  position: relative;
+  isolation: isolate;
+}
+
+.free-anchor__cta::before {
+  content: "";
+  position: absolute;
+  inset: -18% -5%;
+  z-index: -1;
+  border-radius: 999px;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--halo) 58%, transparent) 0%,
+    color-mix(in srgb, var(--halo) 20%, transparent) 55%,
+    transparent 80%
+  );
+  filter: blur(16px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes free-anchor-value-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The value receding as the gift lands — a change of PRESENCE, not of
+   legibility. It ends on `--muted-foreground`, the line's resting colour, which
+   is a measured 5.86:1; it never fades the number toward the background,
+   because ₪490 is a factual claim and not a decoration. */
+@keyframes free-anchor-value-recede {
+  from {
+    color: var(--foreground-soft);
+  }
+  to {
+    color: var(--muted-foreground);
+  }
+}
+
+@keyframes free-anchor-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The head arrives along the curve's own tangent, so it reads as the tip of the
+   line catching up rather than as a glyph appearing. Under `[dir="rtl"]` the
+   whole SVG is mirrored by the `data-icon` rule, which mirrors this translation
+   with it — the head still comes from behind. */
+@keyframes free-anchor-head-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-5px, -5.7px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The gift landing. It comes up small and overshoots a little before it
+   settles — the one spring-ish curve on this site, and it is here because this
+   is the beat the page is genuinely happy about. */
+@keyframes free-anchor-gift-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.72);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Light crossing the word, once, along the reading direction — written as
+   `inset-inline-start` rather than a transform so it travels right-to-left in
+   Hebrew and would travel left-to-right in an LTR locale, with no override. */
+@keyframes free-anchor-shine {
+  0% {
+    opacity: 0;
+    inset-inline-start: -32%;
+  }
+  22% {
+    opacity: 1;
+  }
+  72% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    inset-inline-start: 92%;
+  }
+}
+
+/* The button rising into place, and its halo swelling once before it settles
+   back to the resting glow. */
+@keyframes free-anchor-cta-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes free-anchor-cta-bloom {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.12);
+  }
+  100% {
+    opacity: 0.6;
+    transform: none;
+  }
+}
+
+/* One sheen across the button — the same gesture `.btn-sheen` gives on hover,
+   fired once on arrival and NEVER on a timer. Fill mode is deliberately left at
+   `none`: with `both` the animation would hold the final transform forever and
+   the hover sheen would stop working for the rest of the visit. */
+@keyframes free-anchor-cta-sheen {
+  from {
+    transform: translateX(-130%);
+  }
+  to {
+    transform: translateX(130%);
+  }
+}
+
+/* ── ARMED: the pre-roll frame, written out as PLAIN PROPERTIES ────────
+   Every value here is frame zero of the matching keyframe below it, declared
+   statically rather than as a paused animation. THAT IS THE WHOLE POINT, and it
+   is what makes the replay Daniel asked for on 2026-07-30 possible at all:
+
+   Up to 0.11.4 both states shared one `animation:` declaration and `armed` only
+   added `animation-play-state: paused`. Pausing an animation that has already
+   FINISHED does nothing — it stays parked on its last frame — so re-arming a
+   panel that had already played left it in its end state and un-pausing it
+   restarted nothing. A CSS animation only runs from the top when the declaration
+   itself appears on an element that did not have it.
+
+   So: `armed` carries no animation at all, `playing` carries all of them, and
+   every armed → playing transition is therefore a genuine (re)start. The
+   component drives that cycle — read the state-machine note at the head of
+   free-call-anchor.tsx before changing either selector.
+
+   ⚠️ IF YOU EDIT A `from`/`0%` FRAME BELOW, EDIT THE MATCHING VALUE HERE. They
+   are two halves of one design and a mismatch shows up as a jump on the first
+   frame of the sequence. */
+.free-anchor[data-anchor="armed"] .free-anchor__value {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  color: var(--foreground-soft);
+}
+.free-anchor[data-anchor="armed"] .free-anchor__line {
+  stroke-dashoffset: 1;
+}
+.free-anchor[data-anchor="armed"] .free-anchor__head {
+  opacity: 0;
+  transform: translate3d(-5px, -5.7px, 0);
+}
+.free-anchor[data-anchor="armed"] .free-anchor__free {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0) scale(0.72);
+}
+.free-anchor[data-anchor="armed"] .free-anchor__cta {
+  opacity: 0;
+  transform: translate3d(0, 14px, 0);
+}
+/* Pseudo-elements get their own rules — `:is()` cannot hold one, and a single
+   invalid item there would drop the whole selector silently. Both of these are
+   invisible at rest anyway (the resting design has no highlight parked on it),
+   so frame zero is simply their base state; they are listed for symmetry and so
+   the halo does not sit at its resting 0.6 while the button it belongs to is
+   still off-stage. */
+.free-anchor[data-anchor="armed"] .free-anchor__free::before,
+.free-anchor[data-anchor="armed"] .free-anchor__cta::before {
+  opacity: 0;
+}
+
+/* ── PLAYING: the beats ──
+      0 →  520ms   the value line lands
+    380 → 1180ms   the hairline draws toward the inline end, with weight
+   1100 → 1420ms   the arrowhead arrives along the tangent
+   1180 → 1900ms   "ללא עלות" arrives: up from 0.72, overshoots, settles
+   1250 → 1790ms   the value settles back to its resting tone
+   1560 → 2560ms   light crosses "ללא עלות", once
+   1900 → 2700ms   the button rises; its halo swells and falls back
+   2260 → 3160ms   one sheen across the button, and it is over
+   About 3.2 seconds. It runs on arrival, it runs again if the reader scrolls the
+   panel off the screen and back, and it NEVER runs on a timer — nothing here
+   repeats while she is looking at it. See rule 4 in CLAUDE.md and the header of
+   free-call-anchor.tsx for where that line is drawn. */
+.free-anchor[data-anchor="playing"] .free-anchor__value {
+  animation:
+    free-anchor-value-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both,
+    free-anchor-value-recede 540ms ease 1250ms both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__line {
+  animation: free-anchor-draw 800ms cubic-bezier(0.45, 0, 0.25, 1) 380ms both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__head {
+  animation: free-anchor-head-in 320ms cubic-bezier(0.16, 1, 0.3, 1) 1100ms both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__free {
+  animation: free-anchor-gift-in 720ms cubic-bezier(0.34, 1.45, 0.64, 1) 1180ms
+    both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__free::before {
+  animation: free-anchor-shine 1000ms cubic-bezier(0.4, 0, 0.3, 1) 1560ms both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__cta {
+  animation: free-anchor-cta-in 800ms cubic-bezier(0.16, 1, 0.3, 1) 1900ms both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__cta::before {
+  animation: free-anchor-cta-bloom 900ms cubic-bezier(0.16, 1, 0.3, 1) 1900ms
+    both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__cta .btn-sheen::after {
+  animation: free-anchor-cta-sheen 900ms cubic-bezier(0.16, 1, 0.3, 1) 2260ms;
+}
+
+/* ── The accent-aware CTA skin ──
+   Worn by every `brand` button (button.tsx), and the reason the `?accent=`
+   switcher in §11 can change what the primary CTA is MADE of without knowing
+   where any button is. It holds exactly two things the utilities cannot express:
+
+     • a background IMAGE, which is `none` by default and the bright-gold
+       gradient under `?accent=gold` — a metal has to band, a flat fill cannot;
+     • the two box-shadow pairs, moved here verbatim from the Tailwind arbitrary
+       values that used to sit on the variant, so that an accent can re-point the
+       hairline and the glow instead of losing a specificity fight with them.
+
+   It is UNLAYERED, so it beats the utilities layer — which is also why the hover
+   state has to be spelled out here rather than left to `hover:shadow-[…]`, and
+   why `.cta-hot` below MUST stay after it in source order: same specificity, and
+   the loud offers button is supposed to win. */
+.btn-cta {
+  background-image: var(--cta-image);
+  box-shadow:
+    0 0 0 1px var(--cta-edge),
+    0 8px 30px -8px var(--cta-glow);
+}
+
+.btn-cta:hover {
+  background-image: var(--cta-image-hover);
+  box-shadow:
+    0 0 0 1px var(--cta-edge-hover),
+    0 14px 44px -8px var(--cta-glow-hover);
+}
+
+/* ── The button ──
+   Bigger and hotter than any other CTA on the site, and deliberately so: it is
+   the only button in the section and the thing the whole page is for. A gradient
+   across the accent, a gold hairline, and a wide warm lift.
+
+   It layers OVER the `brand` button variant rather than replacing it, so the
+   focus ring, the disabled state and `.btn-sheen` all still come from there —
+   including `.btn-cta`, which is why this block has to stay AFTER it in source
+   order (same specificity; the loud button is supposed to win).
+
+   ── WHY THE STOPS ARE HEX LITERALS, AND WHY THERE IS A DARK SET ──
+   The button INVERTS between schemes, and that is the site's existing design:
+   the CTA is a deep fill carrying near-white ink on paper, and a lit fill
+   carrying near-black ink after dark (`--cta-ink` is #fff8f5 in light and
+   #1d0f15 in dark). A single set of stops therefore cannot serve both — deep
+   stops behind dark ink is exactly the unreadable button this note exists to
+   stop anyone rebuilding.
+
+   The stops are literals rather than tokens because the tokens that name these
+   colours are TYPE colours and flip for their own reasons. Since 2026-07-30 they
+   are the LIVE SITE's orchid-magenta (hue ~328° in light, ~330° after dark — see
+   the note beside `--rose` in `:root`), measured against the ink each scheme
+   actually uses:
+
+     light, ink #fff8f5      dark, ink #1d0f15
+     #731a49 10.17:1         #d970a4   6.48:1
+     #8a1f58  8.27:1         #e28fb9   7.83:1
+     #94215e  7.57:1         #e79cc2   8.78:1
+     #9a2362  7.16:1 (hover) #f0bcd6  11.06:1 (hover)
+
+   Every stop clears 4.5:1 with room to spare. That is NEW: the 342° family put
+   the light hover stop at 4.55:1, one step from failing, and this note used to
+   say the light end had nowhere left to go. It does now — which is a reason to
+   re-measure if you move it, not a reason to lighten it until it is a
+   highlighter. The two alternate accents re-point all four in §11. */
+/* ── THE RIM IS AN ACCENT ROLE TOO (0.12.x) ──
+   Daniel, 2026-07-30: "the buttons didn't agree on pink."
+
+   The FILLS had already moved to the accent in 0.11.4 — every filled CTA on the
+   site renders `--rose-deep` (#8a1f58 since the move to the live site's pink).
+   What had not moved was the 1px rim on this one button, which was still
+   `--gold` at 55%: a bright metal hairline, hue 45°, drawn tight around a pink
+   pill at hue 330°,
+   and the single loudest piece of gold left on any button. On the free-call
+   panel it reads as a gilded edge belonging to the previous scheme, which is
+   exactly the disagreement.
+
+   So the rim becomes a variable like the stops, and it follows the accent:
+     • light — a PALE pink (`--rose`, #e28fb9) round a deep pink fill. The rim is
+       lighter than what it surrounds, which is what made the gold rim read as a
+       rim in the first place; keeping that relationship inside the pink family
+       keeps the "rose gold" pairing this site is built on without a second hue.
+     • dark  — the fill inverts to a LIT pink (#e28fb9), so a pale rim would
+       vanish into it. `--rose-line` (#d98bb2 after dark) is the pink that is
+       one step darker than the fill, so the relationship inverts with the
+       scheme exactly as the stops do.
+   Decorative in both: this hairline never carries a glyph, so it has no
+   contrast floor to clear — the LABEL's ratios are the six numbers above, and
+   they are unchanged by this block.
+
+   The two alternate accents in §11 keep their gold rim by re-pointing these
+   same two variables; that is what makes `?accent=amber` still the honest
+   pre-0.11.4 rendering. */
+.cta-hot {
+  /* Rebuilt around the new `--rose-deep` (#8a1f58) on 2026-07-30, keeping the
+     old gradient's lightness spread exactly (−5.6 / 0 / +2.4 / +3.9 points of
+     HSL L around the fill) and taking the family's new hue and saturation.
+     Every stop measured with --cta-ink #fff8f5 on it:
+       from 10.17  ·  mid 8.27  ·  to 7.57  ·  hover-to 7.16
+     The old family's lightest stop was 4.79:1, which is why the note at the top
+     of this file used to say there was no headroom left at the light end. There
+     is now — but that is headroom to SPEND deliberately, not a licence to
+     lighten this gradient until it is a highlighter. */
+  --cta-hot-from: #731a49;
+  --cta-hot-mid: #8a1f58;
+  --cta-hot-to: #94215e;
+  --cta-hot-hover-to: #9a2362;
+  --cta-hot-edge: color-mix(in srgb, var(--rose) 70%, transparent);
+  --cta-hot-edge-hover: color-mix(in srgb, var(--rose) 92%, transparent);
+  background-image: linear-gradient(
+    100deg,
+    var(--cta-hot-from) 0%,
+    var(--cta-hot-mid) 48%,
+    var(--cta-hot-to) 100%
+  );
+  box-shadow:
+    0 0 0 1px var(--cta-hot-edge),
+    0 18px 44px -14px color-mix(in srgb, var(--cta-hot-mid) 70%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  .cta-hot {
+    /* Hue-shifted 342° → 330° with the rest of the family, same lightness.
+       Every stop with --cta-ink #1d0f15 on it: from 6.48 · mid 7.83 · to 8.78 ·
+       hover-to 11.06. */
+    --cta-hot-from: #d970a4;
+    --cta-hot-mid: #e28fb9;
+    --cta-hot-to: #e79cc2;
+    --cta-hot-hover-to: #f0bcd6;
+    --cta-hot-edge: color-mix(in srgb, var(--rose-line) 80%, transparent);
+    --cta-hot-edge-hover: color-mix(in srgb, var(--rose-line) 95%, transparent);
+  }
+}
+
+.cta-hot:hover {
+  background-image: linear-gradient(
+    100deg,
+    var(--cta-hot-mid) 0%,
+    var(--cta-hot-to) 52%,
+    var(--cta-hot-hover-to) 100%
+  );
+  box-shadow:
+    0 0 0 1px var(--cta-hot-edge-hover),
+    0 22px 54px -12px color-mix(in srgb, var(--cta-hot-mid) 85%, transparent);
+}
+
+/* ── 10. THE SAND FLOOR (src/components/motion/sand-floor.tsx) ─────
+   Daniel supplied two photographs of rippled cream sand — a 16:9 frame for wide
+   screens and a 9:16 frame for phones — and as of 0.12.1 THEY ARE THE PAGE. This
+   is the floor the whole site stands on: an opaque, full-strength photograph, and
+   the first thing a visitor sees above the fold is his sand and nothing else.
+
+   ── WHY THIS WAS REBUILT (2026-07-30, Daniel: "you didn't use my sand background
+      at all with the hover animation") ──
+   He was right, and the reason was arithmetic, not taste. Until 0.12.0 this layer
+   was a DETAIL MAP, not a photograph: `grade-sand.mjs` divided each channel by a
+   blurred copy of itself, which strips the dune lighting and the tonal mass and
+   leaves a near-white texture (mean 98.6% of white, stddev 1.4%). That plate was
+   then composited `multiply` at opacity 0.45. Multiply's visible signal is
+   `opacity × stddev`, so what actually reached the screen was about six tenths of
+   one percent of modulation — a rumour of texture on a cream page, and on most
+   screens not even that. No opacity value would have fixed it, because the
+   photograph had already been thrown away before the blend.
+
+   That whole approach existed to protect ONE number: the darkest pixel the layer
+   can put behind a line of 12px type. A fixed plate under a scrolling page means
+   every pixel of the photograph eventually sits behind every paragraph, and
+   `--subtle-foreground` (#715e53) needs its background to stay above 221/255 to
+   clear 4.5:1. The photograph's own median is 222/255 and its tail runs to 76/255,
+   so it cannot carry small type directly. Full stop.
+
+   ── SO READABILITY MOVED OFF THE SAND AND ONTO PAPER ──
+   The sand is now at full strength everywhere, and the type sits on a translucent
+   paper veil instead: `--background` (see the note beside it at the top of this
+   file) is no longer `transparent` but a cream at 55% over the sand, which every
+   `bg-background` section already paints. That is the "readability panel" answer,
+   applied through a token instead of through 24 components:
+
+     • the hero shows the photograph at 100% — no veil, no blend mode, no opacity —
+       and so does a soft band at every join between two sections, because the veil
+       ramps in and out over `--paper-fade` (below);
+     • under the type the same photograph reads through the paper at 45%. That is
+       the number Daniel's 2026-07-30 note moved: at the 16% this shipped with, the
+       picture was measurable and not visible, and every band below the hero read
+       as "one single colour background" with a hairline of sand at each join;
+     • the darkest background a glyph can land on is `0.55 × canvas + 0.45 × 193`,
+       i.e. 223/255 — and the auroras, the colour field and the cards spend more
+       on top of that, which is why the ink ladder was darkened in the same
+       commit rather than the veil being put back.
+
+   The 193 in that sum is the plate's floor after the shadow knee in grade-sand.mjs,
+   and it is the ONLY thing that script now does to the light plate. Read the note
+   there before regrading: the knee, the veil and the audit are one system, and
+   moving either number means re-running the audit over the rendered text (method in
+   the CHANGELOG for 0.11.3: blank every glyph, screenshot, sample the real pixels
+   behind each line — and disable smooth scrolling first, or the screenshot and the
+   scroll offset disagree and every reading is fiction).
+
+   ── AND THEN THE GRADE ITSELF HAD TO GO (2026-07-30) ──
+   0.12.1 shipped the photograph, but a graded one: a ×1.09 multiply lifted the
+   frame's tone toward the canvas and bought the veil ~0.2 of a ratio. Daniel, on
+   that result: "pretty sure the background doesn't have the same image we
+   generated… background looks sandy but I don't think it's what we generated", and
+   on the phone, "it looks ugly." The multiply had pinned RED at 255 across 63% of
+   the desktop frame and 56% of the phone one, which is a hue shift, not a
+   brightening — his warm tan came out a pale chalky yellow, and the phone frame,
+   being the more contrasty of the two, had the most to lose. It is gone. The plate
+   is now his file resized, plus the shadow knee, and the veil went 72% → 84% to buy
+   the floor back (and then to 55% on 2026-07-30, paid for in ink instead — see
+   `--background`). See the head of grade-sand.mjs for the measurements.
+
+   ── WHAT ELSE HAD TO MOVE, AND WHY IT IS IN THIS COMMIT ──
+   A photograph under the page is not free, and the site had three hundredths of a
+   ratio point of headroom before it. Four decorative layers that were tuned against
+   a flat cream canvas were dimmed to pay for it, each documented where it lives:
+   the drifting colour field and its vignette (`.site-bg`), the five gold/peach
+   washes (`.aurora-*`, `.wash-*`), and the brown halo behind the phone mock
+   (message-video.tsx). Two bare hero sections — the sub-page header and the
+   /thank-you header — were given `bg-background`, because their muted body copy was
+   the only type on the site sitting straight on the plate. The home hero is the one
+   band deliberately left bare.
+
+   ── DARK ──
+   The same frame re-lit rather than inverted: normalised and mapped into a narrow
+   band from just under the #1c1611 canvas up to 47/255, where the ripples read
+   clearly and the brightest crest still sits well below the 52/255 that dark-mode
+   `--subtle-foreground` needs. Since 2026-07-30 the COLOUR in that band is the
+   photograph's own — each pixel keeps its measured r:g:b ratio, cooled a little —
+   rather than a fixed orange tint half again as saturated as the sand really is.
+   `--background` inverts with it — the veil becomes a dark cream, so it protects
+   type in dark mode exactly as it does on paper.
+
+   ── THE STACK ──
+   z-index -11 puts the sand at the BOTTOM, under the drifting colour field (-10)
+   rather than over it. That inversion is deliberate: the field used to be the
+   page's base and the sand a wash on top of it, and now it is the other way round —
+   the field is the warm light falling ON the sand (its blobs were taken right down
+   in the `.site-bg` block above for exactly this reason), and the photograph is
+   what the light falls on.
+
+   `isolation: isolate` stays. The plate and the WebGL canvas belong to each other:
+   the canvas draws the SAME photograph with the sand pushed aside, so it must
+   replace the plate rather than composite with the page twice.
+
+   ⛔ THE CANVAS IS NOT MOUNTED RIGHT NOW (2026-07-30). Daniel: "the mouse
+   animation when hovering above the sand is currently not working. Disable it for
+   now so we can publish a version." `RIPPLE_ENABLED` in sand-floor.tsx is `false`,
+   so `.sand-floor__canvas` below has nothing to style — the rules are kept, like
+   the shader code, because the flag is a hold and not a removal. The static plate
+   is the whole layer for everybody, which is exactly the state reduced-motion and
+   no-WebGL visitors were always in. */
+.sand-floor {
+  position: fixed;
+  inset: 0;
+  z-index: -11;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* ── THE PAPER'S EDGE ──
+   A flat `background-color` veil meets the bare hero along a dead-straight line
+   right under the fold, and it reads as a rendering fault rather than as a
+   surface. So the veil is painted as a GRADIENT instead: it comes up out of
+   nothing over `--paper-fade`, holds, and goes back to nothing at the other end.
+
+   The point is not only the missing seam. Sections are stacked edge to edge, so
+   two of these fades meet at every join, and the sand runs back up to FULL
+   strength in a soft band there — which is a second place, all the way down the
+   page, where the photograph is the photograph and not a texture under paper.
+
+   `--paper-fade` is 2rem because that is comfortably inside the smallest vertical
+   padding any of these sections has (`py-12`, 3rem): no line of type ever starts
+   inside the ramp. Widening it past that would start putting body copy on sand
+   the audit has not measured.
+
+   UNLAYERED ON PURPOSE. It has to beat the `bg-background` utility, which sets
+   `background-color`, and Tailwind's utilities live in a cascade layer — unlayered
+   author rules win over every layer. Scoped to `section`/`footer` because that is
+   what `bg-background` is on, everywhere (24 uses, all of them full-bleed page
+   bands); a small element with this class would get a fade it never asked for. */
+section.bg-background,
+footer.bg-background {
+  --paper-fade: 2rem;
+  background-color: transparent;
+  background-image: linear-gradient(
+    to bottom,
+    transparent 0,
+    var(--background) var(--paper-fade),
+    var(--background) calc(100% - var(--paper-fade)),
+    transparent 100%
+  );
+}
+
+/* ⚠️ THE FOOTER DOES NOT GET ITS OWN VEIL, AND THE REASON IS A MEASUREMENT BUG.
+   A 68% footer-only override was written on 2026-07-30 and then deleted the same
+   day. It was answering readings — the footer's nav columns at 4.08:1 on /about
+   against 5.38:1 on / — that turned out to be an artifact of the audit harness,
+   not of this site: the sand plate is `position: fixed` under a scrolling page,
+   so a programmatic scroll exposes a band the compositor has to repaint, and a
+   screenshot taken 150ms later can catch a stale tile with the veil above a
+   dead-straight edge and bare plate below. Measured with the paint actually
+   landed, the same pixel reads rgb(249,237,223) and the same pair 5.61:1.
+
+   With one veil for the whole site the footer's columns measure 5.24-5.31:1 in
+   light and 5.24-5.25:1 in dark on all eight routes. It does not need help.
+   If you ever think it does again, re-measure with two rAFs and a settle before
+   the screenshot — the method is in docs/12 §J9. */
+
+/* The static plate — the photograph itself. It is the whole layer for anyone
+   without WebGL, for anyone under reduced motion, and for everybody during the
+   first paint; the ripple canvas then replaces it with the same file at the same
+   `cover` framing, so the hand-off is invisible. */
+.sand-floor__plate {
+  position: absolute;
+  inset: 0;
+  background-image: url("/images/sand-light.webp");
+  background-size: cover;
+  background-position: center;
+}
+
+/* A phone in portrait gets its OWN photograph — a real 9:16 frame, 960×1720 and
+   175KB, whose ripples run down the screen — rather than a 16:9 plate cropped to a
+   slot. `cover` at 390×844 renders it at 471 CSS px wide, so 960 source pixels is
+   exactly a 2×-DPR phone. `sand-floor.tsx` mirrors this query in JS so the canvas
+   loads the same file and not a second one. */
+@media (max-width: 640px) and (orientation: portrait) {
+  .sand-floor__plate {
+    background-image: url("/images/sand-light-portrait.webp");
+  }
+}
+
+/* Hidden until the first frame exists, so there is no flash of an empty canvas
+   over the plate. Transparent pixels would show the plate through anyway; this
+   is belt and braces for a context that initialises and then fails to draw. */
+.sand-floor__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.sand-floor__canvas[data-drawn] {
+  opacity: 1;
+}
+
+@media (prefers-color-scheme: dark) {
+  /* No opacity and no blend mode here either — the dark plate is graded to sit on
+     the dark canvas the way the light one is graded to sit on cream, and the veil
+     over it inverts with the scheme. */
+  .sand-floor__plate {
+    background-image: url("/images/sand-dark.webp");
+  }
+  @media (max-width: 640px) and (orientation: portrait) {
+    .sand-floor__plate {
+      background-image: url("/images/sand-dark-portrait.webp");
+    }
+  }
+}
+
+/* The reader who asked the OS for more contrast gets no photograph under her type,
+   exactly as with the paper grain in §4 and the procedural sand before it. She is
+   left with the solid `--canvas` painted on <html>, which is what the veil in
+   `--background` is mixing toward anyway, so nothing else has to change. */
+@media (prefers-contrast: more) {
+  .sand-floor {
+    display: none;
+  }
+}
+
+/* ── 11. EVALUATION SWITCHER: `?accent=pink|amber|gold` ────────────
+   ⚠️ TEMPORARY, and it goes the way §7 and §8 go — delete this block,
+   `requestedAccent()` in src/lib/eval-flags.ts and the accent half of
+   `eval-motion-script.tsx` / `eval-overrides.tsx` once the accent is settled with
+   Pnina. The DEFAULT does not live here (see below), so deleting this section
+   leaves the shipped site exactly as it is.
+
+   WHY IT EXISTS: after 0.11.3 split the gold in two, Daniel still did not see
+   gold — because the bright metal only ever landed in hairlines while every
+   primary CTA stayed brown. Three accents were built so he could judge them by
+   scrolling the real site in each. On 2026-07-30 he picked the pink ("pink again
+   looks better as contrast"), so:
+
+     ?accent=pink    THE DEFAULT and the shipped site. It has NO rules in this
+                     section, deliberately: the pink lives in `:root` at the
+                     top of this file with every other token, because it is the
+                     design now and not an override of it. (It is the live
+                     site's orchid-magenta family — hue ~330° — not the 342°
+                     rose 0.13.0 shipped, and not the hue-350 mauve before that.)
+     ?accent=amber   the pre-0.11.4 rendering — brown CTA, bronze headline, gold
+                     light. This is what to show Pnina if she does not bless the
+                     pink.
+     ?accent=gold    the bright metal takes the CTA.
+     ?accent=reset   forget the stored choice (back to the pink).
+
+   ── WHAT AN ACCENT IS ALLOWED TO CHANGE ──
+   ACCENT ROLES ONLY: the filled CTA (`--cta-*`), the colour of warm light on a
+   panel (`--halo`), the small accent label (`--accent-ink`) and the highlighted
+   headline line (`--headline-accent`). It may NOT touch the ink ladder, any
+   surface, `--brand`'s washes or the gold hairline family. An accent that
+   repaints the paragraphs is a hue-rotated screenshot, not a design.
+
+   Every value below is measured against the WCAG 2.x formula on the surface it
+   actually lands on, exactly like the tokens at the top of this file. Anything
+   that carries a glyph clears 4.5:1 in both schemes; anything decorative is
+   marked as such and never carries one. */
+
+/* ══════ amber — the site as it stood before 0.11.4 ══════
+   The brown CTA and the gold halo, restored token for token from `--brand` /
+   `--brand-ink` / `--brand-cta-hover` and `--gold`. Nothing is re-derived here:
+   these ARE the old values, which is what makes this a fair comparison rather
+   than an approximation of one. */
+:root[data-accent="amber"] {
+  --cta-fill: var(--brand);
+  --cta-ink: var(--brand-ink);
+  --cta-fill-hover: var(--brand-cta-hover);
+  --cta-edge: rgba(107, 79, 58, 0.45);
+  --cta-glow: rgba(107, 79, 58, 0.55);
+  --cta-edge-hover: rgba(201, 162, 39, 0.65);
+  --cta-glow-hover: rgba(107, 79, 58, 0.8);
+  --halo: var(--gold);
+  /* The offer labels go back to the amber they were before 0.12.0 — on a GOLD
+     halo that is the harmonious pair, which is the whole reason the token is an
+     accent role rather than a hardcoded colour. */
+  --accent-ink: var(--gold-deep);
+  /* …and so does the highlighted headline line. `--headline-accent` is an accent
+     ROLE (see `:root`), so an alternate accent has to re-point it or this mode
+     would ship a brown button under a pink headline — which is precisely the
+     disagreement the pink correction exists to end. This is the bronze the
+     headline actually wore before 0.12.x, so `?accent=amber` stays an honest
+     pre-0.11.4 rendering. */
+  --headline-accent: var(--brand-accent);
+}
+
+/* The loud offers button, in brown. Stops measure 9.4 / 6.9 / 6.3 against
+   `--brand-ink` in light and 5.0 / 6.1 / 8.5 against it in dark.
+   The gold rim comes back with them: the rose rim §9 now ships is a rose-scheme
+   decision, and this mode is supposed to be the pre-0.11.4 site token for
+   token. */
+:root[data-accent="amber"] .cta-hot {
+  --cta-hot-from: #5a3f2b;
+  --cta-hot-mid: #6b4f3a;
+  --cta-hot-to: #85512a;
+  --cta-hot-hover-to: #6b3f1c;
+  --cta-hot-edge: color-mix(in srgb, var(--gold) 55%, transparent);
+  --cta-hot-edge-hover: color-mix(in srgb, var(--gold) 80%, transparent);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="amber"] {
+    --cta-ink: var(--brand-ink);
+    --cta-edge: rgba(107, 79, 58, 0.45);
+    --cta-glow: rgba(107, 79, 58, 0.55);
+    --cta-edge-hover: rgba(201, 162, 39, 0.65);
+    --cta-glow-hover: rgba(107, 79, 58, 0.8);
+  }
+  :root[data-accent="amber"] .cta-hot {
+    --cta-hot-from: #b3792f;
+    --cta-hot-mid: #c3873f;
+    --cta-hot-to: #dda45c;
+    --cta-hot-hover-to: #f3cdb8;
+  }
+}
+
+/* ══════ gold — the bright metal takes the CTA ══════
+   The decoratives are already this gold (0.11.3 made `--gold` #f0c440/#ffd44f),
+   so what this mode changes is the button and the light around it. `--cta-ink`
+   inverts to a near-black warm brown, because dark ink on bright metal is the only
+   legible direction — #2f241c measures 9.12:1 on the middle of the gradient and
+   5.51:1 on the darkest stop the hover state reaches. */
+:root[data-accent="gold"] {
+  --cta-fill: #f0c440; /* the flat fallback under the gradient */
+  --cta-ink: #2f241c; /* 9.12:1 on --cta-fill, 6.36:1 on the deep stop */
+  --cta-fill-hover: #e0ae22;
+  --cta-image: linear-gradient(100deg, #ffd97a 0%, #f0c440 46%, #d4a017 100%);
+  --cta-image-hover: linear-gradient(
+    100deg,
+    #ffe6a8 0%,
+    #f5cf5a 46%,
+    #c9930f 100%
+  );
+  /* A brown hairline round a gold pill is what gilding looks like; a gold
+     hairline round it would disappear. */
+  --cta-edge: rgba(90, 63, 43, 0.5);
+  --cta-glow: rgba(212, 160, 23, 0.5);
+  --cta-edge-hover: rgba(90, 63, 43, 0.6);
+  --cta-glow-hover: rgba(212, 160, 23, 0.75);
+  --halo: var(--gold);
+  /* Gold light wants amber letters — same reasoning as the amber accent, and
+     the same reason the headline follows: the bright metal itself is 1.55:1 and
+     may never carry a glyph, so the headline takes `--gold-deep`, the readable
+     end of the family (5.62:1 on `--canvas`, 5.26:1 on `--gold-soft`). */
+  --accent-ink: var(--gold-deep);
+  --headline-accent: var(--gold-deep);
+}
+
+/* Stops measure 11.12 / 9.12 / 6.36 against `--cta-ink`, 5.51 at the far end of
+   the hover state. The rim goes BROWN here for the same reason `--cta-edge`
+   does: a gold hairline round a gold pill is not a hairline. */
+:root[data-accent="gold"] .cta-hot {
+  --cta-hot-from: #ffd97a;
+  --cta-hot-mid: #f0c440;
+  --cta-hot-to: #d4a017;
+  --cta-hot-hover-to: #c9930f;
+  --cta-hot-edge: rgba(90, 63, 43, 0.5);
+  --cta-hot-edge-hover: rgba(90, 63, 43, 0.65);
+}
+
+/* `.btn-sheen`'s sweep is white, because it was written for a dark fill (see its
+   note in the utilities layer). On bright gold a white sweep is nothing at all,
+   so the light crossing the button becomes a warm shadow instead. */
+:root[data-accent="gold"] .btn-sheen::after {
+  background: linear-gradient(
+    110deg,
+    transparent 28%,
+    rgba(58, 46, 39, 0.14) 50%,
+    transparent 72%
+  );
+}
+
+/* The panel commits: 30% → 40% of `--halo` in the corner, and the action column's
+   wash 24% → 34%. Re-measured where it matters — "הצעד הראשון" in `--gold-deep`
+   sits in that corner at 4.83:1 and the body copy at 6.9:1. */
+:root[data-accent="gold"] .offer-free-panel {
+  background-image:
+    radial-gradient(
+      125% 155% at 100% 0%,
+      color-mix(in srgb, var(--halo) 40%, transparent) 0%,
+      color-mix(in srgb, var(--halo) 14%, transparent) 32%,
+      transparent 60%
+    ),
+    radial-gradient(
+      95% 125% at 0% 100%,
+      color-mix(in srgb, var(--surface-3) 62%, transparent) 0%,
+      color-mix(in srgb, var(--brand) 9%, transparent) 46%,
+      transparent 72%
+    );
+}
+:root[data-accent="gold"] .free-anchor::before {
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--halo) 34%, transparent) 0%,
+    color-mix(in srgb, var(--halo) 12%, transparent) 42%,
+    transparent 72%
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  /* Gold, lit. `--gold` is already #ffd44f here, so again only the button moves:
+     ink #1d140d measures 12.76:1 on the middle stop and 7.15:1 on the darkest one
+     the hover reaches. */
+  :root[data-accent="gold"] {
+    --cta-fill: #ffd44f;
+    --cta-ink: #1d140d;
+    --cta-fill-hover: #ffe6a8;
+    --cta-image: linear-gradient(100deg, #ffe6a8 0%, #ffd44f 46%, #e3ac1e 100%);
+    --cta-image-hover: linear-gradient(
+      100deg,
+      #fff0c8 0%,
+      #ffdd7a 46%,
+      #cf9a12 100%
+    );
+    --cta-edge: rgba(29, 20, 13, 0.55);
+    --cta-glow: rgba(255, 212, 79, 0.35);
+    --cta-edge-hover: rgba(29, 20, 13, 0.65);
+    --cta-glow-hover: rgba(255, 212, 79, 0.5);
+  }
+
+  :root[data-accent="gold"] .cta-hot {
+    --cta-hot-from: #ffe6a8;
+    --cta-hot-mid: #ffd44f;
+    --cta-hot-to: #e3ac1e;
+    --cta-hot-hover-to: #cf9a12;
+  }
+
+  /* The dark panel's wash stays weaker than the light one's for the reason
+     documented on `.offer-free-panel` in §9 — `--gold` here is essentially
+     #ffd700 — but it may come up to 26%, where "הצעד הראשון" in `--gold-deep`
+     still measures 4.94:1. */
+  :root[data-accent="gold"] .offer-free-panel {
+    background-image:
+      radial-gradient(
+        125% 155% at 100% 0%,
+        color-mix(in srgb, var(--halo) 26%, transparent) 0%,
+        color-mix(in srgb, var(--halo) 9%, transparent) 32%,
+        transparent 60%
+      ),
+      radial-gradient(
+        95% 125% at 0% 100%,
+        color-mix(in srgb, var(--surface-3) 62%, transparent) 0%,
+        color-mix(in srgb, var(--brand) 9%, transparent) 46%,
+        transparent 72%
+      );
+  }
+  :root[data-accent="gold"] .free-anchor::before {
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--halo) 20%, transparent) 0%,
+      color-mix(in srgb, var(--halo) 8%, transparent) 42%,
+      transparent 72%
+    );
   }
 }

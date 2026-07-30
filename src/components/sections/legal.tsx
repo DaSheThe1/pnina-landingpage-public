@@ -36,10 +36,10 @@ export function LegalSection({
 }) {
   return (
     <section>
-      <h2 className="text-xl tracking-tight text-foreground">
+      <h2 className="text-[1.45rem] text-foreground">
         {title}
       </h2>
-      <div className="mt-3 space-y-4 leading-7 text-muted-foreground [&_a]:font-medium [&_a]:text-brand-accent hover:[&_a]:text-brand-hover [&_li]:marker:text-subtle-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:ps-5">
+      <div className="mt-3 space-y-4 text-base leading-7 text-muted-foreground [&_a]:font-medium [&_a]:text-brand-accent hover:[&_a]:text-brand-hover [&_li]:marker:text-subtle-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:ps-5">
         {children}
       </div>
     </section>
@@ -53,24 +53,47 @@ export type LegalContentSection = {
   paragraphsAfter?: string[];
 };
 
-// Resolves the {domain}/{email} placeholders and turns the contact email into a
-// real mailto link wherever it appears in the copy.
+/**
+ * Resolves the placeholders the legal copy in `messages/he.json` is written
+ * with, and turns the two contact routes into real links.
+ *
+ * ⚠️ EVERY TOKEN THE COPY CAN CONTAIN MUST BE LISTED HERE. `{phone}` was not,
+ * and the accessibility statement — the one page whose whole job is telling a
+ * disabled visitor how to reach a human — printed the literal string
+ * "טלפון: {phone}." to production. next-intl cannot catch this: these strings
+ * are read with `t.raw()` as a structured array of sections and interpolated
+ * here, by hand, so a token nobody substituted simply survives to the screen.
+ * Add a token to the copy and you add it to this function in the same commit.
+ *
+ * The phone renders exactly as it does in the footer and on /about: a `tel:`
+ * link on the E.164 number, with the human-readable form forced `dir="ltr"` so
+ * the digits do not reorder inside the RTL sentence around them.
+ */
 function renderText(text: string): ReactNode {
-  const resolved = text
-    .replaceAll("{domain}", siteConfig.domain)
-    .replaceAll("{email}", siteConfig.email);
+  const resolved = text.replaceAll("{domain}", siteConfig.domain);
 
-  if (!resolved.includes(siteConfig.email)) return resolved;
+  // Split on the tokens rather than on the substituted values, so a number or
+  // an address that also appears literally in the copy is left as prose.
+  const parts = resolved.split(/(\{email\}|\{phone\})/g);
+  if (parts.length === 1) return resolved;
 
-  const parts = resolved.split(siteConfig.email);
-  return parts.map((part, i) => (
-    <Fragment key={i}>
-      {i > 0 ? (
-        <a href={`mailto:${siteConfig.email}`}>{siteConfig.email}</a>
-      ) : null}
-      {part}
-    </Fragment>
-  ));
+  return parts.map((part, i) => {
+    if (part === "{email}") {
+      return (
+        <a key={i} href={`mailto:${siteConfig.email}`}>
+          {siteConfig.email}
+        </a>
+      );
+    }
+    if (part === "{phone}") {
+      return (
+        <a key={i} href={`tel:${siteConfig.phoneE164}`} dir="ltr">
+          {siteConfig.phone}
+        </a>
+      );
+    }
+    return <Fragment key={i}>{part}</Fragment>;
+  });
 }
 
 export function LegalSections({

@@ -13,12 +13,36 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const isExport = process.env.STATIC_EXPORT === "true";
 
 const nextConfig: NextConfig = {
+  // Image handling, in every mode.
+  //
+  // The static export has no server, so Next's own optimizer never runs. The
+  // scaffold's answer was `images: { unoptimized: true }`, which degrades every
+  // `<Image>` to a bare `<img>` at full source resolution — on a Hebrew site
+  // whose visitors are overwhelmingly on phones, that meant shipping an 854px
+  // JPEG into a 300px frame.
+  //
+  // Instead: `scripts/optimize-images.mjs` pre-builds a WebP ladder at build
+  // time and `src/lib/image-loader.ts` maps each requested width onto it, so
+  // `srcSet` works exactly as it would with a server. Set globally (not only
+  // under STATIC_EXPORT) so `next dev` and the e2e build render what production
+  // renders. Anything absent from the manifest is served as authored.
+  images: {
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
+    // Matched to the ladder in scripts/optimize-images.mjs. Leaving Next's
+    // defaults would emit srcSet entries for 1920/2048/3840 that all resolve to
+    // the same top-rung file — bytes of HTML on every page for no benefit.
+    deviceSizes: [320, 480, 640, 828, 1080],
+    // The floor is 128, not 64. Next resolves a FIXED-size `<Image>` to
+    // `[width, width*2]`, so the 32px header logo would otherwise land on a
+    // 64px file and go soft on a 3× phone screen — the most-seen element on
+    // the site. 128px keeps it crisp and still costs ~3 KB instead of the
+    // 24 KB JPEG it used to ship.
+    imageSizes: [128, 256],
+  },
   ...(isExport
     ? {
         output: "export",
-        // The default next/image loader needs a server; static files can't be
-        // optimized at request time.
-        images: { unoptimized: true },
         // Emit `out/<route>/index.html` so GitHub Pages serves /thank-you/ etc.
         // cleanly (the form redirects there after a successful submit).
         trailingSlash: true,

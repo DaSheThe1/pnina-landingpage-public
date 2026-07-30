@@ -25,9 +25,15 @@ jobs:
     env:
       NEXT_TELEMETRY_DISABLED: 1
       STATIC_EXPORT: "true"
-      # Must match public/CNAME and the Pages custom domain, or canonical tags,
-      # sitemap and OG URLs point at the wrong host.
-      NEXT_PUBLIC_SITE_URL: https://pnina.trickticmedia.com
+      # NEXT_PUBLIC_SITE_URL is deliberately NOT set here.
+      #
+      # `siteConfig.domain` in src/config/site.ts is the single source of truth:
+      # `siteConfig.url` derives from it, public/CNAME is generated from it by
+      # scripts/generate-cname.mjs (the step below), and canonicals, og:url, the
+      # sitemap, robots.txt and the JSON-LD ids all read `siteConfig.url`.
+      # Setting the var here would reintroduce the second copy that drifted and
+      # made every canonical URL on the live site a 404. Set it only for a
+      # preview deploy that genuinely lives on another host.
       # PUBLIC base URL of the R2 media bucket ("pnina-website"), inlined at
       # build time. Each clip's filename lives in videos[].remote in
       # src/content/media.ts, so this one value covers all of them.
@@ -50,7 +56,20 @@ jobs:
       # ⚠️ Never add a session-replay or form-capture tracker to this site. Its
       # visitors are women seeking help after a sexual assault; recording what
       # they read or type would be a serious breach of their privacy.
-      NEXT_PUBLIC_GA_ID: ""
+      #
+      # GA4 measurement id (GA4 Admin → Data Streams). THIS is the production
+      # source of truth — NEXT_PUBLIC_* are inlined at build time, so the value
+      # has to be here rather than in an env file, and turning analytics on or
+      # off is a rebuild and a republish, not a runtime toggle. `.env.example`
+      # deliberately leaves it blank so local dev never reports into the
+      # property.
+      #
+      # ⚠️ GA4 SETS COOKIES (`_ga`, `_ga_8WH5H49LVN`, 2-year, pseudonymous
+      # client id). The cookies section of `pages.privacy` in messages/he.json
+      # says so, and the two must stay in agreement. The id is validated and
+      # Google loads only after opt-in through MinimalCookieConsent; an invalid
+      # or blank id makes both the notice and GA complete no-ops.
+      NEXT_PUBLIC_GA_ID: G-8WH5H49LVN
       # Set this to your Umami instance's tracker URL, e.g.
       # https://analytics.yourdomain.com/script.js — Umami needs BOTH this and
       # the website id below to load.
@@ -79,6 +98,22 @@ jobs:
       # /api/contact in production; this only edits the CI checkout.
       - name: Drop server-only API routes
         run: rm -rf src/app/api
+
+      # public/CNAME is generated from siteConfig.domain, so the host Pages
+      # answers on and the host in every canonical tag cannot disagree. Run
+      # explicitly: this job calls `next build` directly and so never triggers
+      # the `prebuild` script.
+      - name: Generate public/CNAME from site config
+        run: node scripts/generate-cname.mjs
+
+      # Rebuild the WebP ladder under public/images/optimized/ and the manifest
+      # that src/lib/image-loader.ts reads. Both are committed, so this is
+      # normally a no-op that finishes in under a second — it runs anyway so a
+      # forgotten `pnpm optimize:images` can never ship an <img> pointing at a
+      # variant that does not exist. Same reason the CNAME step is explicit:
+      # this job calls `next build` directly and so never triggers `prebuild`.
+      - name: Build responsive image variants
+        run: node scripts/optimize-images.mjs
 
       # Build, then hoist out/he/* to the root so Hebrew is served at / on the
       # static host (next-intl's locale-prefix middleware doesn't run on Pages).

@@ -26,12 +26,15 @@ export function WhatsAppLink({
   /** Overrides the default `whatsapp.message` opening line for one button. */
   message,
   onClick,
+  noUnderline = false,
 }: {
   children: ReactNode;
   className?: string;
   label?: string;
   message?: string;
   onClick?: () => void;
+  /** Marks button-like/icon presentations as opt-outs from link emphasis. */
+  noUnderline?: boolean;
 }) {
   const t = useTranslations("whatsapp");
 
@@ -41,6 +44,7 @@ export function WhatsAppLink({
       target="_blank"
       rel="noopener noreferrer"
       aria-label={label ?? t("aria")}
+      data-a11y-no-underline={noUnderline ? "" : undefined}
       onClick={onClick}
       className={className}
     >

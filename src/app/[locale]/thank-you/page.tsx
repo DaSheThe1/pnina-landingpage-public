@@ -17,6 +17,8 @@ import { Eyebrow, PageShell } from "@/components/sections/marketing-sections";
 import { ThankYouVideo } from "@/components/sections/thank-you-video";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
+import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
+import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { siteConfig } from "@/config/site";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -59,13 +61,27 @@ export default async function ThankYouPage({
 
   return (
     <PageShell>
-      <section className="relative overflow-hidden">
-        {/* A fade into the page — the thank-you hero stays clean and light,
-            with no coloured aurora wash. */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background"
-        />
+      <section className="relative overflow-clip bg-background">
+        {/* The thank-you hero stays clean and light, with no coloured aurora
+            wash. A `from-transparent to-background` fade band used to sit here
+            and painted nothing — `--background` was transparent by design on
+            this site at the time, so it faded transparent into transparent.
+            Removed.
+
+            `bg-background` IS painting something now: as of 0.12.1 that token is
+            the translucent paper veil every content band lays over the sand
+            photograph (globals.css, the note beside the token). This band needs
+            it — "הפרטים הגיעו אליי בלבד" is the site's tightest small-text pair
+            and it sat straight on the plate at 3.58:1 without it.
+
+            The clip is `overflow-clip`, not `overflow-hidden`, and that is not
+            tidying: `hidden` makes an element a SCROLL CONTAINER, and
+            `animation-timeline: view()` (globals.css §1) resolves against the
+            nearest scroll container rather than the viewport. With `hidden`
+            here, the reassurance line and the WhatsApp row below the video
+            measured themselves against a box that never scrolls and froze at
+            0.49 and 0.30 opacity forever. `clip` clips the same box and is not
+            a scroll container. Never `hidden`. */}
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-20 lg:pt-24">
           <div className="mx-auto max-w-3xl text-center">
@@ -73,7 +89,7 @@ export default async function ThankYouPage({
               <Eyebrow>{t("eyebrow")}</Eyebrow>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-6 text-4xl leading-[1.05] tracking-tight text-balance sm:text-5xl">
+              <h1 className="mt-6 text-[2.5rem] leading-[1.06] text-balance sm:text-[3.35rem]">
                 <span className="text-foreground">{t("titleLead")}</span>
                 <span className="text-shimmer">{t("titleHighlight")}</span>
               </h1>
@@ -96,11 +112,39 @@ export default async function ThankYouPage({
               {t("reassurance")}
             </p>
           </Reveal>
+
+          {/* A visible way to reach her right now. The page's whole promise is
+              "I will call you back", which is a wait — and for someone who has
+              just pressed send, writing is often easier than waiting. Uses the
+              shared WhatsApp link so the opening line is pre-filled. */}
+          <Reveal delay={160}>
+            <div className="mt-6 flex justify-center">
+              <WhatsAppLink
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "h-11 rounded-lg px-5"
+                )}
+              >
+                <WhatsAppIcon className="h-4.5 w-4.5 shrink-0 text-[#25d366]" />
+                {t("whatsappCta")}
+              </WhatsAppLink>
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      {/* What happens next */}
-      <section className="bg-background px-6 pb-20">
+      {/* What happens next.
+
+          `pt-10` is a CONTRAST fix, not spacing taste. `bg-background` paints the
+          paper veil as a gradient that ramps up out of nothing over `--paper-fade`
+          (2rem — globals.css §10), so the sand runs back to full strength in a soft
+          band at every join between two sections. The rule that keeps that safe is
+          "no line of type ever starts inside the ramp", and it holds everywhere
+          else because these bands carry `py-12` or open with an opaque card. This
+          one had padding on the bottom only, so "מה עכשיו" sat in the ramp with
+          almost no paper under it. It survived while the plate was being lifted
+          ×1.09 (4.54:1); on Daniel's actual photograph it measured 3.98:1. */}
+      <section className="bg-background px-6 pt-10 pb-20">
         <div className="mx-auto max-w-6xl">
           <Reveal>
             <p className="text-center font-medium text-xs uppercase tracking-[0.18em] text-subtle-foreground">
@@ -112,14 +156,26 @@ export default async function ThankYouPage({
               const Icon = nextStepIcons[i] ?? MessageCircle;
               return (
                 <Reveal key={title} delay={i * 90} className="h-full">
-                  <div className="relative h-full rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
-                    <span className="absolute end-5 top-5 font-medium text-xs text-subtle-foreground">
-                      0{i + 1}
-                    </span>
-                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-foreground/12 bg-brand/10 text-brand-accent">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <p className="mt-4 text-[15px] font-medium text-foreground">
+                  <div className="h-full rounded-2xl border border-foreground/[0.08] bg-foreground/[0.02] p-6">
+                    {/* The step number sits WITH the icon, not pinned to the
+                        far corner. It used to be `absolute end-5 top-5`, which
+                        stranded a tiny "01" across the card from the thing it
+                        numbered — on a phone, most of a card's width away from
+                        it, reading as a stray label rather than as a step. */}
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-foreground/12 bg-brand/10 text-brand-accent">
+                        <Icon className="h-5 w-5" />
+                      </span>
+                      {/* Forced LTR so "01" cannot reorder to "10" inside the
+                          surrounding RTL document. */}
+                      <span
+                        dir="ltr"
+                        className="font-medium tabular-nums text-xs text-subtle-foreground"
+                      >
+                        0{i + 1}
+                      </span>
+                    </div>
+                    <p className="mt-4 text-base font-medium text-foreground">
                       {title}
                     </p>
                     <p className="mt-1.5 text-sm leading-6 text-muted-foreground">
@@ -143,10 +199,10 @@ export default async function ThankYouPage({
                 className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-brand/15 blur-[100px]"
               />
               <div className="relative">
-                <h2 className="text-2xl tracking-tight text-foreground sm:text-3xl">
+                <h2 className="text-[1.7rem] text-foreground sm:text-[2.1rem]">
                   {t("whileYouWaitTitle")}
                 </h2>
-                <p className="mt-2 max-w-xl text-muted-foreground">
+                <p className="mt-2 max-w-xl text-base text-muted-foreground">
                   {t("whileYouWaitText")}
                 </p>
                 <div className="mt-7 grid gap-3 sm:grid-cols-3">
@@ -161,7 +217,7 @@ export default async function ThankYouPage({
                         <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-foreground/12 bg-brand/10 text-brand-accent transition-transform duration-300 group-hover:scale-110">
                           <Icon className="h-4.5 w-4.5" />
                         </span>
-                        <span className="mt-4 flex items-center gap-1 text-[15px] font-medium text-foreground-soft transition-colors group-hover:text-foreground">
+                        <span className="mt-4 flex items-center gap-1 text-base font-medium text-foreground-soft transition-colors group-hover:text-foreground">
                           {title}
                           <ArrowUpRight className="h-3.5 w-3.5 opacity-0 transition-opacity group-hover:opacity-100" />
                         </span>

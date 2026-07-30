@@ -1,11 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type RefObject,
+} from "react";
+import { Dialog } from "@base-ui/react/dialog";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { ArrowUpRight, ChevronLeft, ChevronRight, Maximize2, X } from "lucide-react";
 
 import { SectionHeading } from "@/components/sections/marketing-sections";
+import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
 import { galleryImages, hasGallery, type GalleryImage } from "@/content/gallery";
@@ -74,6 +82,8 @@ export function GalleryCarousel({
   const [mobile, setMobile] = useState(false);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
   const swipedRef = useRef(false);
+  const lightboxTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   const n = images.length;
   const loops = n > 1;
@@ -101,28 +111,36 @@ export function GalleryCarousel({
   const step = useCallback(
     (dir: number) => {
       if (!loops) return;
-      setAnimate(true);
+      setAnimate(!shouldReduceMotion);
       setIndex((i) => i + dir);
     },
-    [loops]
+    [loops, shouldReduceMotion]
   );
 
   // Auto-advance, unless paused or the lightbox is open. `kick` restarts it
   // after a manual press so the next auto-step is a full interval away.
   useEffect(() => {
-    if (paused || openIdx !== null || !loops) return;
+    if (shouldReduceMotion || paused || openIdx !== null || !loops) return;
     const id = window.setInterval(() => step(1), intervalMs);
     return () => window.clearInterval(id);
-  }, [paused, openIdx, loops, intervalMs, step, kick]);
+  }, [
+    shouldReduceMotion,
+    paused,
+    openIdx,
+    loops,
+    intervalMs,
+    step,
+    kick,
+  ]);
 
   // Re-enable the transition on the frame after an un-animated snap.
   useEffect(() => {
-    if (animate) return;
+    if (animate || shouldReduceMotion) return;
     const id = requestAnimationFrame(() =>
       requestAnimationFrame(() => setAnimate(true))
     );
     return () => cancelAnimationFrame(id);
-  }, [animate]);
+  }, [animate, shouldReduceMotion]);
 
   // When the centre settles in a clone zone, jump (no animation) to its twin.
   const handleTransitionEnd = () => {
@@ -150,6 +168,10 @@ export function GalleryCarousel({
   return (
     <>
       <div
+        data-carousel
+        data-carousel-index={
+          loops ? ((index - CLONES) % n + n) % n : 0
+        }
         className="relative mt-14"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
@@ -186,7 +208,7 @@ export function GalleryCarousel({
             style={{
               width: "100%",
               transform: `translateX(${translatePct}%)`,
-              transition: animate
+              transition: animate && !shouldReduceMotion
                 ? "transform 600ms cubic-bezier(0.4, 0, 0.2, 1)"
                 : "none",
             }}
@@ -212,17 +234,20 @@ export function GalleryCarousel({
                     style={{
                       transform,
                       transition:
-                        "transform 600ms cubic-bezier(0.4, 0, 0.2, 1)",
+                        shouldReduceMotion
+                          ? "none"
+                          : "transform 600ms cubic-bezier(0.4, 0, 0.2, 1)",
                     }}
                   >
                     <button
                       type="button"
                       tabIndex={loops && !isCentre ? -1 : 0}
-                      onClick={() => {
+                      onClick={(event) => {
                         if (swipedRef.current) {
                           swipedRef.current = false;
                           return;
                         }
+                        lightboxTriggerRef.current = event.currentTarget;
                         setOpenIdx(images.indexOf(image));
                       }}
                       aria-label={image.alt}
@@ -230,7 +255,7 @@ export function GalleryCarousel({
                         "group relative block w-full cursor-zoom-in overflow-hidden rounded-2xl border bg-surface-1 transition-shadow duration-500",
                         aspectClass,
                         isCentre || !loops
-                          ? "border-brand/30 shadow-[0_30px_70px_-30px_rgba(194,74,133,0.55)]"
+                          ? "border-brand/30 shadow-[0_30px_70px_-30px_rgba(107,79,58,0.55)]"
                           : "border-foreground/[0.08] shadow-card"
                       )}
                     >
@@ -314,14 +339,14 @@ export function GalleryCarousel({
         </div>
       ) : null}
 
-      {openIdx !== null ? (
-        <GalleryLightbox
-          images={images}
-          index={openIdx}
-          onClose={() => setOpenIdx(null)}
-          onNavigate={navigate}
-        />
-      ) : null}
+      <GalleryLightbox
+        images={images}
+        index={openIdx ?? 0}
+        open={openIdx !== null}
+        finalFocus={lightboxTriggerRef}
+        onClose={() => setOpenIdx(null)}
+        onNavigate={navigate}
+      />
     </>
   );
 }
@@ -336,11 +361,15 @@ export function GalleryCarousel({
 export function GalleryLightbox({
   images,
   index,
+  open,
+  finalFocus,
   onClose,
   onNavigate,
 }: {
   images: GalleryImage[];
   index: number;
+  open: boolean;
+  finalFocus: RefObject<HTMLButtonElement | null>;
   onClose: () => void;
   onNavigate: (dir: number) => void;
 }) {
@@ -349,84 +378,82 @@ export function GalleryLightbox({
   const many = images.length > 1;
 
   useEffect(() => {
+    if (!open) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
       if (e.key === "ArrowRight") onNavigate(1);
       if (e.key === "ArrowLeft") onNavigate(-1);
     };
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
     };
-  }, [onClose, onNavigate]);
+  }, [onNavigate, open]);
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-label={image.alt}
-      onClick={onClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm animate-in fade-in duration-200 sm:p-8"
+    <Dialog.Root
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) onClose();
+      }}
     >
-      {/* Close — top-start (top-left in this RTL layout) */}
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label={t("close")}
-        className="absolute left-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20"
-      >
-        <X className="h-5 w-5" />
-      </button>
-
-      {many ? (
-        <>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigate(-1);
-            }}
-            aria-label={t("previous")}
-            className="absolute left-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20"
+      <Dialog.Portal>
+        <Dialog.Backdrop className="fixed inset-0 z-[119] bg-black/85 backdrop-blur-sm transition-opacity duration-200 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0" />
+        <Dialog.Viewport className="fixed inset-0 z-[120] flex items-center justify-center overflow-y-auto p-4 sm:p-8">
+          <Dialog.Popup
+            finalFocus={finalFocus}
+            className="relative my-auto flex max-h-[calc(100dvh-2rem)] w-full max-w-5xl flex-col items-center rounded-xl outline-none transition-all duration-200 data-[ending-style]:scale-95 data-[ending-style]:opacity-0 data-[starting-style]:scale-95 data-[starting-style]:opacity-0 sm:max-h-[calc(100dvh-4rem)]"
           >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              onNavigate(1);
-            }}
-            aria-label={t("next")}
-            className="absolute right-4 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white backdrop-blur transition-colors hover:bg-white/20"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
-        </>
-      ) : null}
+            <Dialog.Title className="sr-only">{image.alt}</Dialog.Title>
+            <Dialog.Description className="sr-only">
+              {t("imageViewerInstructions")}
+            </Dialog.Description>
 
-      {/* Image — clicks here don't close the viewer */}
-      <figure
-        onClick={(e) => e.stopPropagation()}
-        className="relative flex max-h-full max-w-5xl flex-col items-center animate-in zoom-in-95 duration-200"
-      >
-        <Image
-          src={image.src}
-          alt={image.alt}
-          width={image.width}
-          height={image.height}
-          sizes="90vw"
-          style={{ width: "auto", height: "auto" }}
-          className="max-h-[82vh] max-w-full rounded-xl object-contain shadow-2xl"
-        />
-        <figcaption className="mt-4 max-w-2xl text-center text-sm text-white/80">
-          {image.alt}
-        </figcaption>
-      </figure>
-    </div>
+            <Dialog.Close
+              aria-label={t("close")}
+              className="absolute start-0 top-0 z-10 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white outline-none backdrop-blur transition-colors hover:bg-black/85 focus-visible:ring-3 focus-visible:ring-white/70"
+            >
+              <X aria-hidden className="h-5 w-5" />
+            </Dialog.Close>
+
+            {many ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(-1)}
+                  aria-label={t("previous")}
+                  className="absolute left-0 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white outline-none backdrop-blur transition-colors hover:bg-black/85 focus-visible:ring-3 focus-visible:ring-white/70"
+                >
+                  <ChevronLeft aria-hidden className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onNavigate(1)}
+                  aria-label={t("next")}
+                  className="absolute right-0 top-1/2 z-10 inline-flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 bg-black/65 text-white outline-none backdrop-blur transition-colors hover:bg-black/85 focus-visible:ring-3 focus-visible:ring-white/70"
+                >
+                  <ChevronRight aria-hidden className="h-6 w-6" />
+                </button>
+              </>
+            ) : null}
+
+            <figure className="flex max-h-full max-w-full flex-col items-center px-12">
+              <Image
+                src={image.src}
+                alt={image.alt}
+                width={image.width}
+                height={image.height}
+                sizes="90vw"
+                style={{ width: "auto", height: "auto" }}
+                className="max-h-[78dvh] max-w-full rounded-xl object-contain shadow-2xl"
+              />
+              <figcaption className="mt-4 max-w-2xl text-center text-sm text-white/90">
+                {image.alt}
+              </figcaption>
+            </figure>
+          </Dialog.Popup>
+        </Dialog.Viewport>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
 
@@ -460,7 +487,7 @@ export function GalleryTeaser() {
               href="/#gallery"
               className={cn(
                 buttonVariants({ variant: "outline" }),
-                "h-11 rounded-lg px-5 text-[15px]"
+                "h-11 rounded-lg px-5"
               )}
             >
               {t("cta")}

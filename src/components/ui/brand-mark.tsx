@@ -49,7 +49,7 @@ export function BrandMark({
         "inline-flex shrink-0 items-center justify-center rounded-full border border-brand/30 bg-brand-wash font-display text-brand-accent",
         className
       )}
-      style={{ width: size, height: size, fontSize: size * 0.46 }}
+      style={{ width: size, height: size, fontSize: size * 0.52 }}
     >
       {siteConfig.monogram}
     </span>

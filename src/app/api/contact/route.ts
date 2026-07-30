@@ -64,8 +64,13 @@ export async function POST(request: Request) {
 
   const env = getServerEnv();
   const submittedAt = new Date().toISOString();
-  // The lead form sends name + phone only — see src/lib/contact-schema.ts for
-  // why nothing describing the visitor's situation is ever collected here.
+  // Name + phone, plus the ONE optional free-text field (her question about
+  // what the visitor wants to happen next — never about what happened to her).
+  // See the header of src/lib/contact-schema.ts. `question` is omitted entirely
+  // when she left it blank, so those leads look exactly as they did before.
+  // Must stay identical to the payload the Worker builds in
+  // worker/src/contact.js — that file serves this route in production.
+  const question = parsed.data.question?.trim();
   const payload = {
     site: "pnina-website",
     type: "lead_form_submission",
@@ -73,6 +78,7 @@ export async function POST(request: Request) {
     contact: {
       name: parsed.data.name,
       phone: parsed.data.phone,
+      ...(question ? { question } : {}),
     },
     meta: {
       // Which CTA produced the lead: "landing"/"contact" is someone seeking

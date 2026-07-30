@@ -9,17 +9,29 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-primary/85",
-        // The plum hero/CTA action. Lively: a sheen sweeps across on hover/focus
-        // (.btn-sheen), it lifts slightly, and its glow deepens into gold.
+        // The primary hero/CTA action. Lively: a sheen sweeps across on
+        // hover/focus (.btn-sheen), it lifts slightly, and its glow deepens.
         //
-        // It wears `--brand` / `--brand-ink` / `--brand-cta-hover` rather than
-        // the primary pair on purpose: this button is deliberately IDENTICAL in
-        // light and dark (near-white label on plum, 4.6:1), while `--primary`
-        // inverts to a light pill with dark ink and `--brand-hover` — a TEXT
-        // colour — goes light. All three tokens hold the button's ORIGINAL
-        // light-mode values, so nothing about it changed on the light canvas.
+        // It wears the ACCENT-ROLE trio `--cta-fill` / `--cta-ink` /
+        // `--cta-fill-hover` rather than the primary pair. Since 0.11.4 those
+        // three resolve to the PINK (`--rose-deep` #8a1f58 carrying
+        // `--cta-ink` #fff8f5, 8.27:1 — the live site's pink, adopted
+        // 2026-07-30) in globals.css `:root` — this is a pink button,
+        // not the brown one it was through 0.11.3. The indirection exists so
+        // the temporary `?accent=` switcher (globals.css §11) can re-point the
+        // CTA without touching the ~40 low-alpha `--brand` washes elsewhere on
+        // the page; `?accent=amber` is what puts the brown back.
+        //
+        // The pair is deliberately IDENTICAL in light and dark in ROLE (a
+        // saturated fill carrying a contrasting label, 4.6:1 or better), while
+        // `--primary` inverts to a light pill with dark ink and `--brand-hover`
+        // — a TEXT colour — goes light.
+        //
+        // `.btn-cta` (globals.css §9) carries the background IMAGE and both
+        // box-shadows. They used to be Tailwind arbitrary values here; they moved
+        // so an accent can re-point them instead of having to out-specify them.
         brand:
-          "btn-sheen bg-brand text-brand-ink font-semibold shadow-[0_0_0_1px_rgba(194,74,133,0.45),0_8px_30px_-8px_rgba(194,74,133,0.6)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-cta-hover hover:shadow-[0_0_0_1px_rgba(224,169,63,0.6),0_14px_44px_-8px_rgba(194,74,133,0.85)]",
+          "btn-sheen btn-cta bg-cta-fill text-cta-ink font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:bg-cta-fill-hover",
         outline:
           "border-foreground/15 bg-foreground/[0.02] text-foreground-soft hover:bg-foreground/[0.06] hover:text-foreground hover:border-foreground/25 aria-expanded:bg-foreground/[0.06]",
         secondary:

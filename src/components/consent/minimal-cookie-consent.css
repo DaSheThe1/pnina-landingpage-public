@@ -1,0 +1,190 @@
+#cc-main {
+  /* Below application dialogs (120/130), above non-modal launchers (50–70).
+     The launchers shift above the notice while html.show--consent is present. */
+  --cc-z-index: 90;
+  --cc-bg: #2a111e;
+  --cc-cookie-image: none;
+  --cc-primary-color: #fff8f5;
+  --cc-secondary-color: #f5dce8;
+  --cc-btn-primary-bg: #b72d75;
+  --cc-btn-primary-color: #fff8f5;
+  --cc-btn-primary-hover-bg: #c33b83;
+  --cc-btn-secondary-bg: #4a2e3e;
+  --cc-btn-secondary-color: #fff8f5;
+  --cc-btn-secondary-border-color: #c89aad;
+  --cc-btn-secondary-hover-bg: #5d3a4d;
+  --cc-btn-secondary-hover-color: #ffffff;
+  --cc-btn-secondary-hover-border-color: #e5b7ca;
+  --cc-separator-border-color: #c89aad;
+  --cc-footer-border-color: #c89aad;
+  --cc-cookie-category-block-bg: #4a2e3e;
+  --cc-modal-border-radius: 1.15rem;
+  --cc-btn-border-radius: 0.65rem;
+  --cc-modal-transition-duration: 0.18s;
+  font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
+}
+
+#cc-main .cm {
+  position: fixed;
+  overflow: hidden;
+  width: min(56rem, calc(100vw - 1.25rem));
+  max-width: min(56rem, calc(100vw - 1.25rem));
+  border: 1px solid #c89aad;
+  background:
+    linear-gradient(120deg, rgb(183 45 117 / 14%), transparent 42%),
+    #2a111e;
+  box-shadow:
+    0 18px 55px rgb(38 20 31 / 45%),
+    0 0 0 1px rgb(255 248 245 / 5%) inset;
+}
+
+#cc-main .cm::before {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  inset-inline-start: 1rem;
+  width: 3.55rem;
+  height: 3.55rem;
+  transform: translateY(-50%);
+  border: 2px solid rgb(224 169 63 / 82%);
+  border-radius: 9999px;
+  background-color: #e0a93f;
+  background-image: var(--cc-cookie-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 114%;
+  box-shadow:
+    0 9px 24px rgb(0 0 0 / 36%),
+    0 0 0 3px rgb(255 248 245 / 7%);
+  content: "";
+}
+
+#cc-main .cm__body {
+  align-items: center;
+  min-height: 5rem;
+}
+
+#cc-main .cm__texts {
+  min-width: 0;
+  padding-block: 0.75rem;
+  padding-inline-start: 5.25rem;
+  padding-inline-end: 0.75rem;
+}
+
+#cc-main .cm__desc {
+  margin: 0;
+  padding: 0;
+  color: #f5dce8;
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#cc-main .cm__desc a {
+  margin-inline-start: 0.35rem;
+  color: #f4b8d4;
+  font-weight: 650;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+#cc-main .cm__btns {
+  padding: 0.65rem 0.85rem;
+  border: 0 !important;
+}
+
+#cc-main .cm__btn-group {
+  gap: 0.55rem;
+}
+
+#cc-main .cm__btn {
+  min-height: 2.65rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid transparent;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+#cc-main .cm.cm--cloud.cm--inline .cm__btn {
+  min-width: 7.25rem;
+}
+
+#cc-main .cm__btn--secondary {
+  border-color: #c89aad;
+}
+
+#cc-main .cm__btn:focus-visible,
+#cc-main .cm__desc a:focus-visible {
+  outline: 3px solid #ffd0e4;
+  outline-offset: 3px;
+}
+
+@media (max-width: 640px) {
+  #cc-main .cm {
+    width: calc(100vw - 1rem);
+    max-width: calc(100vw - 1rem);
+  }
+
+  #cc-main .cm::before {
+    top: 50%;
+    inset-inline-start: 0.55rem;
+    width: 2.35rem;
+    height: 2.35rem;
+    transform: translateY(-50%);
+  }
+
+  #cc-main .cm__body {
+    flex-direction: row !important;
+    align-items: center;
+    min-height: 4.25rem;
+  }
+
+  #cc-main .cm__texts {
+    min-height: 0;
+    padding-block: 0.55rem;
+    padding-inline-start: 3.15rem;
+    padding-inline-end: 0.25rem;
+  }
+
+  #cc-main .cm__desc {
+    padding-inline: 0 !important;
+    font-size: 0.72rem;
+    line-height: 1.35;
+    white-space: normal;
+  }
+
+  #cc-main .cm__btns {
+    padding-block: 0.45rem;
+    padding-inline: 0.35rem !important;
+    border: 0 !important;
+  }
+
+  #cc-main .cm__btn-group {
+    flex-direction: row !important;
+    gap: 0.3rem;
+  }
+
+  #cc-main .cm__btn + .cm__btn {
+    margin-top: 0 !important;
+    margin-left: 0 !important;
+  }
+
+  #cc-main .cm__btn {
+    min-height: 2.5rem;
+    padding: 0.35rem;
+    font-size: 0.66rem;
+  }
+
+  #cc-main .cm.cm--cloud.cm--inline .cm__btn {
+    min-width: 3.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #cc-main {
+    --cc-modal-transition-duration: 0s;
+  }
+}

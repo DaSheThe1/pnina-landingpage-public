@@ -36,8 +36,10 @@ both. The page also has its own CTA wording ("book a talk", not "leave your
 details"), and leads from it carry `source: "lectures"` so they can be answered
 appropriately.
 
-If the client turns out not to give talks, delete the route, its entry in
-`src/config/navigation.ts`, and its line in `src/app/sitemap.ts`.
+She does give talks — one, "שכבות של פנינה", to the seven kinds of audience
+listed on the page — so as of Phase 1 the route is linked, indexed and in the
+sitemap again. There is deliberately no price row on it (decision D5): a booker
+who wants a number asks for one.
 
 ## Why `/accessibility` exists
 
@@ -48,23 +50,67 @@ Most small practice sites skip it. See [09-accessibility.md](09-accessibility.md
 
 ## The order of the landing page
 
+Reordered 2026-07 at Pnina's request (decision D11, `docs/12-redesign-plan.md`).
+
 ```
-hero          what this is, and that a first conversation costs nothing
-approach      what the accompaniment actually is                       #approach
-offer         the price funnel, ending at the free first conversation
+hero          what this is, and that the introductory call costs nothing
+founder       who she is, and that she has been where the reader is
+audience      "למי הליווי מתאים" — the eight things women arrive with  #audience
 process       what happens step by step, so nothing is a surprise      #process
-trust band    discretion, pace, no obligation
+offer         what the call is worth, that it is free, and the two tracks
+moments       what she has watched become possible
 testimonials  other women's words                                      #testimonials
-founder       who she is
+trust band    her pearl line, closing the proof; discretion, no obligation
 faq           the questions that stop someone from calling             #faq
-final CTA     the form                                                 #contact
+final CTA     the form itself, inline                                  #contact
 ```
 
-**Reassurance comes before proof, and proof before the ask.** The conventional
-landing-page order puts social proof high, immediately after the hero. Here the
-first question in a reader's mind is not "is she any good" but "is this safe,
-and will I have to explain myself" — so the approach and the process answer that
-before anyone is asked to believe testimonials or leave a number.
+**Identification before reassurance, reassurance before proof, and the ask
+last.** Her story used to sit eighth, between the reviews and the FAQ; she asked
+for it near the top and she was right. The first thing a woman on this page
+needs is not an argument about a method — it is the recognition that the person
+on the other side of it has been where she is. Her story does that, and the
+audience grid immediately after it lets the reader find her own sentence on the
+page before anyone explains anything.
+
+Only then does the conventional argument run: what the accompaniment is, what
+happens step by step, what it costs. The conventional landing-page order would
+put social proof high, right after the hero; here the question in a reader's
+mind is not "is she any good" but "is this safe, and will I have to explain
+myself", so the audience grid and the process answer that before anyone is asked
+to believe a testimonial or leave a number.
+
+**The `#approach` block is gone (2026-07-29).** "הליווי נבנה סביבך, לא סביב
+תבנית" (`ServicesTeaser`) used to sit between the audience grid and the process.
+It repeated the argument the audience grid had just made, one screen earlier and
+in weaker words, so Daniel took it off the page. The component is kept unmounted
+in `marketing-sections.tsx` in case /about ever wants it; the header slot it
+owned now points at `#audience`, which is the section a hesitating reader
+actually needs.
+
+**Do not push the story back down.** It moved because she asked, not because it
+tested better.
+
+**The trust band moved BELOW the testimonials (2026-07-29, Daniel).** It used to
+introduce them. Read straight after other women's own messages, her pearl line
+reads as what those messages meant; read before them, it was a claim the reader
+was then handed the evidence for. Nothing about the section itself changed.
+
+The **moments** section sits where the stats strip used to. Every stat there was
+a placeholder zero and the strip hid itself, so that slot rendered nothing at
+all; five generalised things she has witnessed do the job a numbers row was
+there to do without making a single claim about how many women or how long.
+`stats.ts` and `StatsSection` were deleted outright in v0.9.0 — an empty frame
+nobody could fill is not an asset. Real figures, if she ever supplies them, get
+a section built for them.
+
+The **offer** ("מהצדפה אל הפנינה") is two blocks, not a pricing table: the free
+שיחת היכרות as a panel of its own carrying the section's only button, and under
+it — behind the label "המסלולים שנדבר עליהם בשיחה" — the two tracks as two equal
+side-by-side columns. The free call is the thing being given away; the tracks are
+what gets discussed on it, which is why they are not its siblings. It was one
+three-rung vertical ladder until 2026-07-29 — see D10 and the review-round note
+in `docs/12-redesign-plan.md`.
 
 The FAQ sits immediately before the form on purpose: it is a list of the exact
 objections that stop someone from calling ("do I have to say what happened", "do

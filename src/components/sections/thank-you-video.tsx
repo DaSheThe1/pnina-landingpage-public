@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { MessageVideo } from "@/components/ui/message-video";
-import { videoSrc, videos } from "@/content/media";
+import { posterSrc, videoSrc, videos } from "@/content/media";
 
 /**
  * Her personal message on the thank-you page. Production streams it from the R2
@@ -19,7 +19,10 @@ export function ThankYouVideo() {
   return (
     <MessageVideo
       src={videoSrc("thankYou")}
-      poster={videos.thankYou.poster}
+      poster={posterSrc("thankYou")}
+      // null: this clip's Hebrew captions are burnt into the picture. See
+      // `captionsNote` in src/content/media.ts.
+      captions={videos.thankYou.captions}
       trackAs="thankyou_video_watch"
       labels={{
         playWithSound: t("playWithSound"),

@@ -2,6 +2,8 @@
 
 import { useEffect, useRef } from "react";
 
+import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
+
 /**
  * Site-wide flowing colour field. A single fixed layer that sits behind every
  * page (mounted once in the locale layout) so the home page, every subpage and
@@ -18,11 +20,18 @@ import { useEffect, useRef } from "react";
  */
 export function SiteBackground() {
   const ref = useRef<HTMLDivElement>(null);
+  const shouldReduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // The device preference, the accessibility panel's switch, and
+    // `?motion=force`, all answered in one place — see
+    // src/components/motion/use-reduced-motion.ts.
+    if (shouldReduceMotion) {
+      el.style.setProperty("--bg-scroll", "0");
+      return;
+    }
 
     let raf = 0;
     const onScroll = () => {
@@ -44,7 +53,7 @@ export function SiteBackground() {
       window.removeEventListener("resize", onScroll);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [shouldReduceMotion]);
 
   return (
     <div ref={ref} aria-hidden className="site-bg">

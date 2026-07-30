@@ -48,7 +48,7 @@ export function FaqSection() {
                       aria-expanded={isOpen}
                       className="flex w-full items-center justify-between gap-4 px-5 py-4 text-start"
                     >
-                      <span className="text-[15px] font-medium text-foreground">
+                      <span className="text-base font-medium text-foreground">
                         {faq.question}
                       </span>
                       <Plus

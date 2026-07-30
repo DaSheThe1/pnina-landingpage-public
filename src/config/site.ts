@@ -1,10 +1,37 @@
 /**
  * Single source of truth for the site's identity.
  *
- * Everything here except `domain`/`url` is confirmed client data supplied by
- * Pnina. The domain is the one remaining unknown — see the note on it below and
- * `docs/07-deployment-target.md`.
+ * Everything here is confirmed client data supplied by Pnina, including the
+ * domain — see `docs/07-deployment-target.md`.
  */
+
+/**
+ * THE domain. One string, and everything else follows it: `siteConfig.url`,
+ * every canonical tag, og:url, the sitemap, robots.txt, the JSON-LD ids, and
+ * `public/CNAME` (regenerated from this value by `scripts/generate-cname.mjs`
+ * on every build — see the `prebuild` script in package.json).
+ *
+ * It used to be duplicated in four places and they drifted: the site shipped
+ * for weeks with every canonical URL pointing at a host that returned 404.
+ * Change it HERE and nowhere else.
+ */
+const DOMAIN = "peninaphaff.com";
+
+/**
+ * The site's origin: the env override if there is a real one, otherwise the
+ * domain above.
+ *
+ * `??` alone is not enough. `.env` files and CI `env:` blocks both express
+ * "unset" as an EMPTY STRING (`NEXT_PUBLIC_SITE_URL=`), which `??` happily
+ * passes through — every canonical, og:url and sitemap entry would then be
+ * built from `""`. Blank, whitespace and a trailing slash all mean "use the
+ * domain", so the wrong value cannot be produced by accident.
+ */
+function resolveSiteUrl(): string {
+  const override = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  return override || `https://${DOMAIN}`;
+}
+
 export const siteConfig = {
   // Hebrew display brand used across the UI (header, footer, meta titles).
   name: "פנינה פאף",
@@ -13,12 +40,13 @@ export const siteConfig = {
   // Monogram shown in the header/footer logo badge.
   monogram: "פ",
 
-  // A subdomain of Daniel's own zone, not a dedicated domain — chosen so the
-  // site can go live without waiting on a .co.il purchase. If she later buys her
-  // own, every place that has to change is listed in docs/07-deployment-target.md.
-  // NEXT_PUBLIC_SITE_URL still overrides this per-environment (local dev, e2e).
-  domain: "pnina.trickticmedia.com",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://pnina.trickticmedia.com",
+  // Her own domain. Derived from DOMAIN above — never write a host here.
+  domain: DOMAIN,
+  // NEXT_PUBLIC_SITE_URL still overrides per-environment (local dev, e2e,
+  // preview builds). Unset OR BLANK — the normal case, including production —
+  // falls back to the domain above, so a deploy cannot ship a canonical URL
+  // that disagrees with public/CNAME.
+  url: resolveSiteUrl(),
 
   email: "peninapearl23@gmail.com",
   // Display phone (Hebrew/local format) + E.164 for tel: links.
@@ -40,7 +68,7 @@ export const siteConfig = {
 
   defaultTitle: "פנינה פאף | ליווי אישי לנשים שחוו פגיעה מינית",
   description:
-    "ליווי אישי, דיסקרטי ובקצב שלך לנשים שחוו פגיעה מינית. פגישת היכרות ראשונה ללא עלות וללא התחייבות.",
+    "ליווי אישי, דיסקרטי ובקצב שלך לנשים שחוו פגיעה מינית. שיחת היכרות של 40-60 דקות, בטלפון או בזום, ללא עלות וללא התחייבות.",
 
   founder: {
     // Latin name stays canonical for SEO / schema.org.
@@ -53,9 +81,11 @@ export const siteConfig = {
     role: "מלווה אישית לנשים שחוו פגיעה מינית",
     roleEn: "Personal mentor for women recovering from sexual assault",
     location: "Israel",
-    // TODO(client): years of experience. Shown in the stats strip, which hides
-    // itself entirely while every number is still 0.
-    experienceYears: 0,
+    // `experienceYears: 0` used to live here to feed the stats strip. Both are
+    // gone (v0.9.0): the strip was deleted rather than kept empty, and a config
+    // field holding a placeholder zero is an invitation to fill it in with a
+    // plausible guess. If she gives a real figure it comes back with a place to
+    // be shown — see AGENTS.md rule 3.
   },
 };
 

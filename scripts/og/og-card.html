@@ -1,0 +1,313 @@
+<!doctype html>
+<!--
+  Source for public/og.png — the social share card.
+
+  Regenerate with:  node scripts/og/generate-og.mjs
+
+  WHY A STATIC PNG AND NOT src/app/opengraph-image.tsx
+  The dynamic Satori route that used to live at src/app/opengraph-image.tsx
+  rendered every Hebrew line letter-reversed (Satori has no bidi/RTL shaping and
+  next/og ships a Latin-only font). Nobody noticed because the route also never
+  got wired into `openGraph.images`, so the live pages had NO card at all. This
+  file is rendered by a real browser, which does have a bidi engine, so the
+  Hebrew comes out correct — and the result is a plain file the layout points at
+  by absolute URL.
+
+  DISCRETION — read before editing the copy.
+  This image is what appears when someone shares or is SENT this link: in a group
+  chat, on a lock screen, on a device someone else can see. It must never carry
+  the words "פגיעה מינית" in large type, never name what happened, and never look
+  clinical or alarming. Understated is the requirement, not the aesthetic.
+
+  Colours are the light-mode tokens from src/app/globals.css, copied literally
+  (a standalone file cannot read CSS variables from the app). The pearl mark is
+  inlined from public/brand/pearl-mark.svg for the same reason — the renderer
+  loads this file over file://, and an <img> at an absolute path would 404.
+  Both are hand-kept copies: change the tokens or the mark and change them here.
+-->
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <title>פנינה פאף — כרטיס שיתוף</title>
+    <style>
+      /* The site's two faces, subset to Hebrew + Latin. Files live beside this
+         one so the card regenerates without a network. */
+      @font-face {
+        font-family: "Assistant";
+        font-style: normal;
+        font-weight: 400 700;
+        src: url("./fonts/assistant-hebrew.woff2") format("woff2");
+        unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC,
+          U+FB1D-FB4F;
+      }
+      /* The Latin faces MUST declare their range. Without one they claim
+         U+0-10FFFF, which includes Hebrew — and because they are declared last
+         they would win the Hebrew codepoints, have no glyph for them, and drop
+         the whole headline to the Georgia fallback. */
+      @font-face {
+        font-family: "Assistant";
+        font-style: normal;
+        font-weight: 400 700;
+        src: url("./fonts/assistant-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+2000-206F, U+20AC, U+2122, U+FEFF,
+          U+FFFD;
+      }
+      @font-face {
+        font-family: "Frank Ruhl Libre";
+        font-style: normal;
+        font-weight: 500 700;
+        src: url("./fonts/frank-ruhl-libre-hebrew.woff2") format("woff2");
+        unicode-range: U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC,
+          U+FB1D-FB4F;
+      }
+      @font-face {
+        font-family: "Frank Ruhl Libre";
+        font-style: normal;
+        font-weight: 500 700;
+        src: url("./fonts/frank-ruhl-libre-latin.woff2") format("woff2");
+        unicode-range: U+0000-00FF, U+2000-206F, U+20AC, U+2122, U+FEFF,
+          U+FFFD;
+      }
+
+      :root {
+        --canvas: #fbf7f1;
+        --surface-1: #ffffff;
+        --foreground: #3a2e27;
+        --muted-foreground: #6f5d51;
+        --subtle-foreground: #7a675a;
+        --brand: #6b4f3a;
+        --brand-accent: #855128;
+        --gold: #c9a227;
+        --gold-deep: #7d6218;
+        --peach: #e8a078;
+        --silver-blue: #7ea9c0;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 1200px;
+        height: 630px;
+      }
+
+      body {
+        font-family: "Assistant", system-ui, sans-serif;
+        color: var(--foreground);
+        background: var(--canvas);
+        overflow: hidden;
+      }
+
+      .card {
+        position: relative;
+        width: 1200px;
+        height: 630px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 64px 96px;
+        overflow: hidden;
+      }
+
+      /* The same washes the site's hero carries — low sun overhead, peach on
+         one side, the single cool note on the other — kept faint enough that the
+         card reads as warm paper rather than as a coloured graphic. */
+      /* NO `filter: blur()` here, deliberately. A blurred radial-gradient is
+         how the previous card got faint concentric contour rings across the
+         whole 1200×630 frame: Chromium quantises the blur, and at this size the
+         steps are visible as banding in the flat cream. A plain radial gradient
+         with a late falloff is already soft and quantises cleanly. */
+      .wash {
+        position: absolute;
+        border-radius: 9999px;
+        pointer-events: none;
+      }
+      .wash--sun {
+        top: -280px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 980px;
+        height: 560px;
+        background: radial-gradient(
+          circle at center,
+          rgba(224, 173, 96, 0.3),
+          transparent 72%
+        );
+      }
+      .wash--peach {
+        top: 20px;
+        right: -160px;
+        width: 460px;
+        height: 460px;
+        background: radial-gradient(
+          circle at center,
+          rgba(232, 160, 120, 0.24),
+          transparent 70%
+        );
+      }
+      .wash--blue {
+        bottom: -180px;
+        left: -140px;
+        width: 460px;
+        height: 460px;
+        background: radial-gradient(
+          circle at center,
+          rgba(126, 169, 192, 0.15),
+          transparent 70%
+        );
+      }
+
+      .inner {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+      }
+
+      /* Name lockup — the pearl mark beside her name. */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        font-size: 33px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: var(--foreground);
+      }
+      .mark {
+        width: 74px;
+        height: 74px;
+        color: var(--gold-deep);
+        /* The mark's optical centre sits below its geometric one (the dish is
+           the heaviest element), so it needs a nudge to sit on the name's
+           baseline rather than above it. */
+        margin-bottom: 6px;
+      }
+      .mark svg {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* The line. Display serif, the site's headline size relationship. */
+      .headline {
+        margin-top: 40px;
+        max-width: 900px;
+        font-family: "Frank Ruhl Libre", Georgia, serif;
+        font-weight: 700;
+        font-size: 64px;
+        line-height: 1.24;
+        letter-spacing: -0.012em;
+        color: var(--foreground);
+      }
+
+      .sub {
+        margin-top: 26px;
+        max-width: 760px;
+        font-size: 27px;
+        line-height: 1.5;
+        color: var(--muted-foreground);
+      }
+
+      .domain {
+        margin-top: 44px;
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 30px;
+        border-radius: 9999px;
+        border: 1px solid rgba(58, 46, 39, 0.12);
+        background: rgba(255, 255, 255, 0.72);
+        font-size: 23px;
+        color: var(--subtle-foreground);
+        /* A hostname is Latin text inside an RTL document — pin it LTR or the
+           dots reorder. */
+        direction: ltr;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 9999px;
+        background: var(--gold);
+      }
+
+      /* A hairline of the brand colours along the bottom edge: enough to make
+         the card recognisably hers in a chat thread full of grey previews. */
+      .rule {
+        position: absolute;
+        inset-inline: 0;
+        bottom: 0;
+        height: 6px;
+        background: linear-gradient(
+          to left,
+          var(--brand),
+          var(--brand-accent) 34%,
+          var(--gold) 66%,
+          var(--peach)
+        );
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="wash wash--sun"></div>
+      <div class="wash wash--peach"></div>
+      <div class="wash wash--blue"></div>
+
+      <div class="inner">
+        <div class="brand">
+          <span class="mark">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+              <g
+                stroke="currentColor"
+                stroke-width="2.3"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M 11.99 22.48 Q 11.69 13.98 19.3 17.77 Q 21.41 9.53 27.65 15.31 Q 32 8 36.35 15.31 Q 42.59 9.53 44.7 17.77 Q 52.31 13.98 52.01 22.48 Q 50.16 36.75 41 45.5 L 23 45.5 Q 13.84 36.75 11.99 22.48 Z" />
+                <g stroke-width="1.79" opacity="0.7">
+                  <path d="M 24.92 30.04 L 20.55 20.5" />
+                  <path d="M 29.58 28.67 L 28.08 18.28" />
+                  <path d="M 34.42 28.67 L 35.92 18.28" />
+                  <path d="M 39.08 30.04 L 43.45 20.5" />
+                </g>
+                <path d="M 11 45.5 Q 9.43 48.29 15.01 50.2 Q 18.05 52.81 25.51 53.11 Q 32 54.54 38.49 53.11 Q 45.95 52.81 48.99 50.2 Q 54.57 48.29 53 45.5" />
+                <path d="M 11 45.5 L 22.8 45.5" />
+                <path d="M 41.2 45.5 L 53 45.5" />
+              </g>
+              <circle
+                cx="32"
+                cy="40.5"
+                r="8"
+                fill="#eddcae"
+                stroke="currentColor"
+                stroke-width="2.3"
+              />
+            </svg>
+          </span>
+          <span>פנינה פאף</span>
+        </div>
+
+        <div class="headline">את לא צריכה לעבור את זה לבד</div>
+
+        <div class="sub">
+          ליווי אישי ודיסקרטי, בקצב שלך. שיחת היכרות ללא עלות וללא התחייבות.
+        </div>
+
+        <div class="domain">
+          <span class="dot"></span>
+          <span>peninaphaff.com</span>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+    </div>
+  </body>
+</html>

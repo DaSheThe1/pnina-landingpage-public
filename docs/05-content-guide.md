@@ -10,12 +10,12 @@ finished with placeholders, so content can arrive in any order.
 
 | Field | Now | Action |
 | --- | --- | --- |
-| `name`, `legalName`, `monogram` | `PLACEHOLDER_שם_מלא` | ⚠️ her name as she wants it shown |
+| `name`, `legalName`, `monogram` | `פנינה פאף` / `Penina Phaff` / `פ` | ✅ confirmed |
 | `founder.role` | `PLACEHOLDER_תפקיד` | ⚠️ her exact title — see the legal note in [01-client-intake.md](01-client-intake.md) |
-| `email`, `phone`, `phoneE164`, `whatsappUrl` | placeholders | ⚠️ powers `tel:`, WhatsApp, and the footer |
-| `domain`, `url` | `pnina.trickticmedia.com` | ✅ live host — see [07-deployment-target.md](07-deployment-target.md) |
+| `email`, `phone`, `phoneE164`, `whatsappUrl` | her real details | ✅ confirmed; powers `tel:`, WhatsApp, and the footer |
+| `DOMAIN` (→ `domain`, `url`) | `peninaphaff.com` | ✅ **the** host. One constant; `url`, every canonical/og:url, the sitemap and `public/CNAME` all derive from it — see [07-deployment-target.md](07-deployment-target.md) |
 | `profiles.*` | empty | optional; empty ones are simply not rendered |
-| `crisisLine` | 1202, enabled | confirm with her |
+| ~~`crisisLine`~~ | removed | the 1202 footer line was taken out at Daniel's request — do not re-add. See §3 of [03-open-decisions.md](03-open-decisions.md) |
 
 ## 2. Copy — `messages/he.json`
 
@@ -23,7 +23,7 @@ finished with placeholders, so content can arrive in any order.
 | --- | --- |
 | `hero` | top of the homepage — headline, subtitle, CTAs |
 | `servicesTeaser`, `services` | the "what the accompaniment is" block (`#approach`) |
-| `offers`, `offers.funnel` | the offer cards and the **price funnel** (anchor → struck → free) |
+| `offers` | the "מהצדפה אל הפנינה" ladder — `offers.intro` is the free שיחת היכרות (rung 0, the only button), `offers.items` the two tracks |
 | `process` | the four steps (`#process`) |
 | `why` | the four commitments (also used on `/about`) |
 | `trustBand` | the pull-quote strip |
@@ -48,10 +48,12 @@ grep -n "PLACEHOLDER" messages/he.json src/config/site.ts
 
 ## 3. Numbers and prices
 
-- **Prices** → `messages/he.json` → `offers.funnel` (`anchorPrice`, `midPrice`).
-  Currently `₪0,000` and `₪000`.
-- **Stats** → `src/content/stats.ts`. All zero, and the whole strip hides itself
-  until at least one is real. Do not invent these — see `AGENTS.md`.
+- **Prices** → `messages/he.json` → `offers`. Three, all hers:
+  `offers.intro.valuePrice` (₪490, what the free שיחת היכרות is worth) and
+  `offers.items[].price` (₪990 / ₪2,880). Type `₪` BEFORE the digits — the
+  component wraps each one in `<bdi>` so RTL cannot re-order it.
+- **Stats** → gone. The placeholder strip was deleted in v0.9.0; there are no
+  counters on this site. Do not invent any — see `AGENTS.md` rule 3.
 
 ## 4. Images and videos — `src/content/media.ts`
 
@@ -81,12 +83,16 @@ headlines).
 - [ ] Every `PLACEHOLDER` replaced (`grep -rn PLACEHOLDER src/ messages/`)
 - [ ] Domain bought and set in all four places ([07](07-deployment-target.md))
 - [ ] Her professional title confirmed, and matching wording in `pages.terms`
-- [ ] Prices confirmed, or the funnel removed
-- [ ] Stats confirmed, or left at zero (the section hides itself)
+- [ ] Prices confirmed (they are hers as of v0.7.0), and the two
+      "מתאים לך אם…" lines on the ladder confirmed by her
 - [ ] Real testimonials + consent, then Pnina flips `testimonialsAreSamples`
 - [ ] Photos and both videos, or a conscious decision to launch without them
 - [ ] n8n workflow live and the form tested end to end ([10](10-n8n-lead-workflow.md))
 - [ ] Favicon added (`src/app/icon.png`) — the template's was removed
+- [ ] The privacy page's "עוגיות וכלי מדידה" section matches the trackers
+      actually configured in `.github/workflows/deploy-pages.yml` — verify
+      against that file, not against what was planned
+      (`grep -nE 'NEXT_PUBLIC_(GA_ID|UMAMI)' .github/workflows/deploy-pages.yml`)
 - [ ] Social share image checked for Hebrew rendering ([03](03-open-decisions.md) §8)
 - [ ] Privacy, terms and accessibility text reviewed by someone qualified
 - [ ] Accessibility statement states what is actually true ([09](09-accessibility.md))

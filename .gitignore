@@ -3,8 +3,18 @@
 # dependencies
 /node_modules
 
-# scratch media the client sends over WhatsApp before it is cleared for publication
-/private-media/
+# scratch media the client sends over WhatsApp before it is cleared for publication,
+# plus the pristine originals of anything that had to be redacted and the encoded
+# files waiting to be uploaded to R2. None of it belongs in git.
+#
+# The one exception is the upload instructions: a README that says what to put in
+# the bucket and why is documentation, not media, and it is useless if it is not
+# in the repo. Git cannot re-include a file whose parent DIRECTORY is excluded, so
+# the exclusions have to be written per-entry rather than as `/private-media/`.
+/private-media/*
+!/private-media/cdn-upload/
+/private-media/cdn-upload/*
+!/private-media/cdn-upload/README.md
 
 
 /.pnp
