@@ -15,7 +15,8 @@ import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion"
  *    by a single rAF-throttled scroll listener that writes `--bg-scroll`
  *    (0 → 1 down the page) which the CSS in `globals.css` reads.
  *
- * Under `prefers-reduced-motion` we skip the scroll wiring entirely and let the
+ * When the accessibility panel's motion switch is on we skip the scroll wiring
+ * entirely and let the
  * global reduced-motion rule freeze the keyframes, leaving a calm static mesh.
  */
 export function SiteBackground() {
@@ -25,9 +26,9 @@ export function SiteBackground() {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    // The device preference, the accessibility panel's switch, and
-    // `?motion=force`, all answered in one place — see
-    // src/components/motion/use-reduced-motion.ts.
+    // The accessibility panel's motion switch (and `?motion=force`), answered
+    // in one place — see src/components/motion/use-reduced-motion.ts. The
+    // device's own setting is deliberately not part of that answer.
     if (shouldReduceMotion) {
       el.style.setProperty("--bg-scroll", "0");
       return;

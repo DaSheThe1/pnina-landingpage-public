@@ -89,34 +89,57 @@ means here, and these rules are not stylistic preferences:
    while she reads. Loud once is enthusiasm; loud forever is pressure. The line
    is argued in full at the head of `src/components/motion/free-call-anchor.tsx`
    and in globals.css §9.
-5. **Honour `prefers-reduced-motion` with no exceptions.** Nothing on this site
-   animates meaning. Since 2026-07-30 there are TWO ways to ask for less of it —
-   the device's own setting, and the "הפחתת תנועה" switch in the site's
-   accessibility panel — and every gate must honour both. In JavaScript that
-   means `usePrefersReducedMotion` (`src/components/motion/use-reduced-motion.ts`)
-   or `prefersReducedMotion()` (`src/lib/eval-flags.ts`), never a bare
-   `matchMedia` call.
-   **No `!important` escapes** — meaning nothing may `!important` its way PAST
-   the reduced-motion block. That block itself uses the flag, and has to: it has
-   to outrank the more specific motion-system rules further down the file. The
-   test is simple — never put `!important` on something that MOVES.
-   The one place the hero clip differs is documented in `hero-video.tsx`: it
-   autoplays for everyone (muted, captioned, always-visible pause control, WCAG
-   2.2.2) by Daniel's 2026-07-29 call, and only the panel's own switch stops it.
-   The ONE thing that looks like an exception is not one: `?motion=force`
-   (globals.css §7, `src/lib/eval-flags.ts`) is a TEMPORARY evaluation override
-   that a person can only switch ON by typing a query parameter, because Daniel
-   reviews this site on a machine with reduce-motion enabled and otherwise
-   cannot see the motion work. Since 2026-07-29 it is **sticky**, at his
-   request: typing it once stores `pnina:eval-motion` in `localStorage`, an
-   inline script re-applies it before the first paint on later loads, and
-   `?motion=reset` clears it. That changes nothing for a visitor — the key is
-   created by that one keystroke and by nothing else, so a browser that has
-   never had the parameter typed into it stores nothing and renders exactly as
-   before. It is deleted with the `?hover=` switcher at the end of the redesign
-   round. **Do not widen it beyond that keystroke: no default, no UI control,
-   no second stored preference, and never a way for a visitor to end up with
-   motion forced on without having asked.**
+5. **Motion is ON by default. The site's own switch is the only opt-out.**
+   This REVERSES the rule that stood here until 2026-07-30, and it is Daniel's
+   decision as the owner, stated twice that day: *"Usually we want animations on
+   by default. We don't want the clients to override it by default using the
+   browser thing,"* and, of the accessibility panel's control, that reduced
+   motion *"should be off by default"*. The contract, in full:
+   - **Every visitor gets the motion.** Reveals, the pearl scrub, the sand
+     plate, the hero autoplay, all of it, on arrival.
+   - **The device's `prefers-reduced-motion` signal is not read anywhere.** It
+     no longer suppresses anything and no longer seeds anything. There is no
+     `@media (prefers-reduced-motion: …)` arm left in `globals.css` and no
+     `matchMedia("(prefers-reduced-motion…)")` left in `src/`. **Do not add one
+     back** — not "just for this section", not as a default, not as a seed. An
+     agent that reinstates the OS signal is overruling the owner.
+   - **The ONE opt-out is the "הפחתת תנועה" switch in the accessibility panel.**
+     It starts OFF for everyone, it is stored per browser, it is stamped on
+     `<html>` as `data-a11y-reduce-motion` before the first paint by
+     `a11y-boot-script.ts`, and turning it on gives the complete static
+     experience: reveals already visible, the process section left as four
+     static cards with no frames downloaded, cursor layers and the sand ripple
+     never mounted, the hero clip paused.
+   - **Every gate reads that one switch**, and nothing else: in React,
+     `usePrefersReducedMotion` (`src/components/motion/use-reduced-motion.ts`);
+     outside it, `prefersReducedMotion()` (`src/lib/eval-flags.ts`); in CSS, the
+     `:root[data-a11y-reduce-motion="true"]` block in `globals.css` plus the
+     `:root:not([data-a11y-reduce-motion="true"])` gates on the four
+     scroll-timeline effects (§1, §2, §5, §6 — those need their own gate because
+     a scroll-timeline animation ignores `animation-duration`).
+   - **Save-Data / connection-aware gating STAYS.** Skipping the pearl frames for
+     a visitor who asked to save data is about bytes, not motion, and it is
+     unaffected by any of the above.
+   - **Nothing on this site animates meaning**, and nothing loops to create
+     pressure (rule 4). That has not changed and is what makes motion-by-default
+     defensible here.
+   - **No `!important` escapes** — nothing may `!important` its way PAST the
+     reduced-motion block. That block itself uses the flag, and has to: it has to
+     outrank the more specific motion-system rules further down the file. The
+     test is simple — never put `!important` on something that MOVES.
+   - The copy has to keep telling the truth: the accessibility statement in
+     `messages/he.json` describes the in-site switch and says the choice is not
+     taken from the system setting. **That copy and this behaviour change
+     together.**
+   `?motion=force` (globals.css §7, `src/lib/eval-flags.ts`) is now **inert by
+   default and scheduled for deletion**. It existed only because the site used to
+   follow the OS setting, which is on on Daniel's review machine, so he could not
+   see the motion work; motion is on for everyone now, so the only thing it still
+   overrides is the panel switch. It stays sticky (`pnina:eval-motion` in
+   `localStorage`, written by that one keystroke and nothing else; `?motion=reset`
+   clears it) purely so a browser holding the key from the review round behaves
+   predictably. It goes with the `?hover=` switcher at the end of the round.
+   **Do not widen it: no default, no UI control, no second stored preference.**
 6. **No session-replay or form-capture analytics, ever.** Not Hotjar, not
    Clarity, not FullStory. Recording what these visitors read or type is a
    serious breach. `AnalyticsEvent` in `src/lib/analytics.ts` is a closed union
@@ -202,8 +225,10 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
 - `src/components/motion/` — the redesign's motion layer, and
   `use-reduced-motion.ts`, which is the ONLY place a component should ask
   whether to move. Outside the React tree, ask `prefersReducedMotion()` in
-  `src/lib/eval-flags.ts`; the two read the same three inputs (device setting,
-  the panel's switch, the `?motion=force` override) and must stay in step.
+  `src/lib/eval-flags.ts`; the two read the same one input — the accessibility
+  panel's switch, off `data-a11y-reduce-motion` — plus the doomed
+  `?motion=force` override, and must stay in step. Neither reads the device's
+  `prefers-reduced-motion` setting; see rule 5.
 - `src/config/` — `site.ts` (identity, all the PLACEHOLDERs) and `navigation.ts`.
 - `src/content/` — structure only, matched by index to `messages/he.json`.
   **`media.ts` is the single registry of every image/video the client owes**;

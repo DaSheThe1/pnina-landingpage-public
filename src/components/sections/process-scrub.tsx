@@ -12,7 +12,10 @@
  * (see private-media/motion-masters/GENERATION-LOG.md for the full record):
  *
  *  - Snap stations with `scroll-snap-stop: always` — one flick advances exactly
- *    one step; a hard fling cannot skip the story.
+ *    one step; a hard fling cannot skip the story. That is the behaviour INSIDE
+ *    the section and it is unchanged; what changed on 2026-07-30 is WHEN the
+ *    section is allowed to take the scroll over at all — see the long note on
+ *    `applySnap` in the effect below.
  *  - The canvas chases the scroll at a CONSTANT rate (~2.4s per act) instead of
  *    mirroring it, so a flick plays the act as an animation after the snap.
  *  - Adjacent frames are alpha-blended while moving, but a settled station
@@ -56,6 +59,11 @@ import {
 } from "@/components/motion/sequence-source";
 
 const STATIONS = 4;
+/** How far inside the first and last stations the root-level snap zone starts,
+ *  in pixels. Wide enough that resting on an end station is reliably OUTSIDE it
+ *  (fractional scroll offsets, mobile URL-bar resizes), small enough that
+ *  scrolling inward hands the story back to the snap within a few pixels. */
+const SNAP_EDGE = 12;
 /** Scrub playback speed in progress-units/second: one act (1/3) in ~2.4s. */
 const SPEED = 0.14;
 /** Desktop stations that dissolve into a clean approved still at rest. */
@@ -173,16 +181,62 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     );
     io.observe(track);
 
-    // Root-level snapping is active only while the track is on screen, so the
-    // rest of the page scrolls normally.
-    const snapIO = new IntersectionObserver(
-      (entries) => {
-        const on = entries.some((e) => e.isIntersecting);
-        document.documentElement.style.scrollSnapType = on ? "y mandatory" : "";
-      },
-      { rootMargin: "-10% 0px" }
-    );
-    snapIO.observe(track);
+    // ── WHEN THE SECTION IS ALLOWED TO CAPTURE THE SCROLL ──
+    // Root-level snapping is switched on and off from the rAF loop below (see
+    // `applySnap`), and ONLY while the sticky stage actually fills the viewport.
+    //
+    // It used to be an IntersectionObserver with `rootMargin: "-10% 0px"`, which
+    // fired the moment ANY part of this 300vh track touched the viewport. Turning
+    // on `y mandatory` re-snaps the scroller immediately, so one line of scroll
+    // into the section — from either direction, but especially scrolling back UP
+    // from below — yanked the visitor a whole station inwards. Daniel, 2026-07-30:
+    // "Something that I don't like a little bit is the pull of the motion section
+    // … When I scroll back up even a little bit to that section, like one line, it
+    // will pull me inside the full motion. We need to do it like you need to
+    // scroll half the screen or something and not instantly pull."
+    //
+    // The gate is now the PINNED state, which is a stronger version of the "half
+    // a viewport of overlap" he asked for, and it is stronger on purpose: at 50%
+    // overlap mandatory snapping still has to travel the remaining ~50vh to reach
+    // the nearest station, so it would still yank — just half a screen later. The
+    // pinned boundaries, by construction, ARE the first and last snap positions
+    // (station 0 sits at `r.top === 0`, station 3 at `r.bottom === innerHeight`),
+    // so engaging exactly there costs ZERO movement. Entering therefore takes a
+    // full viewport of deliberate scrolling from first contact and then lands on a
+    // station without a jump, in both directions.
+    //
+    // AND IT MUST NEVER TRAP, which needs slightly more than "is it pinned".
+    // Parked on the FIRST station the stage exactly fills the viewport, so a
+    // plain pinned test kept `y mandatory` on there — and mandatory snapping
+    // resolves a small nudge back to the station it started from, because that
+    // station is the nearest snap position. Measured: a 60px wheel nudge off
+    // station 0, and off station 3, both ended exactly where they began.
+    //
+    // ⚠️ THE RELEASE HAS TO BE GEOMETRIC, NOT GESTURAL. Two attempts that do NOT
+    // work, so nobody re-tries them: reading the scroll DIRECTION from `scrollY`
+    // (the browser cancels the scroll before it commits, so at a trapped station
+    // the delta is zero forever), and releasing from a `wheel`/`touchmove`
+    // listener (it races Chromium's snap resolution for that same gesture and
+    // loses about half the time — it tested green at 1440 and red at 390).
+    //
+    // So the snap zone simply STOPS SHORT of both end stations by `SNAP_EDGE`.
+    // Sitting on station 0 or station 3, snapping is off and the page is
+    // ordinary; scrolling outward just leaves, with nothing to race. Scrolling
+    // INWARD crosses into the zone within a few pixels and mandatory snapping
+    // takes over for the rest of the story, exactly as before — one flick, one
+    // step. Entering the section can therefore never jump either: the zone's
+    // edges sit a few pixels inside the first and last snap positions, so
+    // whichever end the visitor arrives at, the snap it engages with is the one
+    // she is already standing on.
+    let snapOn = false;
+    const applySnap = () => {
+      const r = track.getBoundingClientRect();
+      const on =
+        r.top < -SNAP_EDGE && r.bottom > window.innerHeight + SNAP_EDGE;
+      if (on === snapOn) return;
+      snapOn = on;
+      document.documentElement.style.scrollSnapType = on ? "y mandatory" : "";
+    };
 
     const nearestLoaded = (idx: number) => {
       for (let d = 0; d < frameCount; d++) {
@@ -267,6 +321,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         arrowRef.current.style.visibility =
           station >= STATIONS - 1 ? "hidden" : "visible";
       pillRef.current?.classList.toggle("scrub-on", pinned());
+      applySnap();
 
       raf = requestAnimationFrame(tick);
     };
@@ -276,7 +331,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       disposed = true;
       cancelAnimationFrame(raf);
       io.disconnect();
-      snapIO.disconnect();
       document.documentElement.style.scrollSnapType = "";
       // iOS keeps canvas backing stores alive aggressively; zeroing the
       // dimensions releases the bitmap on unmount.

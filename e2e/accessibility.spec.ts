@@ -72,7 +72,13 @@ test("saved preferences are applied before React hydration", async ({ page }) =>
   await expect(root).toHaveAttribute("data-a11y-emphasize-links", "true");
 });
 
-test("the pre-paint OS motion seed is not persisted", async ({ page }) => {
+// Daniel's 2026-07-30 contract (CLAUDE.md rule 5): the site moves for everyone
+// by default and the device's own reduced-motion setting drives nothing. This
+// test used to assert the opposite — that the OS preference seeded the switch on
+// pre-paint — and it is inverted on purpose, not relaxed.
+test("the device motion preference does not switch the site's own control on", async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.route(/\/_next\/static\/.*\.js(?:\?.*)?$/, (route) =>
     route.abort()
@@ -81,13 +87,30 @@ test("the pre-paint OS motion seed is not persisted", async ({ page }) => {
   await page.goto("/", { waitUntil: "domcontentloaded" });
   await expect(page.locator("html")).toHaveAttribute(
     "data-a11y-reduce-motion",
-    "true"
+    "false"
   );
   expect(
     await page.evaluate(() =>
       window.localStorage.getItem("penina-accessibility")
     )
   ).toBeNull();
+});
+
+test("with the OS asking for reduced motion, the switch stays off after hydration", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-a11y-reduce-motion",
+    "false"
+  );
+
+  // And the panel agrees: the control a visitor sees is off, not pre-pressed.
+  await openAccessibilityPanel(page);
+  await expect(
+    page.getByRole("button", { name: /הפחתת תנועה/ })
+  ).toHaveAttribute("aria-pressed", "false");
 });
 
 test("skip link moves keyboard focus to the main content", async ({ page }) => {

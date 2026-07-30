@@ -195,7 +195,15 @@
      the whole viewport including the hero, every section would paint it a second
      time, and the sand would be back where it started. */
   --canvas: #fbf7f1;
-  --background: color-mix(in srgb, var(--canvas) 55%, transparent);
+  /* Daniel, 2026-07-30, launch night: "Just put the color that we have and if
+     something is not really seen, well I will tell you myself. Stop
+     remeasuring... Just use our photo. Can you just use also the one shade
+     that is used in the top parts of the page?" The veil is OFF: every band
+     shows the photograph exactly like the bare hero. Readability rides on the
+     opaque cards ("most of our text is inside squares"), and Daniel eyeballs
+     the rest. If small text over open sand bothers him later, raise this back
+     toward 55% (the last measured-safe value with the current inks). */
+  --background: transparent;
   --surface-1: #ffffff;
   --surface-2: #f4ebe0;
   --surface-3: #f6dcd0;
@@ -2214,16 +2222,27 @@ html.show--consent .back-to-top-control {
 }
 
 /* ────────────────  Reduced motion  ────────────────
-   Honoured without exceptions, and now from TWO directions:
+   ONE trigger, and it is the site's own switch:
 
-     • `@media (prefers-reduced-motion: reduce)` — the device's own setting;
-     • `html[data-a11y-reduce-motion="true"]` — the "הפחתת תנועה" switch in the
-       site's accessibility panel, stamped on <html> before the first paint by
-       the boot script and kept in step afterwards by `AccessibilityProvider`.
+     `html[data-a11y-reduce-motion="true"]` — the "הפחתת תנועה" control in the
+     accessibility panel, stamped on <html> before the first paint by the boot
+     script and kept in step afterwards by `AccessibilityProvider`.
 
-   Everything decorative on this site is allowed to stop: there is no animation
-   here that carries meaning, and an audience that may include people with
-   trauma-related vestibular or anxiety symptoms is exactly who this exists for.
+   ── THERE IS DELIBERATELY NO `@media (prefers-reduced-motion: reduce)` ARM ──
+   There used to be. It was removed on 2026-07-30 at Daniel's instruction, given
+   twice: "Usually we want animations on by default. We don't want the clients
+   to override it by default using the browser thing," and, of this switch,
+   that it "should be off by default". So the device signal no longer suppresses
+   anything and no longer seeds anything, the site moves for every visitor on
+   arrival, and a woman who wants it still gets the complete static rendering
+   from one control on the page itself. Do not re-add the media query here or
+   anywhere else in this file; the sweep that removed it also re-gated §1, §2,
+   §5 and §6 below onto this same attribute.
+
+   Everything decorative on this site is still allowed to stop: there is no
+   animation here that carries meaning, and an audience that may include people
+   with trauma-related vestibular or anxiety symptoms is exactly who the switch
+   exists for.
 
    ── WHY `!important` IS HERE, AND WHY IT IS NOT THE THING CLAUDE.md FORBIDS ──
    The rule in CLAUDE.md is that nothing may `!important` its way PAST reduced
@@ -2237,25 +2256,9 @@ html.show--consent .back-to-top-control {
    The `:not([data-motion="force"])` prefix is the ONE exception, and it is not
    an escape either: it is the evaluation override described in §7 at the bottom
    of this file, which a person can only switch on by typing `?motion=force`
-   into the URL bar. With no such parameter the attribute never exists, the
-   `:not()` always matches, and every rule below applies exactly as it did. */
-@media (prefers-reduced-motion: reduce) {
-  :root:not([data-motion="force"]) *,
-  :root:not([data-motion="force"]) *::before,
-  :root:not([data-motion="force"]) *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
-  :root:not([data-motion="force"]) [data-reveal] {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-}
-
-/* The same, for the panel's own switch — outside the media query, so it works
-   on a device that has asked for nothing. */
+   into the URL bar. It is now inert by default — with motion already on for
+   everyone it only ever matters inside a browser whose panel switch is on — and
+   it is scheduled for deletion with the rest of the review knobs. */
 :root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *,
 :root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *::before,
 :root[data-a11y-reduce-motion="true"]:not([data-motion="force"]) *::after {
@@ -2284,9 +2287,9 @@ html.show--consent .back-to-top-control {
        or less data — `ProcessExperience` renders the static four-card section
        for her instead, and no frame is fetched (see that file's header);
      • the global reduced-motion block a few rules above already freezes every
-       transition and keyframe on the page, and it is the only place that reads
-       all three inputs at once (the device setting, the panel's "הפחתת תנועה"
-       switch, and the `?motion=force` escape);
+       transition and keyframe on the page off the panel's "הפחתת תנועה" switch,
+       which since 2026-07-30 is the only thing that reduces motion here (the
+       device setting is deliberately not read anywhere — see that block);
      • a media-query gate here would ALSO have to be mirrored by hand into §7
        at the bottom of this file, the way §1/§2/§5/§6 are, or the evaluation
        view would silently drift from the real one.
@@ -2342,7 +2345,10 @@ html.show--consent .back-to-top-control {
       animation support, no JavaScript, and no network. Read the fail-open note
       on `[data-reveal]` further up this file before touching the reveal rules.
    2. Every animated block is gated on BOTH `@supports (animation-timeline:
-      view())` and `@media (prefers-reduced-motion: no-preference)`. The
+      view())` and `:root:not([data-a11y-reduce-motion="true"])` — the site's
+      own accessibility-panel switch, which since 2026-07-30 is the only thing
+      that reduces motion here. The device's `prefers-reduced-motion` setting is
+      deliberately not consulted; see the reduced-motion block above. The
       reduced-motion rendering is a complete design, not a broken one: the
       spine is simply already drawn, the quote is simply already legible, the
       cursor layers simply never mount.
@@ -2407,15 +2413,19 @@ html.show--consent .back-to-top-control {
 }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
+  /* Gated on the panel switch, NOT on `@media (prefers-reduced-motion:
+     no-preference)`. A scroll-timeline animation ignores `animation-duration`,
+     so the global block above cannot freeze it and each of these four effects
+     needs its own gate; since 2026-07-30 that gate is a SELECTOR, which is what
+     lets §7 mirror it behind `[data-motion="force"]` at equal specificity. */
+  :root:not([data-a11y-reduce-motion="true"])
     [data-reveal]:not([data-reveal-ready]) {
-      animation: reveal-rise linear both;
-      animation-timeline: view();
-      /* Staggered items get their whole range shifted a few percent later by
-         the component (`--reveal-range`), which is what a stagger IS on a
-         scroll timeline — a delay in milliseconds means nothing here. */
-      animation-range: var(--reveal-range, entry 8% cover 26%);
-    }
+    animation: reveal-rise linear both;
+    animation-timeline: view();
+    /* Staggered items get their whole range shifted a few percent later by
+       the component (`--reveal-range`), which is what a stagger IS on a
+       scroll timeline — a delay in milliseconds means nothing here. */
+    animation-range: var(--reveal-range, entry 8% cover 26%);
   }
 }
 
@@ -2557,19 +2567,17 @@ html.show--consent .back-to-top-control {
 }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .process-spine__line {
-      animation: spine-draw linear both;
-      animation-timeline: --pnina-process;
-      animation-range: entry 20% cover 70%;
-    }
-    .process-spine__dot {
-      animation: spine-dot-bloom linear both;
-      animation-timeline: --pnina-process;
-      /* Each dot lights up as the line reaches it — the component writes the
-         range, because the offsets depend on how many steps there are. */
-      animation-range: var(--dot-range, entry 20% cover 70%);
-    }
+  :root:not([data-a11y-reduce-motion="true"]) .process-spine__line {
+    animation: spine-draw linear both;
+    animation-timeline: --pnina-process;
+    animation-range: entry 20% cover 70%;
+  }
+  :root:not([data-a11y-reduce-motion="true"]) .process-spine__dot {
+    animation: spine-dot-bloom linear both;
+    animation-timeline: --pnina-process;
+    /* Each dot lights up as the line reaches it — the component writes the
+       range, because the offsets depend on how many steps there are. */
+    animation-range: var(--dot-range, entry 20% cover 70%);
   }
 }
 
@@ -2759,12 +2767,10 @@ html.show--consent .back-to-top-control {
   view-timeline-name: --pnina-seq;
 }
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .scroll-seq__beat {
-      animation: reveal-rise linear both;
-      animation-timeline: --pnina-seq;
-      animation-range: var(--beat-range, contain 10% contain 30%);
-    }
+  :root:not([data-a11y-reduce-motion="true"]) .scroll-seq__beat {
+    animation: reveal-rise linear both;
+    animation-timeline: --pnina-seq;
+    animation-range: var(--beat-range, contain 10% contain 30%);
   }
 }
 
@@ -2782,12 +2788,10 @@ html.show--consent .back-to-top-control {
 }
 
 @supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    .quote-reveal__word {
-      animation: quote-word-in linear both;
-      animation-timeline: view();
-      animation-range: var(--word-range, entry 20% cover 45%);
-    }
+  :root:not([data-a11y-reduce-motion="true"]) .quote-reveal__word {
+    animation: quote-word-in linear both;
+    animation-timeline: view();
+    animation-range: var(--word-range, entry 20% cover 45%);
   }
 }
 
@@ -2796,28 +2800,31 @@ html.show--consent .back-to-top-control {
    `src/components/eval/eval-overrides.tsx` at the end of the 2026-07 redesign
    round, the same way the `?hover=` switcher in §3 goes.
 
-   WHY IT EXISTS: Daniel reviews this site on a machine with "reduce motion"
-   switched on at the OS level. The site then correctly renders its
-   reduced-motion design — spine already drawn, reveals already visible, no
-   cursor layer — which means he cannot see the motion work he is being asked
-   to judge. This turns the motion back on FOR HIS TAB ONLY, and only when he
-   types `?motion=force` into the URL bar.
+   ⚠️ INERT BY DEFAULT SINCE 2026-07-30 — it is now waiting to be deleted rather
+   than doing a job. It was built because the site followed the OS
+   "reduce motion" setting, which is switched on on Daniel's review machine, so
+   the site rendered its static design for him and he could not judge the motion
+   work. He then decided the OS signal should not drive the site at all, motion
+   plays for everyone by default, and the problem went away. The only thing
+   `?motion=force` still overrides is the site's own accessibility-panel switch,
+   so on a browser that has not turned that switch on — i.e. every browser, by
+   default — none of it changes a single computed style.
 
-   IT IS NOT A LOOPHOLE IN RULE 5. Nothing here changes a single computed style
-   for a visitor who has not typed that parameter: `EvalOverrides` writes the
-   `data-motion` attribute in an effect and only when the parameter is present,
-   so the attribute simply does not exist on anybody else's document, and every
-   rule below is inert. A real reduced-motion preference is still absolute.
+   IT IS NOT A LOOPHOLE IN RULE 5. `EvalOverrides` writes the `data-motion`
+   attribute in an effect and only when the parameter is present, so the
+   attribute does not exist on anybody else's document.
 
    Two halves:
      a) the global reduced-motion block above already excludes a forced root
         (`:root:not([data-motion="force"])`), which un-freezes the keyframe
         animations, the transitions and the page-enter fade;
-     b) the four scroll-timeline effects are each gated on `@media
-        (prefers-reduced-motion: no-preference)`, which a selector cannot
-        satisfy — so their declarations are repeated here, unchanged, behind
-        the attribute. Any edit to §1, §2, §5 or §6 has to be mirrored here or
-        the evaluation view silently drifts from the real one. */
+     b) the four scroll-timeline effects each carry their own
+        `:root:not([data-a11y-reduce-motion="true"])` gate, because a
+        scroll-timeline animation ignores `animation-duration` and so cannot be
+        frozen by (a) — their declarations are repeated here, unchanged, behind
+        the attribute, at equal specificity and later in the file so they win.
+        Any edit to §1, §2, §5 or §6 has to be mirrored here or the evaluation
+        view silently drifts from the real one. */
 @supports (animation-timeline: view()) {
   /* §1 — scroll-driven reveal */
   :root[data-motion="force"] [data-reveal]:not([data-reveal-ready]) {

@@ -8,7 +8,8 @@ import { cn } from "@/lib/utils";
  * ── THE TEXT IS NEVER "REVEALED", ONLY LIT ──
  * Every word is in the DOM as ordinary text from the first byte of HTML, in one
  * paragraph, in order. A screen reader reads it as a sentence; a browser with no
- * CSS scroll-timeline support, a reader with `prefers-reduced-motion`, and a
+ * CSS scroll-timeline support, a reader who has switched motion off in the
+ * accessibility panel, and a
  * page with JavaScript off all show it fully. The words never start at opacity
  * 0 either — they start dim (0.12) and brighten, so even a timeline that froze
  * halfway would leave a legible sentence. Nothing here carries meaning; it is

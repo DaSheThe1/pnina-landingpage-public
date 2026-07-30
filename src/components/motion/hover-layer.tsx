@@ -39,7 +39,8 @@ import { prefersReducedMotion } from "@/lib/eval-flags";
  *
  * ── WHO NEVER GETS ANY OF THIS ──
  * Touch devices (a cursor effect with no cursor is dead weight in the bundle and
- * on the GPU) and anyone with `prefers-reduced-motion`. Both are checked before
+ * on the GPU) and anyone who has turned the accessibility panel's "הפחתת תנועה"
+ * switch on. Both are checked before
  * a variant mounts, so there is no layer, no listener and no rAF loop at all.
  * Neither exclusion applies to the sand floor, which is a background: it is drawn
  * for touch devices too, and its ripple has its own reduced-motion gate.

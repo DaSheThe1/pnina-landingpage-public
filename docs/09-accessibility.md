@@ -16,15 +16,39 @@ baseline. This is not a certification or legal guarantee.
   `penina-accessibility` localStorage object and sends nothing to analytics or
   the server.
 - `a11y-boot-script.ts` reads those preferences before first paint. It shares
-  its storage key and version with the provider, seeds reduced motion from the
-  operating system when no choice exists, and never persists that OS seed.
+  its storage key and version with the provider, and stamps **only a stored,
+  explicit choice**. It does not consult the operating system's
+  `prefers-reduced-motion` setting, so a visitor who has never opened the panel
+  is stamped `data-a11y-reduce-motion="false"` and the site animates for her.
 - `accessibility-launcher.tsx` uses the installed Base UI dialog primitive for
   focus containment, Escape, background inertness, and focus restoration.
 - `skip-link.tsx` targets `#main-content`; `PageShell` supplies that focusable
   landmark on every route.
-- `src/components/motion/use-reduced-motion.ts` combines the operating-system
-  preference with the saved site choice. Imperative timers, rAF work, smooth
-  scrolling, carousel progression, and muted video previews use that result.
+- `src/components/motion/use-reduced-motion.ts` reports the saved site choice,
+  and nothing else. Imperative timers, rAF work, smooth scrolling, carousel
+  progression, the pearl scrub and the hero clip all use that result;
+  `prefersReducedMotion()` in `src/lib/eval-flags.ts` answers the same question
+  outside the React tree, off the same `data-a11y-reduce-motion` attribute.
+
+### The motion contract (2026-07-30)
+
+Site motion plays for **every** visitor by default. The device's
+`prefers-reduced-motion` signal is deliberately not read anywhere: it does not
+suppress anything and does not seed anything. Daniel's decision, stated twice
+that day: "Usually we want animations on by default. We don't want the clients
+to override it by default using the browser thing," and, of the panel control,
+that reduced motion "should be off by default".
+
+The accommodation is the site's own **"הפחתת תנועה"** switch. It starts off for
+everyone, it is stored per browser, it is applied before first paint by the boot
+script, and turning it on gives the complete static rendering: reveals arrive
+already visible, the process section stays as four static cards and downloads no
+frames, the sand ripple and cursor layers never mount, and the hero clip pauses.
+The accessibility statement in `messages/he.json` says exactly this; the copy and
+the behaviour change together.
+
+Save-Data and connection-aware gating for heavy assets is unaffected — that is
+about bytes, not motion.
 - `src/app/globals.css` contains the attribute-driven visual preferences. The
   high-contrast mode overrides tokens rather than filtering media, and Hebrew
   spacing never forces letter spacing.

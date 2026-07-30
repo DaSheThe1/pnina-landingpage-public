@@ -140,10 +140,10 @@ import { prefersReducedMotion } from "@/lib/eval-flags";
  * reduced-motion visitor gets the loud design; she just does not get the show.
  *
  * Reduced motion is gated HERE, in JavaScript, through `prefersReducedMotion()`
- * — the one helper that also knows about the `?motion=force` evaluation
- * override. That is why globals.css §9 needs no `prefers-reduced-motion`
- * media query and no mirrored copy in §7: with a real reduced-motion
- * preference this component simply never arms. AND IT NEVER REPLAYS EITHER:
+ * — the one helper that reads the accessibility panel's switch and the
+ * `?motion=force` evaluation override. That is why globals.css §9 needs no
+ * gate of its own and no mirrored copy in §7: with that switch on, this
+ * component simply never arms. AND IT NEVER REPLAYS EITHER:
  * the observer is never created, so the panel is the finished still and the
  * re-entry behaviour above does not exist for her.
  */

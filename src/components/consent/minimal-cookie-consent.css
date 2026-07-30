@@ -183,8 +183,10 @@
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  #cc-main {
-    --cc-modal-transition-duration: 0s;
-  }
+/* Re-gated onto the site's own accessibility-panel switch on 2026-07-30, when
+   the device's `prefers-reduced-motion` setting stopped driving anything here
+   (CLAUDE.md rule 5). The banner's transition is a fade, not a movement, and it
+   now stops for the same one control that stops everything else. */
+:root[data-a11y-reduce-motion="true"] #cc-main {
+  --cc-modal-transition-duration: 0s;
 }

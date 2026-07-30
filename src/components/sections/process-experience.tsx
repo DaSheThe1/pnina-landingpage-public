@@ -9,11 +9,14 @@
  * After mount, and only if every gate below passes, it upgrades to the
  * scroll-scrubbed pearl animation:
  *
- *   1. Less motion has not been asked for. `usePrefersReducedMotion` is the one
- *      hook allowed to answer that here: it reads the device's own setting, the
- *      "הפחתת תנועה" switch in this site's accessibility panel, and the
- *      temporary `?motion=force` review override, so a bare `matchMedia` call
- *      would silently ignore two of the three (CLAUDE.md rule 5).
+ *   1. Less motion has not been asked for ON THIS SITE. `usePrefersReducedMotion`
+ *      is the one hook allowed to answer that here: it reads the "הפחתת תנועה"
+ *      switch in this site's accessibility panel (plus the temporary
+ *      `?motion=force` review override), and deliberately NOT the device's own
+ *      `prefers-reduced-motion` setting — since 2026-07-30 the scrub plays for a
+ *      visitor whose OS asks for less motion, and only the panel switch stops
+ *      it. A bare `matchMedia` call here would reinstate the old behaviour for
+ *      this section alone (CLAUDE.md rule 5).
  *   2. The visitor has not asked to save data (`navigator.connection.saveData`)
  *      — the scrub streams several MB of frames.
  *   3. A media CDN is configured, so there is a bucket to stream them from.
@@ -44,6 +47,7 @@ import {
   useSequenceSource,
 } from "@/components/motion/sequence-source";
 import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
+import { prefersReducedMotion } from "@/lib/eval-flags";
 
 import { ProcessSection } from "./marketing-sections";
 import { ProcessScrub } from "./process-scrub";
@@ -75,6 +79,14 @@ export function ProcessExperience() {
 
   useEffect(() => {
     if (reducedMotion || !baseUrl) return;
+    // `AccessibilityProvider` restores the stored preferences in a `setTimeout`,
+    // so for the first tick after mount the hook above still answers "false" for
+    // a visitor whose switch is on — long enough to fire the two probe requests.
+    // The pre-paint boot script has ALREADY stamped the truth on <html>, and
+    // `prefersReducedMotion()` reads exactly that attribute, so asking it here
+    // means a woman who asked for less motion downloads no frame at all, not
+    // even the probe's two. Same answer, one tick earlier — not a second gate.
+    if (prefersReducedMotion()) return;
     if ((navigator as SaveDataNavigator).connection?.saveData === true) return;
 
     let cancelled = false;

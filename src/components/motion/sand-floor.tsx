@@ -456,8 +456,10 @@ export function SandFloor() {
     if (!RIPPLE_ENABLED) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
-    // Honours `?motion=force` — see src/lib/eval-flags.ts. A real reduced-motion
-    // preference keeps the still plate, and nothing below is created at all.
+    // The accessibility panel's motion switch (and `?motion=force`) — see
+    // src/lib/eval-flags.ts. With that switch on the still plate stays and
+    // nothing below is created at all. The device's own reduced-motion setting
+    // is deliberately not read: the ripple runs for everyone by default.
     if (prefersReducedMotion()) return;
 
     const gl = canvas.getContext("webgl", {

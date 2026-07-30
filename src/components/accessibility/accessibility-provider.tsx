@@ -28,16 +28,6 @@ export type AccessibilityPreferences = {
 };
 
 type AccessibilityContextValue = AccessibilityPreferences & {
-  /**
-   * True once these values came from the visitor rather than from the seed.
-   *
-   * The provider seeds `reduceMotion` from the device preference, so
-   * `reduceMotion === true` alone cannot tell "her operating system is set to
-   * reduce motion" apart from "she switched it on in this panel". One place
-   * needs that difference: the hero clip autoplays for everyone by Daniel's
-   * 2026-07-29 call (see hero-video.tsx), and only a choice made HERE stops it.
-   */
-  hasExplicitPreferences: boolean;
   setTextScale: (scale: TextScale) => void;
   setEnhancedContrast: (enabled: boolean) => void;
   setComfortableSpacing: (enabled: boolean) => void;
@@ -46,6 +36,17 @@ type AccessibilityContextValue = AccessibilityPreferences & {
   reset: () => void;
 };
 
+/**
+ * What every visitor gets before she changes anything.
+ *
+ * `reduceMotion: false` is the whole motion contract in one line, and it is not
+ * an oversight: since 2026-07-30 the device's `prefers-reduced-motion` setting
+ * is deliberately NOT read here, so this default is what a browser with the OS
+ * switch on gets too. Daniel's call, stated twice: "Usually we want animations
+ * on by default. We don't want the clients to override it by default using the
+ * browser thing," and reduced motion "should be off by default". The one opt-out
+ * is the panel's own switch below. Do not re-seed this from `matchMedia`.
+ */
 export const defaultAccessibilityPreferences: AccessibilityPreferences = {
   textScale: 100,
   enhancedContrast: false,
@@ -123,10 +124,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   );
   const [hasLoaded, setHasLoaded] = useState(false);
   // Only an explicit visitor choice or a storage migration may be persisted.
-  // The OS reduced-motion seed stays unpersisted so it keeps tracking the OS.
   const dirtyRef = useRef(false);
-  // The rendered half of `dirtyRef`: restored-from-storage or changed-in-panel.
-  const [hasExplicitPreferences, setHasExplicitPreferences] = useState(false);
 
   useEffect(() => {
     const loadPreferences = window.setTimeout(() => {
@@ -137,26 +135,15 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
         const parsed: unknown = stored ? JSON.parse(stored) : null;
         restored = parsed ? parseStoredPreferences(parsed) : null;
       } catch {
-        // Malformed or blocked storage falls through to the OS-seeded defaults.
+        // Malformed or blocked storage falls through to the defaults.
       }
 
+      // No stored choice means the defaults, which are already in state. There
+      // is deliberately no `matchMedia` seed here any more — see the note on
+      // `defaultAccessibilityPreferences` above.
       if (restored) {
         if (restored.migrated) dirtyRef.current = true;
-        setHasExplicitPreferences(true);
         setPreferences(restored.preferences);
-      } else {
-        let reduceMotion = false;
-        try {
-          reduceMotion = window.matchMedia(
-            "(prefers-reduced-motion: reduce)"
-          ).matches;
-        } catch {
-          // An unavailable matchMedia must never prevent the page from loading.
-        }
-        setPreferences({
-          ...defaultAccessibilityPreferences,
-          reduceMotion,
-        });
       }
 
       setHasLoaded(true);
@@ -166,8 +153,8 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // The inline boot script already holds the stored or OS-seeded attributes
-    // until this load completes. Writing defaults sooner would cause a flash.
+    // The inline boot script already holds the stored attributes until this
+    // load completes. Writing defaults sooner would cause a flash.
     if (!hasLoaded) return;
 
     const root = document.documentElement;
@@ -196,44 +183,37 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
   const setTextScale = useCallback((textScale: TextScale) => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences((current) => ({ ...current, textScale }));
   }, []);
 
   const setEnhancedContrast = useCallback((enhancedContrast: boolean) => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences((current) => ({ ...current, enhancedContrast }));
   }, []);
 
   const setComfortableSpacing = useCallback((comfortableSpacing: boolean) => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences((current) => ({ ...current, comfortableSpacing }));
   }, []);
 
   const setReduceMotion = useCallback((reduceMotion: boolean) => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences((current) => ({ ...current, reduceMotion }));
   }, []);
 
   const setEmphasizeLinks = useCallback((emphasizeLinks: boolean) => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences((current) => ({ ...current, emphasizeLinks }));
   }, []);
 
   const reset = useCallback(() => {
     dirtyRef.current = true;
-    setHasExplicitPreferences(true);
     setPreferences(defaultAccessibilityPreferences);
   }, []);
 
   const value = useMemo(
     () => ({
       ...preferences,
-      hasExplicitPreferences,
       setTextScale,
       setEnhancedContrast,
       setComfortableSpacing,
@@ -242,7 +222,6 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
       reset,
     }),
     [
-      hasExplicitPreferences,
       preferences,
       reset,
       setComfortableSpacing,

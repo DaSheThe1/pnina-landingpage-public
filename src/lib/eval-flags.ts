@@ -4,9 +4,16 @@
  * Three URL parameters that exist so Daniel can judge design work in a real
  * browser during the 2026-07 redesign round. All are read on the client only.
  *
- *     /?motion=force     ignore this machine's reduced-motion setting, so the
- *                        motion layer can be evaluated
- *     /?motion=reset     forget it again (see "STICKY", below)
+ *     /?motion=force     ⚠️ INERT BY DEFAULT SINCE 2026-07-30, and scheduled for
+ *                        deletion. It overrides the site's "הפחתת תנועה" panel
+ *                        switch, which is now the ONLY thing that reduces
+ *                        motion — so on a browser that has not switched it on
+ *                        (i.e. every browser, by default) it changes nothing at
+ *                        all. Kept working only so a stored key from the review
+ *                        round keeps behaving predictably until it is removed.
+ *     /?motion=reset     forget it again (see "STICKY", below). Still worth
+ *                        typing once on a machine that stored `force` during the
+ *                        review round.
  *     /?font=bonanova|bellefair|frank|noto|david|sans
  *                        swap the display (headline) face. `bonanova` (at a real
  *                        700) is what the site ships as of 0.12.x; `bellefair`
@@ -17,18 +24,20 @@
  *                        shipped site and changes nothing.
  *     /?accent=reset     forget the stored accent
  *
- * ── WHY `motion=force` EXISTS, AND WHY IT IS NOT A LOOPHOLE ──
- * Daniel's OS has "reduce motion" switched on, so on his machine the site
- * correctly renders its reduced-motion design: no hover layer, the process
- * spine already drawn, reveals already visible. That is the right behaviour and
- * rule 5 in CLAUDE.md is not negotiable — but it also means he cannot see the
- * work he is reviewing.
+ * ── WHY `motion=force` EXISTED, AND WHY IT IS NOW REDUNDANT ──
+ * It was built because Daniel's OS has "reduce motion" switched on: the site
+ * used to follow that signal, so on his machine it rendered its reduced-motion
+ * design — no hover layer, spine already drawn, reveals already visible — and he
+ * could not see the work he was reviewing.
  *
- * So this is an explicit, opt-in override that a person can only ever turn ON
- * by typing a query string. A visitor's preference is still honoured
- * absolutely: with nothing ever having been typed, nothing in this file changes
- * a single computed style, and the reduced-motion block in globals.css keeps
- * the last word.
+ * On 2026-07-30 he decided the signal should not drive the site at all
+ * ("Usually we want animations on by default. We don't want the clients to
+ * override it by default using the browser thing"). The motion layer now plays
+ * for everyone, so the problem this override solved no longer exists. It is kept
+ * FUNCTIONAL rather than deleted today only so that a browser still holding the
+ * stored key behaves predictably, and it now overrides just one thing: the
+ * site's own accessibility-panel switch. It goes with the `?hover=` switcher at
+ * the end of the round, and it must not be widened in the meantime.
  *
  * ── STICKY (2026-07-29, at Daniel's request) ──
  * `?motion=force` used to be per-tab and had to be re-typed on every page load,
@@ -162,26 +171,28 @@ export function requestedAccent(): AccentVariant | null {
 }
 
 /**
- * The single question every JS motion gate outside the React tree should ask,
- * instead of calling `matchMedia("(prefers-reduced-motion: reduce)")` itself.
+ * The single question every JS motion gate outside the React tree should ask.
  *
- * Two things can say "less motion, please": the device, and the site's own
- * "הפחתת תנועה" switch in the accessibility panel. The switch is read off the
- * `data-a11y-reduce-motion` attribute that both the pre-paint boot script and
- * `AccessibilityProvider` stamp on <html>, so this stays a plain function with
- * no React dependency. Components inside the tree should use
- * `usePrefersReducedMotion` (src/components/motion/use-reduced-motion.ts),
- * which re-renders when either input changes; this one answers for a single
- * moment in time.
+ * Exactly ONE thing says "less motion, please": the site's own "הפחתת תנועה"
+ * switch in the accessibility panel, read off the `data-a11y-reduce-motion`
+ * attribute that both the pre-paint boot script and `AccessibilityProvider`
+ * stamp on <html>. That keeps this a plain function with no React dependency.
  *
- * The `?motion=force` override is the ONLY thing that can answer "no" to either,
- * and it can only be turned on from the URL bar.
+ * ⚠️ The device's `prefers-reduced-motion` setting is deliberately NOT read
+ * here, and a `matchMedia` call must not be added back. Since 2026-07-30 the
+ * site moves for every visitor by default and the panel switch is the only
+ * opt-out — Daniel's call, in full in CLAUDE.md rule 5. This function is the
+ * non-React half of that contract; `usePrefersReducedMotion`
+ * (src/components/motion/use-reduced-motion.ts) is the other, re-rendering when
+ * the switch changes where this one answers for a single moment in time.
+ *
+ * The `?motion=force` override can still answer "no" to the switch, but with
+ * motion already on for everyone it is inert unless the switch is on.
  */
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined") return false;
   if (motionForced()) return false;
-  if (document.documentElement.dataset.a11yReduceMotion === "true") return true;
-  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  return document.documentElement.dataset.a11yReduceMotion === "true";
 }
 
 /** The requested headline face, or null for the shipped one (Bona Nova 700).

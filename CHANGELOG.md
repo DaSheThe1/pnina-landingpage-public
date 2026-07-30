@@ -12,6 +12,28 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.13.1] - 2026-07-30
+
+### Animations for everyone, the photograph everywhere, and a gentler animation section
+
+- **The animations now play for every visitor.** Until now a device set to
+  "reduce motion" silently got the static site (which is why the process
+  animation looked missing on your own computer). Your decision: the site
+  decides, not the device. The one opt-out is the reduced-motion switch in the
+  site's own accessibility menu, off by default, remembered per browser, and
+  it still gives the complete quiet experience to whoever chooses it.
+- **The sand photograph shows plainly on every part of every page**, the same
+  shade as the top of the home page. The translucent cream sheet the sections
+  used to lay over it is gone.
+- **The animation section no longer grabs the page.** Scrolling near it, or
+  one line back up into it, used to yank the screen into the animation. Now it
+  only takes over once it truly fills the screen, and one scroll at either
+  edge lets go.
+- **The contact form on the live site reaches the real endpoint.** The
+  address had a leftover "Hello World" test program answering it; the real
+  one is deployed. (Sending still needs the refreshed n8n secret stored,
+  which is a one-time manual step.)
+
 ## [0.13.0] - 2026-07-30
 
 ### The two work streams become one site: your sand, real pink, real bold, and the accessibility round on board

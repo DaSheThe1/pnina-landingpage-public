@@ -8,7 +8,8 @@ import type { CSSProperties } from "react";
  * The whole effect is one `stroke-dashoffset` on a CSS view-progress timeline
  * (globals.css → MOTION SYSTEM §2). Nothing here reads the scroll position, so
  * there is no observer, no rAF and no client bundle. Without CSS scroll-timeline
- * support, without JavaScript, and under `prefers-reduced-motion` the line is
+ * support, without JavaScript, and with the accessibility panel's motion switch
+ * on, the line is
  * simply already drawn — which is a finished design, not a degraded one. That is
  * the only acceptable failure mode on this site.
  *

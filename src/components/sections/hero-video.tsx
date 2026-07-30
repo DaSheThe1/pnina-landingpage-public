@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Maximize2, Pause, Play } from "lucide-react";
 
-import { useSiteReducedMotionChoice } from "@/components/motion/use-reduced-motion";
+import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion";
 import { trackEvent } from "@/lib/analytics";
 import { siteConfig } from "@/config/site";
 import { useFullscreenLetterbox } from "@/lib/use-fullscreen-letterbox";
@@ -29,7 +29,7 @@ export function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const siteMotionChoiceReduced = useSiteReducedMotionChoice();
+  const siteMotionChoiceReduced = usePrefersReducedMotion();
   const userControlledRef = useRef(false);
   // Fire the "watched" analytics event at most once per mount, so repeated
   // expand clicks don't spam the tracker.
@@ -60,11 +60,12 @@ export function HeroVideo() {
   // written in docs/12 §D3; that doc predates the decision.
   //
   // An earlier version vetoed autoplay under `prefers-reduced-motion`. That veto
-  // is gone. The site's reduced-motion contract is unchanged for everything the
-  // SITE animates — the global block at the bottom of globals.css still stops
-  // every decorative animation without exception — but this is a piece of
-  // content, it is silent, it carries burnt-in captions, and the always-visible
-  // pause control below satisfies WCAG 2.2.2 for it.
+  // is gone, and as of 2026-07-30 so is the device signal it read: the whole
+  // site now moves by default and the accessibility panel's switch is the single
+  // opt-out (CLAUDE.md rule 5). This clip was simply the first thing to be moved
+  // onto that contract. It is also a piece of CONTENT rather than decoration: it
+  // is silent, it carries burnt-in captions, and the always-visible pause
+  // control below satisfies WCAG 2.2.2 for it.
   //
   // Playback is still started HERE rather than with an `autoplay` attribute, so
   // that a refusal is something we can handle: iOS Low Power Mode and strict
@@ -78,7 +79,9 @@ export function HeroVideo() {
   // deliberate request made ON THIS PAGE by the woman reading it, not a device
   // default she may have set years ago for something else, so it wins. The
   // device preference alone does not, which is exactly what Daniel asked for.
-  // See `useSiteReducedMotionChoice` in components/motion/use-reduced-motion.ts.
+  // See `usePrefersReducedMotion` in components/motion/use-reduced-motion.ts —
+  // there is no longer a hook-level split here, because with no OS seed the
+  // provider's value IS the explicit choice.
   useEffect(() => {
     if (!VIDEO_SRC) return;
     const video = videoRef.current;
