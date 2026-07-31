@@ -12,6 +12,29 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.15.1] - 2026-07-31
+
+### The animation respects every kind of scroll, and moving through it feels right
+
+- **A hard desktop scroll can no longer blow through the animation.** From
+  inside the section, a fast wheel flick or heavy trackpad swipe used to
+  travel from step 1 to step 4 and straight out the bottom (the burst
+  outlived the rate limit, and reaching the last step handed the rest of the
+  gesture back to the page). One gesture now means one step, no matter how
+  hard it is thrown, on every input. Deliberate repeated scrolling still
+  walks through normally, and leaving from the first or last step is still
+  one ordinary gesture.
+- **Moving between steps on the phone is much easier.** Advancing used to
+  demand ~2.4 seconds of stillness (and a second flick could accidentally
+  extend its own wait); now a step is ready for the next flick about half a
+  second after it arrives. Rapid back-to-back flicks still move one step.
+- Also fixed along the way: on touch, a flick into the last step could arm
+  the exit early and sail out of the section — leaving now requires the
+  gesture to start on the step it leaves from.
+- **Step 4 is tighter on phones**: the line about the two tracks is not
+  shown in the mobile card (the full text stays on desktop, where there is
+  room), which took the tallest card down to mid-pack and off the pearl.
+
 ## [0.15.0] - 2026-07-31
 
 ### Text that shows on every phone, an animation that behaves, and a faster first load

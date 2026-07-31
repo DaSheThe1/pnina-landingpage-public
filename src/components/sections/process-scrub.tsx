@@ -18,6 +18,16 @@
  *    the wheel is held to one station per gesture by `onWheel`, and a finger by
  *    the touch clamp in `applySnap` (a rapid series of flicks was still skipping
  *    steps on a Samsung). Both are argued where they live.
+ *    A SECOND round the same day closed the two ways a gesture could still get
+ *    out of that rule, and both were the same bug on different inputs: the
+ *    section stopped intercepting at a boundary, so a gesture that had just been
+ *    carried to an end station was handed to the native scroller and rode
+ *    straight out of the section. On the wheel that is `gestureSpent` being
+ *    checked before the exit rule; on touch it is `touchOrigin`. The same round
+ *    made the phone's next step CHEAPER — Daniel found the first cut too hard —
+ *    by asking whether the step has arrived rather than whether its whole
+ *    2.4s act has finished. See `GESTURE_QUIET_MS`, `TOUCH_COOLDOWN` and
+ *    `scrubBeatIn`.
  *  - The canvas chases the scroll at a CONSTANT rate (~2.4s per act) instead of
  *    mirroring it, so a flick plays the act as an animation after the snap.
  *  - Adjacent frames are alpha-blended while moving, but a settled station
@@ -151,9 +161,19 @@ const INTENT_WHEEL_MIN = 2;
 const INTENT_TOUCH_MIN = 8;
 
 /** ── THE DESKTOP WHEEL TRAIN (see `onWheel`) ──
- *  Wheel events closer together than this belong to the same gesture. A mouse
- *  notch train runs 50-100ms apart and a trackpad ~10-16ms, so 220ms groups both
- *  without joining two deliberate flicks. */
+ *  How long the ACCUMULATOR remembers. Wheel travel closer together than this
+ *  adds up toward `WHEEL_THRESHOLD`; a longer gap starts the count from zero.
+ *  A mouse notch train runs 50-100ms apart and a trackpad ~10-16ms, so 220ms
+ *  gathers a gentle trackpad push into one request without letting an
+ *  abandoned half-push count toward the next one.
+ *
+ *  ⚠️ THIS IS NOT THE DEFINITION OF "A GESTURE" — that is `GESTURE_QUIET_MS`
+ *  below, and it is five times longer for a measured reason. Using 220ms as the
+ *  gesture boundary was tried and fails on a free-spinning wheel: as the wheel
+ *  slows its notches spread past 220ms while it is still visibly the same
+ *  flick, each late notch reads as a fresh gesture, and the burst walks the
+ *  visitor through the whole section (measured 2026-07-31 — from station 3 a
+ *  decelerating flick reached station 0). */
 const TRAIN_GAP = 220;
 /** How much accumulated, deltaMode-normalised wheel travel a train needs before
  *  it moves a station. One Chrome mouse notch (~100px) clears it on its own; a
@@ -163,7 +183,13 @@ const WHEEL_THRESHOLD = 40;
 /** After a train has moved a station, no further wheel input may move another
  *  one until this is up. This is the fix for "two quick scrolls jump two or more
  *  stations": people double-scroll when they think the page has not responded,
- *  and the second scroll must be absorbed, not obeyed. */
+ *  and the second scroll must be absorbed, not obeyed.
+ *
+ *  It is a RATE LIMIT and, on its own, it is NOT the one-station rule — a
+ *  gesture that keeps producing events for longer than this simply earns
+ *  another station every 550ms. That is what `gestureSpent` in `onWheel` is
+ *  for; read the note there before deciding this number is the one that
+ *  matters. */
 const STATION_COOLDOWN = 550;
 /** How long after a wheel-driven station move `applySnap` leaves the CSS snap
  *  alone, so mandatory snapping cannot fight the smooth scroll we started. */
@@ -174,14 +200,76 @@ const WHEEL_MOVE_MS = 900;
  *  so small that a finger resting on a moving page re-triggers it. 0.15 of a
  *  station is ~84px on a 390x844 phone. */
 const TOUCH_HOLD = 0.15;
-/** ── THE ARRIVAL GESTURE IS SPENT (see `notePinned` and `onWheel`) ──
- *  Once the stage pins, the gesture that brought her here may not also advance
- *  a station: she has to see the first image. A new gesture is one that starts
- *  after this much wheel silence. Deliberately the same figure as
- *  `STATION_COOLDOWN` — arriving IS a station move, so it earns the same pause
- *  — but expressed as a QUIET GAP rather than a deadline, because a sustained
- *  train that simply waits out a deadline is still the same gesture. */
-const ENTRY_QUIET_MS = 550;
+/** ── THE TOUCH RATE LIMIT, AND WHY IT IS NOT `STATION_COOLDOWN` ──
+ *  The same job on the other input: absorb the second and third flick of a
+ *  visitor who thinks nothing happened, without making the FIRST deliberate
+ *  next step feel like a wall. Daniel, 2026-07-31, having tested 0.15.0 on his
+ *  S25: *"We made it so you cannot scroll and it's even harder to go between
+ *  phases in the animations on the phone, but we might have made it too hard."*
+ *
+ *  It is 100ms shorter than the wheel's, and the difference is not a fudge: a
+ *  wheel notch is instantaneous, so 550ms of cooldown is 550ms of stillness,
+ *  whereas a flick is a 150-250ms gesture whose momentum runs on after the
+ *  finger lifts — the clock starts at the END of all that. Measured at 390×844:
+ *  at 550 a deliberate second flick 600ms later was refused about half the time,
+ *  which is exactly the "dead" feeling he described; at 450 it lands every time,
+ *  while three flicks a quarter-second apart are still absorbed to one station.
+ *
+ *  ⚠️ THE NO-SKIP RULE IS NOT THIS NUMBER. What guarantees one flick is one
+ *  station is the clamp in `applySnap` plus `touchOrigin`; this only governs how
+ *  soon the NEXT deliberate flick is honoured. Lowering it further starts
+ *  letting a rapid series through, which is the thing Daniel asked for in the
+ *  first place. */
+const TOUCH_COOLDOWN = 450;
+/** ── WHAT COUNTS AS A NEW WHEEL GESTURE (see `onWheel` and `notePinned`) ──
+ *  A gesture ends when the wheel has been silent for this long, and everything
+ *  before that silence is ONE gesture no matter how long it ran or how its
+ *  events were spaced.
+ *
+ *  It began as the arrival rule alone: once the stage pins, the gesture that
+ *  brought her here may not also advance a station, because she has to see the
+ *  first image. On 2026-07-31 it became the definition of a gesture EVERYWHERE
+ *  in this file, because Daniel's report — *"if I am already at step 1 it will
+ *  let me skip to step 4 and continue down"* — was exactly the case of a single
+ *  hard flick being read as several gestures once it slowed down.
+ *
+ *  It is expressed as a QUIET GAP and not as a deadline, because a sustained
+ *  train that simply waits out a deadline is still the same gesture; and it is
+ *  deliberately the same figure as `STATION_COOLDOWN`, because arriving IS a
+ *  station move and should earn the same pause. Two consequences worth stating
+ *  plainly, both of them intended:
+ *
+ *    • a trackpad drag held down for five seconds moves ONE station, and then
+ *      nothing until the fingers lift. That is the same bargain a phone makes
+ *      with one flick, and Daniel asked for the two inputs to match.
+ *    • repeated deliberate scrolling still walks the section a step at a time,
+ *      as long as the notches are more than half a second apart. Chromium
+ *      measures a "quick double scroll" at ~400ms, which is inside this window
+ *      and is precisely the input that must be absorbed. Skipping the section
+ *      outright is the back-to-top arrow's job, which he named himself. */
+const GESTURE_QUIET_MS = 550;
+
+/** ── ONE LINE THAT ONLY A DESKTOP HAS ROOM FOR (Daniel, 2026-07-31) ──
+ *  *"On desktop the copy stays the same, because we don't have screen space
+ *  problems there. On the mobile view we remove that specific line to make it
+ *  tighter."*
+ *
+ *  Station 4's card is the tallest of the four — it is the only one that also
+ *  carries `process.endpoint` underneath — and on a 390px phone it was covering
+ *  the pearl it is supposed to sit beside. The line that goes is the one about
+ *  the two tracks ("יש שני מסלולים…"): it is the only line in the four steps
+ *  that states a fact the visitor can read in full elsewhere (the offers section
+ *  and the FAQ both carry it), so a phone loses height and nothing else.
+ *
+ *  ⚠️ THE COPY IN `messages/he.json` IS UNTOUCHED and stays complete — this is a
+ *  presentation choice for one breakpoint, not an edit to what she wrote, and
+ *  the static `ProcessSection` still renders every line at every width. The
+ *  indices are named rather than buried in the map so that re-ordering the
+ *  `lines` array is a visible break here instead of a silently wrong line
+ *  disappearing on phones. The line is NOT RENDERED rather than visually
+ *  hidden: it is genuinely absent from the mobile card, so it should be absent
+ *  from the accessibility tree too. */
+const MOBILE_OMITTED_LINE = { step: 3, line: 1 } as const;
 
 type ProcessCopy = { title: string; lines: string[] };
 
@@ -444,6 +532,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     let lockAt: number | null = null;
     let lockEnds = 0;
     let lastClampAt = 0;
+    /** The last `end` `applySnap` measured — the track's scrollable length, in
+     *  px. Kept so the rAF loop can convert `lockAt` into a station without a
+     *  second layout read; it only changes on resize, so one frame of staleness
+     *  is nothing. */
+    let lastEnd = 1;
     /** Which way the RAW INPUT says she wants to go, and when it last said so.
      *  Never used for position or speed — only for direction, and only at the
      *  two end stations. */
@@ -463,6 +556,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  actually moved a station, which is what rate-limits the next one. Read by
      *  the branch in `applySnap` that carries the argument. */
     let touchFrom: number | null = null;
+    /** Where the flick in flight BEGAN, written once on `touchstart` and never
+     *  rewritten by the clamp. Only the exit release reads it, and only to ask
+     *  "did this gesture start on the boundary it is trying to leave" — see the
+     *  note beside `mayEscape` in `applySnap`. */
+    let touchOrigin: number | null = null;
     let touchMovedAt = -Infinity;
     /** Whether the flick in flight is allowed to move a station at all, decided
      *  ONCE when the finger lands and never re-read after that. It has to be a
@@ -470,10 +568,26 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  drag's own first pixels immediately make that false, so asking again
      *  mid-drag would refuse every flick including the first. */
     let touchMayMove = false;
-    /** Has the canvas finished playing its way to the station the scroll is
-     *  parked on? Written once a frame by the rAF loop, read by the touch clamp
-     *  — it is what "and only then can keep scrolling" means, in code. */
-    let scrubSettled = true;
+    /** ── HAS THIS STATION ACTUALLY ARRIVED? ──
+     *  Written once a frame by the rAF loop, read by the touch clamp — it is
+     *  what "and only then can keep scrolling" means, in code.
+     *
+     *  It used to be `smoothP === targetP`: the playhead had to have finished
+     *  the WHOLE act, which at `SPEED` is 2.4 seconds. Daniel, 2026-07-31, on
+     *  the S25: *"We made it so you cannot scroll, and it's even harder to go
+     *  between phases in the animations on the phone, but we might have made it
+     *  too hard."* Two-and-a-half seconds of a flick doing nothing is a page
+     *  that feels broken, and the no-skip rule never needed that much.
+     *
+     *  So the test is now the one the visitor can SEE: the station's copy has
+     *  been allowed in (the same `nearSettle && nearStation` the beat cards are
+     *  toggled on). It is the honest form of "you have arrived at this step" —
+     *  and it keeps the self-tuning property that made the old rule attractive,
+     *  because it is a band around the target rather than a timer: a visitor
+     *  who advances while the canvas is still behind pushes the playhead
+     *  further behind, and the NEXT flick waits for it to catch up. One step
+     *  ahead of the frames is free; three is not. */
+    let scrubBeatIn = true;
     const noteIntent = (dir: number) => {
       if (!dir) return;
       intentDir = dir;
@@ -495,6 +609,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // fills the viewport.
       const y = -r.top;
       const end = r.height - vh;
+      lastEnd = Math.max(1, end);
       const now = performance.now();
       // Speed and direction come from `scrollY`, NOT from the change in `y`:
       // `y` also moves when something ABOVE this section changes height (a photo
@@ -531,7 +646,29 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // release keeps refreshing all the way out rather than expiring halfway.
       const atFirst = y <= SNAP_EDGE;
       const atLast = y >= end - SNAP_EDGE;
-      if (intentDir !== 0 && now - intentAt < GESTURE_MS) {
+      // ── AND THE FLICK HAS TO HAVE *STARTED* AT THE BOUNDARY TO LEAVE IT ──
+      // The mobile twin of the desktop leak fixed in `onWheel` (read the trace
+      // there). `atLast` is only 12px inside the last station, but the touch
+      // clamp below does not intervene until a flick has travelled a WHOLE
+      // station (1.02) — which on a 390×844 phone is 574px against the escape's
+      // 12px. So a flick from station 3 aimed at station 4 crossed the escape's
+      // threshold ~560px BEFORE the clamp could land it, armed the release, and
+      // sailed out of the bottom of the section. Measured 2026-07-31: from
+      // station 3, one ordinary flick down left the section entirely, and the
+      // mirror case did the same off the top from station 2.
+      //
+      // A boundary release is for LEAVING A BOUNDARY, so the gesture has to have
+      // begun on the one it is leaving. `touchOrigin` is where the finger landed
+      // and is never rewritten by the clamp (`touchFrom` is, which is why it
+      // cannot be used here — after the clamp it reads as the station she was
+      // just carried to, and the same flick would be free to keep going).
+      // `null` means "no finger, or it started outside the pinned stage", which
+      // covers every wheel gesture and every arrival: those behave exactly as
+      // before.
+      const mayEscape =
+        touchOrigin === null ||
+        (intentDir > 0 ? touchOrigin === STATIONS - 1 : touchOrigin === 0);
+      if (mayEscape && intentDir !== 0 && now - intentAt < GESTURE_MS) {
         if ((atFirst && intentDir < 0) || (atLast && intentDir > 0)) {
           escapeDir = intentDir;
           escapeUntil = now + ESCAPE_MS;
@@ -609,17 +746,21 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // And a further flick does nothing at all — it holds her where she is
       // rather than advancing — until BOTH of these are true:
       //
-      //   • `STATION_COOLDOWN` has passed, the same 550ms rate limit the wheel
-      //     train uses, which is what absorbs the double-flick a visitor makes
-      //     when she thinks nothing happened; and
-      //   • the canvas has finished playing the act it is on (`scrubSettled`).
-      //     This is the literal form of what Daniel asked for — *"the user
-      //     should be forced to see each animation and only then can keep
-      //     scrolling"* — and it is a better rule than a longer timer because it
-      //     self-tunes: it costs the ~2.4s an act actually takes, and nothing at
-      //     all where there was no act left to play. It cannot feel like a dead
-      //     page either, because the thing it is waiting for is a picture that
-      //     is visibly moving.
+      //   • `TOUCH_COOLDOWN` has passed, the rate limit that absorbs the
+      //     double-flick a visitor makes when she thinks nothing happened; and
+      //   • the step she is on has actually ARRIVED (`scrubBeatIn`).
+      //
+      // ── HOW MUCH THAT SECOND CONDITION IS ALLOWED TO COST (2026-07-31) ──
+      // It used to be `smoothP === targetP`: the playhead had to finish the
+      // whole act, ~2.4 seconds, which was the literal form of *"the user should
+      // be forced to see each animation and only then can keep scrolling"*.
+      // Daniel then tested it on his S25 and drew the other line: *"we might
+      // have made it too hard."* Both are his, and the second is newer, so the
+      // gate is now the arrival of the step rather than the end of its film.
+      // The self-tuning property that made the old rule attractive survives —
+      // it is still a band around the playhead, so a visitor who gets two
+      // stations ahead of the frames waits for them to catch up — but one step
+      // ahead is free, and one step ahead is all a deliberate reader ever is.
       //
       // He accepted the cost of being carried through every step explicitly,
       // and named the way out: the back-to-top button, which is a scripted
@@ -636,7 +777,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // The first cut only intervened once she had travelled a WHOLE station,
       // which meant every refused flick still scrolled a full act's worth before
       // being put back — and the canvas dutifully played that act forwards and
-      // then backwards at its constant rate, keeping `scrubSettled` false for
+      // then backwards at its constant rate, keeping `scrubBeatIn` false for
       // seconds and refusing the next flick too. Measured: three quick flicks
       // left the section unable to advance for over five seconds. So a flick
       // that is not allowed to move a station is stopped as soon as it has
@@ -687,6 +828,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         lockAt = target;
         lockEnds = now + LOCK_MS;
         lastClampAt = now;
+        // ARRIVING IS A STATION MOVE, and is stamped as one. It is the same
+        // claim the wheel makes in `notePinned`, and it is what stops the
+        // "a new finger ends the lock" rule in `onTouchStart` from handing the
+        // arriving visitor straight past the first image.
+        touchMovedAt = now;
         return;
       }
 
@@ -790,17 +936,20 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  on the frame it actually changes. Written only through `notePinned`. */
     let pinnedNow = false;
 
-    /** ── WHEEL TRAIN STATE (see `onWheel`) ──
-     *  When the current train last saw an event and how much it has
-     *  accumulated; when a station move last fired; when ANY wheel event last
-     *  arrived (kept even while the section is nowhere near, because that is
-     *  what identifies the gesture that scrolled her in); and whether that
-     *  arrival gesture has been spent (see `notePinned`). */
-    let trainAt = 0;
+    /** ── WHEEL GESTURE STATE (see `onWheel`) ──
+     *  How much travel the current train has accumulated toward
+     *  `WHEEL_THRESHOLD`; when a station move last fired, which is the rate
+     *  limit; when ANY wheel event last arrived — kept even while the section
+     *  is nowhere near, because that is what identifies the gesture that
+     *  scrolled her in — and whether THE GESTURE IN FLIGHT has already had its
+     *  one station, whether it spent it on arriving (`notePinned`) or on a move
+     *  inside the section. One flag for both, because they are the same rule.
+     *  It clears itself after `GESTURE_QUIET_MS` of wheel silence and can
+     *  therefore never trap anybody. */
     let trainDelta = 0;
     let firedAt = -Infinity;
     let lastWheelAt = -Infinity;
-    let entrySpent = false;
+    let gestureSpent = false;
 
     const progress = () => {
       const r = track.getBoundingClientRect();
@@ -843,14 +992,20 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      * So arriving is treated as what it is: a station move made by the gesture
      * in flight. That gesture is now SPENT — every further event it produces is
      * absorbed — and the next station needs a genuinely new one, which is a
-     * wheel event arriving after `ENTRY_QUIET_MS` of silence.
+     * wheel event arriving after `GESTURE_QUIET_MS` of silence. Since
+     * 2026-07-31 that is the same flag a station move sets, because they are
+     * the same rule: one gesture, one station.
      *
-     * ⚠️ IT CANNOT TRAP HER. The exit rule in `onWheel` is checked BEFORE any of
-     * this: at the first station scrolling up (or the last scrolling down) the
-     * event is never intercepted, cooldown or no cooldown, so one ordinary
-     * gesture still leaves the section immediately. And it says nothing about
-     * the no-yank entry above it — the arrival lock still puts her exactly on
-     * the station she came in at; this only stops the same gesture leaving it.
+     * ⚠️ IT CANNOT TRAP HER, though it now holds slightly more than it did.
+     * Until 2026-07-31 the exit rule in `onWheel` was checked first, so the
+     * arriving gesture could still turn round and leave; it no longer can,
+     * because that same ordering was what let a hard flick ride out of the
+     * bottom of the section (read the trace above `onWheel`). What stands
+     * instead is the property that actually matters: half a second of stillness
+     * always hands the page back, in both directions, from any station. And it
+     * says nothing about the no-yank entry above it — the arrival lock still
+     * puts her exactly on the station she came in at; this only stops the same
+     * gesture leaving it.
      *
      * Touch does not come through here and does not need to: a finger's flick
      * is one gesture that the arrival lock (`lockAt`, above) already clamps to
@@ -862,7 +1017,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       pinnedNow = isPinned;
       document.documentElement.toggleAttribute("data-scrub-pinned", isPinned);
       if (!isPinned) return;
-      entrySpent = true;
+      gestureSpent = true;
       trainDelta = 0;
     };
     /** Where the visitor is inside the track, in track-pixels, and where the
@@ -887,16 +1042,45 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // arrival lock owns that. See the branch in `applySnap`.
       if (!pinned()) {
         touchFrom = null;
+        touchOrigin = null;
         return;
       }
       const { y, end } = geometry();
       touchFrom = Math.round((y / end) * (STATIONS - 1));
+      touchOrigin = touchFrom;
       // …and whether this flick may advance at all, decided now, while the page
       // is still where the last one left it. Both halves of the test are about
-      // the PREVIOUS flick: has its act finished playing, and has the 550ms rate
-      // limit lapsed.
+      // the PREVIOUS flick: has the step it moved to actually arrived on screen
+      // (`scrubBeatIn` — read the note on it; this used to demand the whole
+      // 2.4s act and that is what Daniel called too hard), and has
+      // `TOUCH_COOLDOWN` lapsed. The rate limit is what absorbs the
+      // double-flick a visitor makes when she thinks nothing happened, and it
+      // is now the binding half of the test — the effective wait between two
+      // deliberate flicks went from ~2.4s to ~0.45s without loosening the
+      // no-skip rule at all.
       touchMayMove =
-        scrubSettled && performance.now() - touchMovedAt >= STATION_COOLDOWN;
+        scrubBeatIn && performance.now() - touchMovedAt >= TOUCH_COOLDOWN;
+      // ── A NEW FINGER ENDS THE PREVIOUS GESTURE'S LOCK ──
+      // The lock exists to spend the REMAINDER of a flick that has already had
+      // its station (or of the one that scrolled her in). A finger landing on
+      // the glass is proof that flick is over — so if this one is entitled to
+      // move, it takes the page back rather than queueing behind momentum that
+      // is no longer there.
+      //
+      // It matters more than it sounds, because the lock re-arms itself from
+      // any movement it has to correct: a second flick arriving mid-lock pushed
+      // the page, the lock pulled it straight back, and THAT correction kept
+      // the lock alive — so the visitor's own flick extended the wall that was
+      // eating it, all the way to `LOCK_MS`. Measured at 390×844: a deliberate
+      // second flick 600ms after the first was fought for 590ms and then
+      // refused. That is the "too hard" Daniel reported.
+      //
+      // ⚠️ THIS MUST NOT REOPEN THE ARRIVAL. It cannot: arriving stamps
+      // `touchMovedAt` (see the backstop in `applySnap`), so a finger landing
+      // inside `TOUCH_COOLDOWN` of an arrival is not entitled to move, and the
+      // lock that is holding her on the station she came in at survives
+      // untouched.
+      if (touchMayMove) lockAt = null;
     };
     const onTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0];
@@ -929,25 +1113,75 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      * So while the stage is pinned, the wheel does not scroll the page — it asks
      * for a station. A move needs `WHEEL_THRESHOLD` of accumulated, normalised
      * travel, the accumulator is reset whenever the wheel has been quiet for
-     * `TRAIN_GAP`, and — the rule that actually does the work — no move may
-     * follow another inside `STATION_COOLDOWN`. Taking the scroll over outright
-     * is what makes "never more than one" true: there is no native scroll left
-     * to race and no momentum left to arrive late.
+     * `TRAIN_GAP`, no move may follow another inside `STATION_COOLDOWN`, and no
+     * gesture may move more than once at all (`GESTURE_QUIET_MS`, below).
+     * Taking the scroll over outright is what makes "never more than one" true:
+     * there is no native scroll left to race and no momentum left to arrive
+     * late.
      *
-     * The consequence worth stating plainly: a SUSTAINED gesture (a trackpad
-     * drag held for seconds) advances one station per cooldown rather than one
-     * in total. That is deliberate. "One station per gesture, forever" would
-     * mean a visitor holding a trackpad scroll sits motionless until she lets
-     * go, which reads as a dead page — the same complaint from the other side.
-     * Two flicks in quick succession are what must not overshoot, and they do
-     * not.
+     * ── ONE STATION PER GESTURE, NOT ONE PER COOLDOWN (Daniel, 2026-07-31) ──
+     * *"The scrolling on the browser only allows that after we are already in
+     * the animation full screen, so if I start from top and just hard scroll it
+     * will stop me — but if I am already at step 1 it will let me skip to step 4
+     * and continue down."*
      *
-     * ⚠️ IT NEVER INTERCEPTS AN EXIT. At the first station scrolling up, or the
-     * last scrolling down, the event is left completely alone: no
+     * The cut this replaces said, in this very comment, that a SUSTAINED gesture
+     * advancing one station per cooldown was deliberate. It is not what he
+     * wants, and the measurement shows why it is worse than it sounds. Traced at
+     * 1440×900, parked on station 1, with a burst modelling a free-spinning
+     * wheel (dispatched events landing ~100ms apart):
+     *
+     *     t=76ms   station 1.00  prevented → moved to station 2
+     *     t=827ms  station 2.05  prevented → moved to station 3   (cooldown up)
+     *     t=1118ms station 2.99  NOT PREVENTED  ← the section let go
+     *     …every later event of the same burst scrolled natively…
+     *     final    station 8.00  — out of the section entirely
+     *
+     * TWO faults, and the fix needs both halves:
+     *
+     *  1. `STATION_COOLDOWN` is a rate limit, so one continuous gesture bought a
+     *     station every 550ms. A real hard flick keeps firing for 1-2 seconds,
+     *     which is three or four stations.
+     *  2. THE EXIT RULE WAS THE ESCAPE HATCH. It is geometry + direction only,
+     *     so the moment OUR OWN smooth scroll delivered her into the last
+     *     station's `SNAP_EDGE` band, the still-running gesture stopped being
+     *     intercepted and the native scroller took the rest of it straight out
+     *     of the section. That is the "and continue down" half of the report,
+     *     and no amount of rate-limiting fixes it: the leak is downstream of it.
+     *
+     * So a GESTURE may now spend itself exactly once (`gestureSpent`), and a
+     * spent gesture is absorbed ENTIRELY — including at a boundary, which is
+     * what plugs fault 2. It is the same flag the arrival already set, because
+     * arriving and advancing are the same rule seen twice.
+     *
+     * ── AND A GESTURE ENDS WHEN THE WHEEL GOES QUIET, NOT WHEN IT SLOWS ──
+     * The first cut of this fix used `TRAIN_GAP` (220ms) as the boundary, on the
+     * grounds that it already grouped a notch train. It measured RED, and the
+     * failure is worth keeping: a free-spinning wheel decelerates, so its
+     * notches spread past 220ms while it is still obviously the same flick, and
+     * each late notch bought another station. From station 3, a decelerating
+     * flick reached station 0. `GESTURE_QUIET_MS` (550ms) is the boundary
+     * instead; `TRAIN_GAP` is left doing the only job it was ever good at,
+     * which is deciding how long the ACCUMULATOR remembers.
+     *
+     * The dead-page worry the old comment raised is real, and is answered by
+     * that gap rather than by the cooldown: half a second of wheel silence
+     * starts a fresh gesture, so ordinary repeated deliberate scrolling still
+     * advances one station at a time. What can no longer happen is a single
+     * flick — or a trackpad drag held down — travelling the whole section.
+     * Skipping the section is what the back-to-top arrow is for; Daniel named
+     * it himself.
+     *
+     * ⚠️ IT STILL NEVER INTERCEPTS A *FRESH* GESTURE AT AN EXIT. At the first
+     * station scrolling up, or the last scrolling down, an event that is not
+     * part of an already-spent gesture is left completely alone: no
      * `preventDefault`, no accumulation, nothing. The direction is known from
-     * the FIRST event of the train, so the beginning of a leaving gesture is
-     * never swallowed and then regretted. That is the same rule as the exit
-     * release in `applySnap`, expressed on the other input.
+     * the FIRST event, so the beginning of a leaving gesture is never swallowed
+     * and then regretted. What changed is only that the SAME gesture which just
+     * moved a station cannot also leave — she has to stop for half a second
+     * first, which is the same "you have to see the step" bargain the arrival
+     * already makes. It cannot trap: any gap that clears `GESTURE_QUIET_MS`
+     * hands the exit straight back, at every station and in both directions.
      *
      * Touch never reaches here: a phone has the CSS snap path and the release
      * above, and this listener is the only non-passive one in the file precisely
@@ -966,59 +1200,79 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // that scrolls her in recognisable once it gets here.
       const quietFor = now - lastWheelAt;
       lastWheelAt = now;
+      // A wheel event proves no finger is driving this. On a touchscreen laptop
+      // a `touchOrigin` left over from an earlier flick would otherwise still be
+      // narrowing the exit release in `applySnap` (see `mayEscape`) while the
+      // visitor is scrolling with the wheel.
+      touchOrigin = null;
       if (Math.abs(px) >= INTENT_WHEEL_MIN) noteIntent(dir);
       // Either this or the rAF loop can be first to see the stage engage; both
       // report, and `notePinned` acts once. See the long note on it.
       notePinned(pinned());
+
+      // ── IS THIS STILL THE SAME GESTURE? ──
+      // Asked for EVERY wheel event, pinned or not, so a gesture that began
+      // outside the section keeps its identity when it arrives — the same
+      // reason `lastWheelAt` is global. The accumulator has its own, much
+      // shorter memory; see the warning on `TRAIN_GAP`.
+      if (quietFor > TRAIN_GAP) trainDelta = 0;
+      if (quietFor > GESTURE_QUIET_MS) gestureSpent = false;
       if (!pinnedNow) return;
+
+      // ── A GESTURE GETS ONE STATION, AND THIS ONE HAS HAD IT ──
+      // Spent either on ARRIVING (`notePinned` — she has to see the first
+      // image) or on a move it already made inside the section. From here to
+      // `GESTURE_QUIET_MS` of silence, every event it produces is swallowed.
+      //
+      // ⚠️ IT IS CHECKED BEFORE THE EXIT RULE BELOW, and that ordering IS the
+      // fix for "it will let me skip to step 4 and continue down". The exit
+      // rule is geometry plus direction, so OUR OWN smooth scroll delivering
+      // her into the last station's `SNAP_EDGE` band mid-gesture used to hand
+      // every remaining event of that gesture straight to the native scroller,
+      // which then rode out of the section. Rate-limiting cannot reach that
+      // leak — it is downstream of it. Read the trace in the note above this
+      // handler.
+      //
+      // The cost is that the gesture which just moved a station cannot also
+      // leave the section; she stops for half a second first. That is the same
+      // bargain the arrival already makes, and it cannot trap — any gap over
+      // `GESTURE_QUIET_MS` hands the exit straight back.
+      if (gestureSpent) {
+        event.preventDefault();
+        trainDelta = 0;
+        return;
+      }
 
       const { y, end } = geometry();
       if ((dir < 0 && y <= SNAP_EDGE) || (dir > 0 && y >= end - SNAP_EDGE)) {
-        trainAt = 0;
         trainDelta = 0;
         return;
       }
 
       event.preventDefault();
 
-      // ── THE GESTURE THAT BROUGHT HER IN IS SPENT ──
-      // Checked here, AFTER the exit rule above, so a cooldown can never stand
-      // between her and the way out, and before everything below, because it
-      // outranks them: no accumulation, no threshold, no station. It clears
-      // itself the moment a wheel event arrives out of `ENTRY_QUIET_MS` of
-      // silence, which is the definition of a new gesture. See `notePinned`.
-      if (entrySpent) {
-        if (quietFor < ENTRY_QUIET_MS) {
-          trainAt = now;
-          trainDelta = 0;
-          return;
-        }
-        entrySpent = false;
-      }
-
-      // ⚠️ THE COOLDOWN IS CHECKED FIRST, BEFORE THE TRAIN GROUPING, and that
-      // ordering is the whole fix. The first cut had it the other way round —
-      // group into trains, then rate-limit within a train — and it did not work,
+      // ⚠️ THE COOLDOWN IS CHECKED BEFORE THE ACCUMULATOR, and that ordering
+      // matters on its own. The first cut had it the other way round — group
+      // into trains, then rate-limit within a train — and it did not work,
       // because the reported gesture is TWO SEPARATE FLICKS. Measured in
       // Chromium: two "quick" wheel scrolls actually land ~400ms apart, which is
-      // past `TRAIN_GAP`, so the grouping declared a fresh train, cleared the
-      // fired flag and let the cooldown be skipped entirely. Two notches, two
-      // stations — exactly the bug. The rate limit has to sit ABOVE the grouping
-      // to be a rate limit at all.
+      // past `TRAIN_GAP`, so the grouping declared a fresh train and let the
+      // cooldown be skipped entirely. Two notches, two stations — exactly that
+      // bug. The rate limit has to sit above the accumulator to be a rate limit
+      // at all. It is what keeps two SEPARATE quick gestures to one station;
+      // `gestureSpent` above is what keeps one long gesture to one.
       if (now - firedAt < STATION_COOLDOWN) {
         // Absorbed. Still cancelled, so nothing drifts, and the accumulator is
         // reset so the next gesture has to earn its threshold from zero rather
         // than firing the instant the cooldown lapses.
-        trainAt = now;
         trainDelta = 0;
         return;
       }
-      if (now - trainAt > TRAIN_GAP) trainDelta = 0;
-      trainAt = now;
       trainDelta += px;
       if (Math.abs(trainDelta) < WHEEL_THRESHOLD) return;
 
       firedAt = now;
+      gestureSpent = true;
       const from = Math.round((y / end) * (STATIONS - 1));
       const to = Math.min(
         STATIONS - 1,
@@ -1051,9 +1305,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // the playhead has crossed onto a different stored frame.
       store.focus(Math.round(smoothP * (frameCount - 1)));
       draw(smoothP, smoothP === targetP);
-      // The touch clamp asks this rather than a timer; see the branch in
-      // `applySnap` that holds a second flick until the act has played.
-      scrubSettled = smoothP === targetP;
 
       const station = Math.round(targetP * (STATIONS - 1));
       // Both bands carry the one-second lead — see TEXT_LEAD at the top of the
@@ -1066,6 +1317,30 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         isMobile ||
         !STILL_STATIONS.includes(station as 1 | 2 | 3) ||
         Math.abs(smoothP - station / (STATIONS - 1)) <= STILL_BAND;
+      // The touch clamp asks this rather than a timer; see the note on
+      // `scrubBeatIn` and the branch in `applySnap` that holds a second flick.
+      //
+      // It is the beat card's own test with ONE difference, and the difference
+      // is what makes it usable: the card asks how far the playhead is from
+      // where the SCROLL is (`delta`), this asks how far it is from the STATION
+      // THE SECTION IS HOLDING HER ON. Those are the same number at rest and
+      // diverge only while a lock is fighting a fling — and that window is
+      // exactly when a visitor takes her next flick.
+      //
+      // Two measurements, both at 390×844, are why it is written this way:
+      //   • `targetP` is sampled at the top of this loop, BEFORE `applySnap`
+      //     pulls the overshoot back, so during a fight it reads a position she
+      //     never occupies. Rounding it to a station does not help — a 0.4
+      //     overshoot rounds to the NEXT station and the answer inverts.
+      //   • the fight lasts ~800ms after a flick, because the clamp's momentum
+      //     keeps arriving. So a second deliberate flick at 600ms or 700ms was
+      //     refused while one at 800ms was allowed: not a rate limit, a
+      //     misreading. `lockAt` is the section's own answer to "where is she",
+      //     and while it is set it is the only honest one.
+      const heldP = lockAt !== null ? lockAt / lastEnd : targetP;
+      scrubBeatIn =
+        Math.abs(smoothP - Math.round(heldP * (STATIONS - 1)) / (STATIONS - 1)) <
+          SETTLE_BAND && nearStation;
 
       beatRefs.current.forEach((b, i) => {
         if (!b) return;
@@ -1213,14 +1488,23 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
                 </span>
               </>
             )}
-            {s.lines.map((line) => (
-              <p
-                key={line}
-                className="mb-1.5 text-sm leading-relaxed sm:text-base"
-              >
-                {line}
-              </p>
-            ))}
+            {s.lines
+              // See MOBILE_OMITTED_LINE at the top of this file: step 4 drops
+              // its tracks line on a phone and keeps it everywhere else.
+              .filter(
+                (_, li) =>
+                  !isMobile ||
+                  i !== MOBILE_OMITTED_LINE.step ||
+                  li !== MOBILE_OMITTED_LINE.line
+              )
+              .map((line) => (
+                <p
+                  key={line}
+                  className="mb-1.5 text-sm leading-relaxed sm:text-base"
+                >
+                  {line}
+                </p>
+              ))}
             {i === STATIONS - 1 && (
               <p className="mt-2 text-xs italic opacity-80 sm:text-sm">
                 {t("endpoint")}
