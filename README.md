@@ -37,7 +37,8 @@ pnpm lint            # eslint
 pnpm typecheck       # tsc --noEmit
 pnpm build           # production build
 ./scripts/dev/validate.sh   # all of the above; also runs on push via .githooks
-pnpm test:e2e        # ⚠ currently blocked — see docs/11-testing.md
+pnpm test:e2e        # runs; a few stale assertions remain — see docs/11-testing.md
+pnpm test:motion     # isolated mobile process-animation regression suite
 ```
 
 ## Where things live

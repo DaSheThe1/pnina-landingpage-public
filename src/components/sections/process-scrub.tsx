@@ -5,19 +5,19 @@
  *
  * Four stations map 1:1 to the four process steps: closed shell → half open →
  * pearl revealed → pearl risen. Scroll position drives which frame the canvas
- * shows; CSS scroll-snap parks the visitor exactly on each station, and the
- * step's text enters in the last second of the motion that leads to it.
+ * shows, and the step's text enters in the last second of the motion that leads
+ * to it. Desktop wheel input uses the established snap controller below.
+ * Phones use `mobile-process-controller.ts`: four explicit states projected
+ * onto the track, with no root scroll-snap dependency.
  *
  * Every behaviour here was validated with Daniel on real devices before landing
  * (see private-media/motion-masters/GENERATION-LOG.md for the full record):
  *
- *  - Snap stations with `scroll-snap-stop: always` — one flick advances exactly
- *    one step; a hard fling cannot skip the story. What changed on 2026-07-30 is
- *    WHEN the section is allowed to take the scroll over at all, and on
- *    2026-07-31 that one-step rule stopped relying on the browser honouring it:
- *    the wheel is held to one station per gesture by `onWheel`, and a finger by
- *    the touch clamp in `applySnap` (a rapid series of flicks was still skipping
- *    steps on a Samsung). Both are argued where they live.
+ *  - One gesture advances exactly one step; a hard fling cannot skip the story.
+ *    Desktop wheel input is held by `onWheel`. On mobile, native vertical
+ *    momentum is disabled only while the stage is pinned and Pointer Events ask
+ *    the discrete controller for one adjacent state. Rendering and media
+ *    readiness do not participate in that decision.
  *    A SECOND round the same day closed the two ways a gesture could still get
  *    out of that rule, and both were the same bug on different inputs: the
  *    section stopped intercepting at a boundary, so a gesture that had just been
@@ -28,8 +28,9 @@
  *    by asking whether the step has arrived rather than whether its whole
  *    2.4s act has finished. See `GESTURE_QUIET_MS`, `TOUCH_COOLDOWN` and
  *    `scrubBeatIn`.
- *  - The canvas chases the scroll at a CONSTANT rate (~2.4s per act) instead of
- *    mirroring it, so a flick plays the act as an animation after the snap.
+ *  - The canvas chases the scroll at a CONSTANT wall-clock rate (~2.4s per act)
+ *    instead of mirroring it. Slow rAF delivery drops visual frames rather than
+ *    extending an act or keeping the visitor locked.
  *  - Adjacent frames are alpha-blended while moving, but a settled station
  *    always draws ONE exact frame — blending two frames at a segment joint
  *    shows as a double exposure.
@@ -75,10 +76,11 @@
  * the right answer depends on how the finished frames read.
  */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, type CSSProperties } from "react";
 import { useTranslations } from "next-intl";
 
 import { createFrameStore } from "@/components/motion/frame-store";
+import { createMobileProcessController } from "@/components/motion/mobile-process-controller";
 import { type SequenceSource } from "@/components/motion/sequence-source";
 
 const STATIONS = 4;
@@ -285,6 +287,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
   const steps = t.raw("steps") as ProcessCopy[];
 
   const trackRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const beatRefs = useRef<(HTMLDivElement | null)[]>([]);
   const pillRef = useRef<HTMLDivElement>(null);
@@ -321,10 +324,35 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     const base = source.baseUrl;
     const frameCount = source.frameCount;
     const track = trackRef.current;
+    const stage = stageRef.current;
     const canvas = canvasRef.current;
-    if (!track || !canvas) return;
+    if (!track || !stage || !canvas) return;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
+
+    /**
+     * One viewport measurement owns the track, sticky stage and all JavaScript
+     * geometry. Safari's toolbar changes `innerHeight` while `svh` stays fixed
+     * and `vh` means the large viewport; mixing the three is how a station ends
+     * up between the CSS and JS targets. The live visual viewport is followed
+     * while approaching, then frozen for the pinned session.
+     */
+    let viewportHeight = Math.max(
+      1,
+      window.visualViewport?.height ?? window.innerHeight
+    );
+    let viewportFrozen = false;
+    let requestRender = () => {};
+    const syncViewportHeight = () => {
+      if (viewportFrozen) return;
+      viewportHeight = Math.max(
+        1,
+        window.visualViewport?.height ?? window.innerHeight
+      );
+      track.style.setProperty("--process-viewport", `${viewportHeight}px`);
+      requestRender();
+    };
+    syncViewportHeight();
 
     // Size the backing store HERE and not only through the JSX attributes.
     // The cleanup below zeroes it to release the bitmap, and React does not
@@ -339,6 +367,8 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     // Phones fetch every 2nd frame — half the bytes and decoded memory; the
     // constant-rate playback plus blending hides the halved temporal detail.
     const step = isMobile ? 2 : 1;
+    const mobileControllerEnabled =
+      isMobile && typeof window.PointerEvent !== "undefined";
 
     /** Which frame each snap station rests on, snapped to the fetch grid. These
      *  are the images a visitor actually STOPS on, so the store fetches them
@@ -357,6 +387,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       frameBytes: dims.w * dims.h * 4,
       cut: isMobile ? "mobile" : "desktop",
       firstFrame,
+      onChange: () => requestRender(),
     });
 
     // Start fetching well before the section scrolls into view, so frame 0 is
@@ -594,6 +625,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       intentAt = performance.now();
     };
     const setSnap = (on: boolean) => {
+      if (mobileControllerEnabled) {
+        snapOn = false;
+        document.documentElement.style.scrollSnapType = "";
+        return;
+      }
       if (on === snapOn) return;
       snapOn = on;
       document.documentElement.style.scrollSnapType = on ? "y mandatory" : "";
@@ -603,7 +639,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     };
     const applySnap = () => {
       const r = track.getBoundingClientRect();
-      const vh = window.innerHeight;
+      const vh = viewportHeight;
       // How far the visitor has travelled into the track, and the offset of the
       // last station — which is also the last pixel at which the stage still
       // fills the viewport.
@@ -932,6 +968,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     let smoothP = 0;
     let lastT = 0;
     let raf = 0;
+    const requestTick = () => {
+      if (raf) return;
+      raf = requestAnimationFrame((now) => tick(now));
+    };
+    requestRender = requestTick;
     /** Mirrors `data-scrub-pinned` on <html>, so the attribute is only written
      *  on the frame it actually changes. Written only through `notePinned`. */
     let pinnedNow = false;
@@ -953,7 +994,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
 
     const progress = () => {
       const r = track.getBoundingClientRect();
-      return Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
+      return Math.min(1, Math.max(0, -r.top / (r.height - viewportHeight)));
     };
     /** Does the sticky stage fill the viewport right now?
      *
@@ -965,7 +1006,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  stops. Measured at 390×844 and 1440×900: the shortfall is 0.375px. */
     const pinned = () => {
       const r = track.getBoundingClientRect();
-      return r.top <= 0.5 && r.bottom >= window.innerHeight - 0.5;
+      return r.top <= 0.5 && r.bottom >= viewportHeight - 0.5;
     };
     /**
      * ── THE ONE PLACE THAT SEES THE STAGE ENGAGE ──
@@ -1015,8 +1056,12 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     const notePinned = (isPinned: boolean) => {
       if (isPinned === pinnedNow) return;
       pinnedNow = isPinned;
+      viewportFrozen = isPinned;
       document.documentElement.toggleAttribute("data-scrub-pinned", isPinned);
-      if (!isPinned) return;
+      if (!isPinned) {
+        syncViewportHeight();
+        return;
+      }
       gestureSpent = true;
       trainDelta = 0;
     };
@@ -1024,7 +1069,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  last station sits. Both are also the two ends of the pinned range. */
     const geometry = () => {
       const r = track.getBoundingClientRect();
-      const end = Math.max(1, r.height - window.innerHeight);
+      const end = Math.max(1, r.height - viewportHeight);
       return { y: -r.top, end };
     };
 
@@ -1095,7 +1140,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     /** One wheel event in CSS pixels, whichever unit it arrived in. */
     const wheelPx = (event: WheelEvent) => {
       if (event.deltaMode === 1) return event.deltaY * 16;
-      if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
+      if (event.deltaMode === 2) return event.deltaY * viewportHeight;
       return event.deltaY;
     };
 
@@ -1287,12 +1332,35 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       });
     };
 
-    window.addEventListener("touchstart", onTouchStart, { passive: true });
-    window.addEventListener("touchmove", onTouchMove, { passive: true });
-    window.addEventListener("wheel", onWheel, { passive: false });
+    const mobileController = mobileControllerEnabled
+      ? createMobileProcessController({
+          track,
+          stage,
+          stationCount: STATIONS,
+          getViewportHeight: () => viewportHeight,
+          onStationChange: requestTick,
+          onPinnedChange: notePinned,
+          requestRender: requestTick,
+        })
+      : null;
 
-    const tick = (now: number) => {
-      const dt = Math.min(0.1, (now - lastT) / 1000 || 0.016);
+    if (!mobileControllerEnabled) {
+      window.addEventListener("touchstart", onTouchStart, { passive: true });
+      window.addEventListener("touchmove", onTouchMove, { passive: true });
+      window.addEventListener("wheel", onWheel, { passive: false });
+    }
+    const visualViewport = window.visualViewport;
+    window.addEventListener("resize", syncViewportHeight);
+    visualViewport?.addEventListener("resize", syncViewportHeight);
+    document.addEventListener("visibilitychange", requestTick);
+
+    function tick(now: number) {
+      raf = 0;
+      // Use the whole wall-clock interval. The old 100ms cap discarded time
+      // whenever iPhone Safari fell below 10fps, stretching one 2.4s act to six
+      // seconds and a queued three-act chase to the reported 10-15 seconds.
+      // Dropped frames now reduce visual detail; they never extend duration.
+      const dt = lastT ? Math.max(0, (now - lastT) / 1000) : 0.016;
       lastT = now;
       targetP = progress();
       const delta = targetP - smoothP;
@@ -1305,6 +1373,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // the playhead has crossed onto a different stored frame.
       store.focus(Math.round(smoothP * (frameCount - 1)));
       draw(smoothP, smoothP === targetP);
+      track!.dataset.processPlayhead = smoothP.toFixed(4);
 
       const station = Math.round(targetP * (STATIONS - 1));
       // Both bands carry the one-second lead — see TEXT_LEAD at the top of the
@@ -1371,24 +1440,46 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // covered pixels are all canvas either way. (A wheel event landing between
       // two frames can beat this call to it by a millisecond or two — see
       // `notePinned` — which is the same instant by any measure that matters.)
-      const isPinned = pinned();
-      notePinned(isPinned);
-      pillRef.current?.classList.toggle("scrub-on", isPinned);
-      applySnap();
+      if (mobileControllerEnabled) {
+        pillRef.current?.classList.toggle("scrub-on", pinnedNow);
+      } else {
+        const isPinned = pinned();
+        notePinned(isPinned);
+        pillRef.current?.classList.toggle("scrub-on", isPinned);
+        applySnap();
+      }
 
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
+      // Desktop's legacy snap/arrival controller still needs a continuous
+      // observer. The phone controller is event-driven and sleeps completely
+      // while parked; frame decoding wakes it through FrameStore.onChange.
+      if (
+        !mobileControllerEnabled ||
+        Math.abs(targetP - smoothP) > Number.EPSILON
+      ) {
+        requestTick();
+      } else {
+        lastT = 0;
+      }
+    }
+    requestTick();
 
     return () => {
       cancelAnimationFrame(raf);
       io.disconnect();
+      mobileController?.dispose();
       store.dispose();
-      window.removeEventListener("touchstart", onTouchStart);
-      window.removeEventListener("touchmove", onTouchMove);
-      window.removeEventListener("wheel", onWheel);
+      if (!mobileControllerEnabled) {
+        window.removeEventListener("touchstart", onTouchStart);
+        window.removeEventListener("touchmove", onTouchMove);
+        window.removeEventListener("wheel", onWheel);
+      }
+      window.removeEventListener("resize", syncViewportHeight);
+      visualViewport?.removeEventListener("resize", syncViewportHeight);
+      document.removeEventListener("visibilitychange", requestTick);
       document.documentElement.removeAttribute("data-scrub-pinned");
       document.documentElement.style.scrollSnapType = "";
+      delete track.dataset.processPlayhead;
+      track.style.removeProperty("--process-viewport");
       // iOS keeps canvas backing stores alive aggressively; zeroing the
       // dimensions releases the bitmap on unmount.
       canvas.width = 0;
@@ -1397,20 +1488,33 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
   }, [source.baseUrl, source.frameCount, isMobile, firstFrame, dims, stationLabels]);
 
   return (
-    <div ref={trackRef} className="relative h-[300vh]">
+    <div
+      ref={trackRef}
+      className="relative"
+      style={
+        {
+          "--process-viewport": "100dvh",
+          height: "calc(var(--process-viewport) * 3)",
+        } as CSSProperties
+      }
+    >
       {Array.from({ length: STATIONS }, (_, s) => (
         <div
           key={s}
           aria-hidden
           className="absolute h-px w-full"
           style={{
-            top: `calc((100% - 100svh) * ${s / (STATIONS - 1)})`,
-            scrollSnapAlign: "start",
-            scrollSnapStop: "always",
+            top: `calc((100% - var(--process-viewport)) * ${s / (STATIONS - 1)})`,
+            scrollSnapAlign: isMobile ? undefined : "start",
+            scrollSnapStop: isMobile ? undefined : "always",
           }}
         />
       ))}
-      <div className="sticky top-0 grid h-svh place-items-center overflow-hidden">
+      <div
+        ref={stageRef}
+        className="process-scrub__stage sticky top-0 grid place-items-center overflow-hidden"
+        style={{ height: "var(--process-viewport)" }}
+      >
         <canvas
           ref={canvasRef}
           width={dims.w}
@@ -1419,8 +1523,8 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
           aria-label={t("motionAlt")}
           className={
             isMobile
-              ? "block h-svh w-auto max-w-[100vw] object-cover"
-              : "block h-svh w-screen object-cover"
+              ? "block h-full w-auto max-w-[100vw] object-cover"
+              : "block h-full w-screen object-cover"
           }
         />
         {steps.map((s, i) => (

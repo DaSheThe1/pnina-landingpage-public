@@ -12,6 +12,30 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.15.2] - 2026-07-31
+
+### The process animation can no longer trap or skip on an iPhone
+
+- **Phone scrolling is four explicit steps now.** One vertical finger gesture
+  moves one adjacent step, however hard or long the flick is; a second finger
+  cancels rather than skipping; and a fresh outward gesture at either end
+  leaves normally. The phone no longer depends on iOS momentum and root scroll
+  snapping agreeing after the gesture has already travelled.
+- **A slow animation cannot hold the page.** Playback now follows real elapsed
+  time, so an iPhone delivering four frames per second drops visual frames
+  instead of stretching one act from roughly two seconds to six. Missing or
+  failed image frames never participate in the navigation decision.
+- **Safari's moving toolbar no longer moves the stations.** The track, sticky
+  picture and JavaScript all share one visual-viewport measurement, frozen
+  while the process is active and refreshed after leaving.
+- **Every destination picture loads first, and the phone rests when the image
+  rests.** Steps 2-4 now beat intermediate act-one frames into the decoder, and
+  the process animation loop sleeps while it is parked instead of reading
+  layout on every screen refresh.
+- Added a mobile browser regression suite covering hard forward and reverse
+  flicks, multi-touch, toolbar-height changes, four-frame-per-second playback,
+  failed media, boundary exit and the back-to-top bypass.
+
 ## [0.15.1] - 2026-07-31
 
 ### The animation respects every kind of scroll, and moving through it feels right

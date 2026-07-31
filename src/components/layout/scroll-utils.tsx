@@ -52,12 +52,17 @@ export function BackToTop() {
     <button
       type="button"
       aria-label={t("backToTop")}
-      onClick={() =>
+      onClick={() => {
+        // The mobile process controller deliberately owns vertical movement
+        // while its stage is pinned. This explicit bypass keeps the owner's
+        // chosen skip route load-bearing instead of making a scripted scroll
+        // look like arriving momentum that should be held on a station.
+        window.dispatchEvent(new Event("pnina:scroll-bypass"));
         window.scrollTo({
           top: 0,
           behavior: shouldReduceMotion ? "auto" : "smooth",
-        })
-      }
+        });
+      }}
       className={cn(
         // Positioning comes from `.back-to-top-control` in globals.css, which
         // owns the whole fixed-control stack: WhatsApp at the bottom

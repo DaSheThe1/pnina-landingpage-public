@@ -1,6 +1,6 @@
 {
   "name": "pnina-website",
-  "version": "0.15.1",
+  "version": "0.15.2",
   "private": true,
   "packageManager": "pnpm@11.5.2",
   "scripts": {
@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit",
     "validate": "./scripts/dev/validate.sh",
     "test:e2e": "playwright test",
+    "test:motion": "PLAYWRIGHT_PROCESS_MOTION=1 playwright test e2e/process-motion.spec.ts",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",

@@ -385,10 +385,13 @@ pnpm lint && pnpm typecheck && pnpm build   # or: ./scripts/dev/validate.sh
 `.githooks/pre-push` (activate once per clone with
 `scripts/dev/install-git-hooks.sh`).
 
-`pnpm test:e2e` — **currently blocked by a harness bug, not a site bug.** See
-`docs/11-testing.md`. The specs are written and correct; the Playwright web
-server cannot boot the app. Do not "fix" it by changing `localePrefix` or
-renaming the middleware — both were tried and both make it worse.
+`pnpm test:e2e` — runs against an isolated Next dev server. The harness boots,
+but a few older UI/navigation assertions are stale; see `docs/11-testing.md`
+for the current list. `pnpm test:motion` is the hermetic phone-process suite:
+it compiles against a local fake media origin and covers hard flicks,
+multi-touch, failed frames and four-frame-per-second playback. Do not "fix"
+test serving by changing `localePrefix` or renaming the middleware — both were
+tried and both make routing worse.
 
 ## Local preview (after applying changes)
 
