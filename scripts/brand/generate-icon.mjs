@@ -77,9 +77,18 @@ const composed = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height
 const out = join(root, "src", "app", "icon.png");
 mkdirSync(dirname(out), { recursive: true });
 
+// `palette: true` and `effort: 10`, not just `compressionLevel: 9`.
+//
+// This icon is two flat colours — the cream plate and the bronze mark — plus the
+// antialiasing along one thin outline. As a 24-bit truecolour PNG that cost
+// 23 KB, and the browser asks for it at HIGH priority in the first second of
+// every cold load, so it was competing with the stylesheet for a phone's first
+// megabit. Quantised to a palette it is the same drawing at a fraction of the
+// size. Keep the two options together: `palette` picks the encoder, `effort`
+// tells it to actually search.
 await sharp(Buffer.from(composed), { density: 384 })
   .resize(SIZE, SIZE)
-  .png({ compressionLevel: 9 })
+  .png({ compressionLevel: 9, palette: true, effort: 10 })
   .toFile(out);
 
 console.log(`[generate-icon] wrote ${out} (${SIZE}×${SIZE})`);

@@ -32,12 +32,28 @@ const buttonVariants = cva(
         // so an accent can re-point them instead of having to out-specify them.
         brand:
           "btn-sheen btn-cta bg-cta-fill text-cta-ink font-semibold transition-all duration-300 hover:-translate-y-0.5 hover:bg-cta-fill-hover",
+        // ── THE SECONDARY BUTTONS CARRY FULL `--foreground` INK ──
+        // Daniel, 2026-07-31, on the built site: *"The buttons, like 'Who is it
+        // for?' and 'How does it work in my presentations?', that text is not
+        // good, not black enough, but all the other text is good."* Those are
+        // the outline-shaped CTAs beside the pink one — the hero's secondary,
+        // /lectures', /about's pair — and they were the last things on the site
+        // still set in `--foreground-soft`, one rung below the body copy that
+        // he had just approved. A button label is shorter and more decisive
+        // than a paragraph, so if anything it wants the darker end, not the
+        // lighter one.
+        //
+        // Only the LABEL moved. The border and the 2% wash are unchanged, and
+        // the FILLED pink CTA (`brand`, above) is untouched — it is the one
+        // Daniel called perfect. Hover keeps its job through the background and
+        // the border, which is why `hover:text-foreground` came off both: it
+        // now resolves to the colour they already are.
         outline:
-          "border-foreground/15 bg-foreground/[0.02] text-foreground-soft hover:bg-foreground/[0.06] hover:text-foreground hover:border-foreground/25 aria-expanded:bg-foreground/[0.06]",
+          "border-foreground/15 bg-foreground/[0.02] text-foreground hover:bg-foreground/[0.06] hover:border-foreground/25 aria-expanded:bg-foreground/[0.06]",
         secondary:
           "bg-foreground/[0.06] text-foreground hover:bg-foreground/[0.1] aria-expanded:bg-foreground/[0.06]",
         ghost:
-          "text-foreground-soft hover:bg-foreground/[0.06] hover:text-foreground aria-expanded:bg-foreground/[0.06]",
+          "text-foreground hover:bg-foreground/[0.06] aria-expanded:bg-foreground/[0.06]",
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",

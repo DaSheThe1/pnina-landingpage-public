@@ -12,6 +12,48 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.15.0] - 2026-07-31
+
+### Text that shows on every phone, an animation that behaves, and a faster first load
+
+- **Section text no longer vanishes on some phones.** On browsers that could
+  not run the reveal animation (older Samsung Internet among them), the
+  intro paragraphs of whole sections stayed invisible forever — the empty
+  gaps under "למי הליווי מתאים", in the offers, and above the testimonial
+  screenshots were all this one bug. The site now proves the reveal engine
+  actually works before hiding anything, and a watchdog releases anything
+  left hidden. Browsers with working animation see exactly what they saw
+  before.
+- **The mobile menu opens again.** The hamburger menu had been broken in
+  production: its slide animation never ran while the sand background was
+  active, leaving the panel 1 pixel tall. It now opens instantly.
+- **The animation section behaves.** It stops on the first image instead of
+  rolling straight to the second; one scroll gesture (wheel or finger) moves
+  exactly one step and rapid flicks cannot skip ahead; leaving from the
+  first or last step is one ordinary flick; the step copy appears about a
+  second earlier; on phones the text box moved up off the pearl and "שלב X"
+  shares a line with the step title; the header disappears entirely while
+  the animation fills the screen.
+- **Tapping a video now also opens fullscreen** along with the sound, on the
+  home page and the about page.
+- **The header got its background back.** Transparent-over-everything made
+  the menu unreadable on busy sections, so the bar is solid again at every
+  scroll position (except inside the animation) — without the old scroll
+  detection or blur, so none of the old glitching returned.
+- **Blacker where it was still grey**: the header links and the outline
+  buttons ("למי הליווי מתאים" and friends) now use the same near-black as
+  body text.
+- **Faster first load.** The cookie banner's decorative image shrank from
+  287 KB to 46 KB (measured 1.3 seconds off load time by itself); the hero
+  now shows Pnina's poster photo within ~1 second while the clip buffers
+  instead of a text panel; and the media CDN and site assets are now cached
+  at Cloudflare's edge (set up in the dashboard the same day), so the 5 MB
+  hero clip no longer crosses to storage origin for every visitor.
+- **Cookie-banner button lift is phone-only** — on desktop the WhatsApp,
+  accessibility and back-to-top buttons stay put while the banner shows.
+- **Copy**: the lead form heading speaks as Pnina alone ("אשמח לחזור אלייך"),
+  and the footer blurb no longer repeats her name directly under her name.
+
 ## [0.14.0] - 2026-07-31
 
 ### The phone release: fast loading, a smooth animation, bigger and blacker text

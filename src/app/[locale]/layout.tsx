@@ -22,6 +22,8 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { BackToTop, ScrollProgress } from "@/components/layout/scroll-utils";
 import { SiteBackground } from "@/components/layout/site-background";
 import { HoverLayer } from "@/components/motion/hover-layer";
+import { REVEAL_BOOT_SCRIPT } from "@/components/motion/reveal-boot-script";
+import { RevealGuard } from "@/components/motion/reveal-guard";
 import { SandFloor } from "@/components/motion/sand-floor";
 import { EvalMotionScript } from "@/components/eval/eval-motion-script";
 import { EvalOverrides } from "@/components/eval/eval-overrides";
@@ -306,12 +308,24 @@ export default async function LocaleLayout({
             frame of the other rendering.
             src/components/accessibility/a11y-boot-script.ts. */}
         <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT_SCRIPT }} />
+        {/* Also parser-blocking, and for the same reason: it decides whether the
+            scroll reveal is allowed to hide anything at all, and that decision
+            has to be made before the first paint or a reader watches a
+            paragraph she is already looking at blink out.
+            src/components/motion/reveal-boot-script.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOT_SCRIPT }} />
         <NextIntlClientProvider messages={clientMessages}>
           {/* Wraps everything: the motion layer, the reveals and the sand floor
               all read this provider's `reduceMotion` through
               `usePrefersReducedMotion`, so it has to sit above them. */}
           <AccessibilityProvider>
             <SkipLink />
+            {/* The safety net under both reveal paths: it releases any section
+                that is still transparent long after its reveal should have
+                finished, so a browser whose timeline or observer quietly does
+                nothing shows the text instead of a blank strip.
+                src/components/motion/reveal-guard.tsx. */}
+            <RevealGuard />
             <SiteBackground />
             {/* The sand floor: a graded photograph fixed behind the whole site
                 for EVERY visitor, plus a WebGL layer that stirs it under the
@@ -345,11 +359,21 @@ export default async function LocaleLayout({
           </AccessibilityProvider>
         </NextIntlClientProvider>
         <Analytics />
+        {/* `iconUrl` is a WebP, not the PNG it replaced. The notice draws this
+            mark at 3.55rem (`#cc-main .cm::before` in minimal-cookie-consent.css)
+            — about 57 CSS px — yet the PNG behind it was a 373x373 RGBA file
+            weighing 286 KB, the second heaviest request on the whole site after
+            the hero clip, and fetched at HIGH priority roughly a second into the
+            load because the notice is on screen immediately. Its alpha channel
+            was entirely opaque, so it was also paying for a fourth channel it
+            never used. Same 373x373, re-encoded to WebP q95: 45.9 KB, a 240 KB
+            saving off the first seconds. Measured mean channel delta at display
+            size is below the lossless encode's own resampling noise. */}
         <MinimalCookieConsent
           measurementId={publicEnv.ga4MeasurementId}
           locale={locale}
           privacyUrl="/privacy"
-          iconUrl="/cookie-consent-cookie.png"
+          iconUrl="/cookie-consent-cookie.webp"
           cookieName="penina_cookie_consent"
           cookiePath="/"
           googleCookieDomain={`.${siteConfig.domain}`}

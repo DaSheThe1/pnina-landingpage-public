@@ -117,7 +117,11 @@ export default async function LecturesPage({
           </LeadButton>
           <a
             href={`mailto:${siteConfig.email}`}
-            className="inline-flex h-11 items-center rounded-lg border border-foreground/12 bg-foreground/[0.03] px-5 text-sm font-medium text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent"
+            // `text-foreground`, matching the `outline` button variant it is
+            // hand-rolled from (see the note in components/ui/button.tsx):
+            // Daniel asked for this page's secondary button ink to be as black
+            // as the rest of the copy. Hover still answers, in bronze.
+            className="inline-flex h-11 items-center rounded-lg border border-foreground/12 bg-foreground/[0.03] px-5 text-sm font-medium text-foreground transition-colors hover:border-brand/40 hover:text-brand-accent"
           >
             {t("cta.secondary")}
           </a>

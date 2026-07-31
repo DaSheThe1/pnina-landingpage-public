@@ -21,45 +21,65 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50">
-      {/* ── THE HEADER HAS NO BACKGROUND OF ITS OWN. (2026-07-30, Daniel) ──
-          There used to be a cream `bg-canvas/80 backdrop-blur-xl` sheet on its
-          own layer here, toggled on at `scrollY > 8`. Two rounds of work went
-          into making that toggle behave — the fade was dropped because any
-          transition on this page is starved while the sand floor and the
-          reveals are live — and the answer, reading the live site, was that the
-          sheet should not exist:
+    // `site-header` is the hook for one CSS rule: the bar is hidden outright
+    // while the pearl stage is pinned (globals.css §10b). Nothing else styles
+    // it by that name.
+    <header className="site-header sticky top-0 z-50">
+      {/* ── THE HEADER HAS ITS OWN BACKGROUND AGAIN, EXCEPT ON THE ANIMATION ──
+          (2026-07-31, Daniel — reversing his own call of the day before.)
 
-            *"The header will keep it in a different color, the entire header
-            line, and not the background color. I think we might want to leave
-            it the background color."*
+          The 2026-07-30 version had no sheet at all: the bar was transparent at
+          every scroll position, over whatever the page had behind it, on the
+          argument that a cream band over the sand photograph announces itself.
+          One day on the built site answered that:
 
-          He is right. The page background is a photograph of sand; a cream bar
-          laid over the top of it is a second, flatter colour drawn as a band
-          across the whole width, and the moment it switches on it announces
-          itself. The header is now transparent at every scroll position, over
-          whatever the page has behind it, separated by the hairline below and
-          nothing else.
+            *"I might have been mistaken to make it so the header won't have its
+            own colored background because that way stuff there is unreadable
+            when hovering. When scrolling down, stuff gets in the background. On
+            the animation itself, the header can be without the background …
+            But in all other sections the header should have a different color
+            background so it will stand above all other text."*
 
-          Three things went with the sheet, and all three are wins: the scroll
-          listener and its state (a re-render of the whole header on a scroll
-          threshold), the `backdrop-blur-xl` (a full-width blur repainted on a
-          sticky element every frame — part of why the header stuttered on a
-          phone), and the toggle that was making it visibly change.
+          So the sheet is back, and it is SIMPLER than the one that was removed:
 
-          Do NOT put a veil back "for contrast" over the sand. Daniel, same
-          review: *"if something is not really seen, I will tell you myself."*
-          The mobile menu panel below is a different case and IS opaque — see
-          the note on it. */}
+            • It is ALWAYS ON — at the top of the page, over the hero, over
+              everything. There is no `scrollY > 8` listener and no state, so
+              the header still does not re-render on scroll, and there is
+              nothing that can visibly switch on halfway down the page. That
+              listener was one of the three wins of removing the sheet and it
+              does not come back with it.
+            • It is SOLID `bg-canvas`, not a translucent veil. Without
+              `backdrop-blur` — which also does not come back, because a
+              full-width blur repainted on a sticky element every frame is part
+              of why this bar stuttered on a phone — any transparency simply
+              lets the sand's noise through under the nav type, which is the
+              readability complaint above, not a fix for it.
+            • It never animates. See the exception below.
+
+          ── THE EXCEPTION: THE PEARL STAGE ──
+          While the process scrub is pinned it fills the viewport with its own
+          canvas, and there the WHOLE HEADER goes away — not just its
+          background. Daniel asked first for the bar to be transparent over the
+          animation and then, testing on a second Samsung, for the rest of it
+          too: *"in the animation part probably hide header completely."* That
+          is done in CSS, off the `data-scrub-pinned` attribute the scrub
+          already stamps on <html> (globals.css §10b, beside the rule that
+          quiets the page background for the same state) — the `site-header`
+          class on this element is the hook. It is an INSTANT flip with no
+          transition, deliberately: any transition on this bar is starved while
+          the sand floor and the scrub are both live, and a starved transition
+          reads as glitching. That is documented history here, not a preference.
+
+          The mobile menu panel below is solid for its own reasons — see the
+          note on it. */}
       <div
         aria-hidden
-        // All that is left of that layer: the hairline. It keeps its own
-        // element rather than riding on the row below, because the row is
-        // capped at `max-w-6xl` and the rule has to reach both edges of the
-        // viewport. `h-16`, not `inset-0` — the mobile menu is part of this
-        // same <header>, and a layer spanning the whole element would draw its
-        // rule across the middle of the open menu.
-        className="pointer-events-none absolute inset-x-0 top-0 h-16 border-b border-foreground/[0.08]"
+        // The sheet and the hairline are one element. It stays separate from
+        // the row below because the row is capped at `max-w-6xl` and both have
+        // to reach the edges of the viewport. `h-16`, not `inset-0` — the
+        // mobile menu is part of this same <header>, and a layer spanning the
+        // whole element would draw its rule across the middle of the open menu.
+        className="pointer-events-none absolute inset-x-0 top-0 h-16 border-b border-foreground/[0.08] bg-canvas"
       />
 
       <div className="relative mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-6">
@@ -126,17 +146,28 @@ export function SiteHeader() {
           // mobile menu takes over, which is the right control on a tablet.
           className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex"
         >
+          {/* ── EVERY LINK IS FULL `--foreground`, ACTIVE OR NOT ──
+              Daniel, 2026-07-31: *"the header itself is not dark enough."* The
+              inactive links were `--muted-foreground`, one rung down, which is
+              the right ladder for body copy and the wrong one for six words at
+              the top of the page that have to read at a glance.
+              So the colour stops carrying the active state and WEIGHT carries
+              it instead — bold plus the same faint wash the mobile menu uses —
+              which is the stronger signal anyway and leaves every link at the
+              darkest ink the site has. Hover goes bronze, matching the two icon
+              buttons beside them, so a pointer still gets an answer. */}
           {mainNavigation.map((item) => {
             const active = pathname === item.href;
             return (
               <Link
                 key={item.href}
                 href={item.href}
+                aria-current={active ? "page" : undefined}
                 className={cn(
-                  "rounded-lg px-3 py-1.5 text-sm transition-colors",
+                  "rounded-lg px-3 py-1.5 text-sm text-foreground transition-colors",
                   active
-                    ? "text-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-foreground/[0.05] font-bold"
+                    : "font-medium hover:text-brand-accent"
                 )}
               >
                 {tNav(item.key)}
@@ -187,8 +218,15 @@ export function SiteHeader() {
           full-width GPU layer that came off the bar. */}
       <div
         className={cn(
-          "overflow-hidden border-t border-foreground/[0.06] bg-canvas transition-[max-height,opacity] duration-300 lg:hidden",
-          open ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+          // INSTANT toggle, no transition. The old `transition-[max-height,opacity]`
+          // slide left the menu PERMANENTLY 1px tall: while the WebGL sand runs,
+          // its CSS transitions never get a start time (verified live — both
+          // stayed play-pending forever; hide the sand canvas and they complete
+          // in 300ms). Third confirmed victim of sand-starved transitions, after
+          // the header backdrop and the FAB fades. House pattern applies: state
+          // changes near the sand flip instantly or not at all.
+          "border-t border-foreground/[0.06] bg-canvas lg:hidden",
+          open ? "block" : "hidden"
         )}
       >
         <nav
@@ -203,10 +241,12 @@ export function SiteHeader() {
               className={cn(
                 // `min-h-11`: a 38px row is under the 44px touch minimum, and
                 // this menu exists only for touch.
-                "flex min-h-11 items-center rounded-lg px-3 py-2.5 text-sm transition-colors",
+                // Same ink rule as the desktop nav above: full `--foreground`
+                // on every row, weight and the wash for the active one.
+                "flex min-h-11 items-center rounded-lg px-3 py-2.5 text-sm text-foreground transition-colors",
                 pathname === item.href
-                  ? "bg-foreground/[0.05] text-foreground"
-                  : "text-muted-foreground hover:bg-foreground/[0.04] hover:text-foreground"
+                  ? "bg-foreground/[0.05] font-bold"
+                  : "font-medium hover:bg-foreground/[0.04]"
               )}
             >
               {tNav(item.key)}

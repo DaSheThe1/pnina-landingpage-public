@@ -153,18 +153,28 @@ export function HeroVideo() {
     return () => cleanup?.();
   }, [siteMotionChoiceReduced, started]);
 
-  // Native controls only once it is really playing with sound, or while
+  // Native controls only once she has pressed "הפעלה עם קול", or while
   // fullscreen — silent and pre-play it stays a clean frame. Lifted verbatim
   // from MessageVideo so the two players behave identically.
+  //
+  // `started`, not `started && !video.paused`: since the first press also opens
+  // fullscreen (see `playWithSound`), coming back OUT of fullscreen is now the
+  // ordinary path rather than a corner case, and a visitor who paused before
+  // leaving fullscreen would land on an inline frame with no controls at all
+  // and no way to resume. Exiting fullscreen must never take playback away from
+  // her, and that includes the means to restart it.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const onChange = () => {
-      video.controls =
-        document.fullscreenElement === video || (started && !video.paused);
+      video.controls = document.fullscreenElement === video || started;
     };
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
   }, [started]);
 
   // Track real playback state rather than assuming it, so the control's label
@@ -186,6 +196,46 @@ export function HeroVideo() {
   }, [ready]);
 
   /**
+   * Ask the video element itself for fullscreen, synchronously.
+   *
+   * Two rules, both load-bearing:
+   *
+   *  1. IT MUST BE CALLED INSIDE THE GESTURE HANDLER. Browsers only grant
+   *     fullscreen while the transient user activation from the tap is still
+   *     live, so this cannot move into an effect or behind an `await`. Calling
+   *     `play()` first is fine — playing a video does not consume the
+   *     activation — but nothing else may sit between the tap and this call.
+   *  2. IT IS ADDITIVE AND NEVER BLOCKING. Every failure path is swallowed:
+   *     a rejected promise, a synchronous throw (Safari), an environment with
+   *     neither API. The sound must play whether or not the frame expands, so
+   *     this function can only ever succeed or do nothing.
+   *
+   * iOS Safari has no `Element.requestFullscreen` on a <video> at all — the
+   * native player is entered through `webkitEnterFullscreen`, which is tried
+   * both as the fallback of a rejected promise and as the only option when the
+   * standard method is missing.
+   */
+  function enterFullscreen() {
+    const video = videoRef.current as FullscreenVideo | null;
+    if (!video) return;
+    try {
+      if (video.requestFullscreen) {
+        void video.requestFullscreen().catch(() => {
+          try {
+            video.webkitEnterFullscreen?.();
+          } catch {
+            /* No fullscreen here. The clip still plays inline. */
+          }
+        });
+      } else {
+        video.webkitEnterFullscreen?.();
+      }
+    } catch {
+      /* Same: fullscreen is a bonus, never a precondition. */
+    }
+  }
+
+  /**
    * The first tap: restart from zero, with sound, once through.
    *
    * Daniel, 2026-07-30, testing the live site: *"I like the thing that we have
@@ -200,6 +250,15 @@ export function HeroVideo() {
    * refuses audio, same one-way `started` latch (the pill does not come back
    * when the clip ends, and a second tap goes to fullscreen like any other tap
    * on a started clip).
+   *
+   * ── AND IT ALSO GOES FULLSCREEN (Daniel, 2026-07-31) ──
+   * *"Pressing on the video and the Hero Video won't make it full screen on the
+   * first press. It will just make the audio play. We want to also make it full
+   * screen."* So the ONE press does both. The order below is deliberate:
+   * playback is asked for first and fullscreen last, so that if the expand is
+   * refused — an embedded context, a desktop Safari quirk, a headless browser —
+   * she still gets the sound, which is the part that carries her meaning. The
+   * corner "מסך מלא" button is unchanged and still works on its own.
    */
   function playWithSound() {
     const video = videoRef.current;
@@ -221,6 +280,7 @@ export function HeroVideo() {
       video.muted = true;
       void video.play();
     });
+    enterFullscreen();
     setStarted(true);
   }
 
@@ -236,17 +296,12 @@ export function HeroVideo() {
   }
 
   function expand() {
-    const video = videoRef.current as FullscreenVideo | null;
-    if (!video) return;
+    if (!videoRef.current) return;
     if (!trackedRef.current) {
       trackedRef.current = true;
       trackEvent("hero_video_watch");
     }
-    if (video.requestFullscreen) {
-      void video.requestFullscreen();
-    } else if (video.webkitEnterFullscreen) {
-      video.webkitEnterFullscreen();
-    }
+    enterFullscreen();
   }
 
   return (
@@ -317,9 +372,17 @@ export function HeroVideo() {
               // affordance and reads as "inspect this woman's face". A play/
               // expand surface is a plain pointer. Same in message-video.tsx —
               // keep the two matched.
-              className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
-                ready ? "cursor-pointer opacity-100" : "opacity-0"
-              }`}
+              //
+              // ALWAYS VISIBLE — this is what lets `poster` actually paint. The
+              // element used to sit at `opacity-0` until `ready`, which meant the
+              // poster WebP (20 KB, fetched on every load) was never once shown:
+              // visitors watched the monogram panel for the whole 5 MB buffer.
+              // An unready <video> renders transparent until its poster arrives,
+              // so HeroPoster still shows through for the first ~1s, then her
+              // actual poster frame takes over (~1.2s measured), then playback.
+              // The blocked/no-video cases still fall back to HeroPoster because
+              // `ready` never flips there.
+              className="absolute inset-0 h-full w-full cursor-pointer object-cover"
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>

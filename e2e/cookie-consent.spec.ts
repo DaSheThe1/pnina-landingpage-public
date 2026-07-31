@@ -180,7 +180,7 @@ test.describe("Google cookie consent", () => {
         parseRgb(palette.dialogBackground)
       )
     ).toBeGreaterThanOrEqual(4.5);
-    expect(palette.cookieMark).toContain("cookie-consent-cookie.png");
+    expect(palette.cookieMark).toContain("cookie-consent-cookie.webp");
 
     expect(googleRequests).toEqual([]);
     await expect(

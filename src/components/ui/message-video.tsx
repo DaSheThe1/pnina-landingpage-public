@@ -122,19 +122,69 @@ export function MessageVideo({
     });
   }, [shouldReduceMotion, src, started]);
 
-  // Native controls only once it is really playing, or while fullscreen —
+  // Native controls only once she has pressed play, or while fullscreen —
   // inline and pre-play it stays a clean frame.
+  //
+  // `started`, not `started && !video.paused`: the first press now also opens
+  // fullscreen (see `playWithSound`), so coming back out of it is the ordinary
+  // path, and pausing before leaving would otherwise strand her on an inline
+  // frame with no controls and no click handler left to restart it. Matched in
+  // sections/hero-video.tsx.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const onChange = () => {
-      video.controls =
-        document.fullscreenElement === video || (started && !video.paused);
+      video.controls = document.fullscreenElement === video || started;
     };
     document.addEventListener("fullscreenchange", onChange);
-    return () => document.removeEventListener("fullscreenchange", onChange);
+    document.addEventListener("webkitfullscreenchange", onChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onChange);
+      document.removeEventListener("webkitfullscreenchange", onChange);
+    };
   }, [started]);
 
+  /**
+   * Ask the video element itself for fullscreen, synchronously.
+   *
+   * It has to be called inside the gesture handler — the browser only grants
+   * fullscreen while the tap's transient activation is live, so it cannot move
+   * into an effect or behind an `await` (calling `play()` first is fine; that
+   * does not consume the activation). And it is additive, never blocking: every
+   * failure is swallowed, including a synchronous throw, so the sound plays
+   * whether or not the frame expands.
+   *
+   * iOS Safari has no `requestFullscreen` on a <video>; the native player is
+   * entered through `webkitEnterFullscreen`, tried both as the fallback of a
+   * rejected promise and as the only option when the standard method is absent.
+   * Matched in sections/hero-video.tsx — keep the two in step.
+   */
+  const enterFullscreen = () => {
+    const video = videoRef.current as FullscreenVideo | null;
+    if (!video) return;
+    try {
+      if (video.requestFullscreen) {
+        void video.requestFullscreen().catch(() => {
+          try {
+            video.webkitEnterFullscreen?.();
+          } catch {
+            /* No fullscreen here. The clip still plays inline. */
+          }
+        });
+      } else {
+        video.webkitEnterFullscreen?.();
+      }
+    } catch {
+      /* Same: fullscreen is a bonus, never a precondition. */
+    }
+  };
+
+  /**
+   * The first press: restart from zero, with sound, once through — AND
+   * fullscreen (Daniel, 2026-07-31: the first press on a clip should not only
+   * unmute it, it should open it). Playback is asked for first and the expand
+   * last, so a refused fullscreen still leaves her with the sound.
+   */
   const playWithSound = () => {
     const video = videoRef.current;
     if (!video) return;
@@ -152,19 +202,13 @@ export function MessageVideo({
       video.muted = true;
       void video.play();
     });
+    enterFullscreen();
     setStarted(true);
   };
 
   const expand = () => {
-    const video = videoRef.current as FullscreenVideo | null;
-    if (!video || !ready) return;
-    if (video.requestFullscreen) {
-      void video.requestFullscreen().catch(() => {
-        video.webkitEnterFullscreen?.();
-      });
-    } else {
-      video.webkitEnterFullscreen?.();
-    }
+    if (!videoRef.current || !ready) return;
+    enterFullscreen();
   };
 
   return (

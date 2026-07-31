@@ -33,6 +33,17 @@ type RevealProps = {
  * yet released it (`data-reveal-shown`). Server HTML, no-JS, dead-JS and
  * no-observer all render the content plainly visible.
  *
+ * ── AND "FAILS OPEN" NOW MEANS "IS FORCED OPEN IF IT DOES NOT" (2026-07-31) ──
+ * There was still one way to lose the text: arm an element, then have the thing
+ * that was supposed to release it never do so. An IntersectionObserver that
+ * exists but never delivers, a `view()` timeline that reports support and never
+ * advances. Both left a paragraph blank forever on a Samsung phone, which is
+ * what `RevealGuard` (src/components/motion/reveal-guard.tsx) now watches for:
+ * anything still transparent well past the end of its own reveal range gets
+ * `data-reveal-off`, and every reveal rule in globals.css excludes that
+ * attribute. Nothing on this site may depend on an animation running in order
+ * to be readable.
+ *
  * ── WHY ABOVE-THE-FOLD CONTENT DOES NOT ANIMATE ──
  * Anything already inside the viewport when this mounts goes straight to
  * visible without ever being hidden. Hiding it at hydration would mean the
@@ -63,13 +74,18 @@ const STAGGER_STEP_MS = 80;
 const MAX_STAGGER_STEPS = 4;
 const RANGE_SHIFT_PER_STEP = 4; // percent
 
-/** Does the browser drive reveals itself? Guarded for SSR and for older
- *  browsers without CSS.supports. */
-function supportsViewTimeline() {
+/** Is the BROWSER driving reveals, rather than this component?
+ *
+ *  It asks the document, not the CSS engine. `reveal-boot-script.ts` runs
+ *  before the first paint, makes that decision once and stamps it on <html> as
+ *  `data-reveal-engine="css"`; globals.css §1 gates the scroll-driven reveal on
+ *  the same attribute. Reading the attribute rather than re-running
+ *  `CSS.supports` here is what makes it impossible for the two to disagree and
+ *  end up either double-driving an element or driving it with neither. */
+function cssDrivesReveals() {
   return (
-    typeof CSS !== "undefined" &&
-    typeof CSS.supports === "function" &&
-    CSS.supports("animation-timeline", "view()")
+    typeof document !== "undefined" &&
+    document.documentElement.getAttribute("data-reveal-engine") === "css"
   );
 }
 
@@ -100,7 +116,7 @@ export function Reveal({
     // CSS is driving this element (see globals.css → MOTION SYSTEM §1). Leave
     // it open: arming it here would hide it behind an observer AND animate it
     // off the timeline at the same time.
-    if (supportsViewTimeline()) return;
+    if (cssDrivesReveals()) return;
 
     // No observer (very old browsers, some embedded webviews): leave it open.
     if (typeof IntersectionObserver === "undefined") return;
