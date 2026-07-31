@@ -162,8 +162,6 @@ export type FrameStoreOptions = {
   cut: keyof typeof PEAK_BYTES;
   /** Frame 1, already downloaded and decoded by the probe. Never evicted. */
   firstFrame: HTMLImageElement;
-  /** Wake the canvas when a newly decoded source can improve its picture. */
-  onChange?(): void;
 };
 
 export type FrameStore = {
@@ -198,7 +196,6 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
     frameBytes,
     cut,
     firstFrame,
-    onChange,
   } = options;
 
   const bytes = Math.max(1, frameBytes);
@@ -261,10 +258,6 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
   for (const s of stations) pushFrame(s);
   for (const s of stillStations) jobs.push({ kind: "still", station: s });
   for (const i of anchors) pushFrame(i);
-  // Everything before this cursor is the usable skeleton. It must win over the
-  // moving window: on a cold phone, decoding a dozen act-one intermediates
-  // before the later station frames makes a successful step look frozen.
-  const skeletonEnd = jobs.length;
   for (let stride = 32; stride >= 1; stride = Math.floor(stride / 2)) {
     const gap = stride * step;
     const level: number[] = [];
@@ -302,7 +295,6 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
   const settle = (slot: Slot, state: SlotState) => {
     slot.state = state;
     inFlight--;
-    if (state === "ready") onChange?.();
     pump();
   };
 
@@ -375,7 +367,6 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
       if (!supportsBitmap) {
         stills[station] = img;
         inFlight--;
-        onChange?.();
         pump();
         return;
       }
@@ -393,7 +384,6 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
         .finally(() => {
           if (disposed) return;
           inFlight--;
-          onChange?.();
           pump();
         });
     };
@@ -422,25 +412,19 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
   /**
    * The next thing worth requesting.
    *
-   * The four station frames, desktop stills and coarse anchors come first. They
-   * are a small bounded skeleton, not the old whole-sequence preload, and they
-   * guarantee that every destination is drawable before act-one detail spends
-   * the decoder. The window follows the skeleton, so a visitor who jumps still
-   * gets direction-aware detail without grinding through the full static list.
+   * The window comes FIRST and the static list second: a visitor who lands on
+   * station 3 from a deep link must not wait for the queue to grind through the
+   * whole of act one. Searching outward from the playhead is bounded by the
+   * window, so this stays cheap even at 180 frames.
    *
-   * The remaining static list is filtered by the SAME window, so the
-   * coarse-to-fine order only supplies frames the retention pass would keep.
-   * Without that the two halves of this file fight: the queue downloads act
-   * three while the playhead is in act one, and eviction throws it away unread.
+   * The static list is then filtered by the SAME window, so the coarse-to-fine
+   * order only ever supplies frames the retention pass would keep. Without that
+   * the two halves of this file fight: the queue downloads act three while the
+   * playhead is in act one, and the eviction sweep throws it away unread.
+   * Pinned frames — stations, stills, anchors — are exempt, which is exactly
+   * what makes them the skeleton.
    */
   const nextJob = (): Job | null => {
-    while (cursor < skeletonEnd) {
-      const job = jobs[cursor++];
-      if (job.kind === "still") return job;
-      const slot = slots[job.index];
-      if (slot?.state === "idle") return job;
-    }
-
     const reach = Math.round(keepHalf * AHEAD) * step;
     for (let d = 0; d <= reach; d += step) {
       const forward = focused + (heading >= 0 ? d : -d);

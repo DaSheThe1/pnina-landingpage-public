@@ -12,6 +12,53 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.15.4] - 2026-08-01
+
+### Phone process navigation has one enforceable sequence
+
+- Replaced the phone's competing native-snap and gesture decisions with one
+  explicit state machine while keeping the proven sticky stage in the normal
+  document. There is still no fixed overlay, body freeze or document scroll
+  lock.
+- A hard wheel or touch gesture entering from above is now intercepted at step
+  1 even if it would otherwise cross the complete process track between two
+  animation frames. Approaching from below lands on step 4.
+- Each fresh vertical gesture moves exactly one adjacent step. Every extra
+  wheel event or finger gesture is discarded while that step's visible act is
+  playing, never queued, so rapid double and triple scrolling cannot wake up
+  later and skip a step.
+- Step 4 holds until its act has completed, then a fresh outward gesture exits.
+  Reverse travel follows the same one-step rule, multi-touch cannot buy a step,
+  a missing touch-end event cannot poison the next gesture, and the back-to-top
+  control remains the immediate explicit skip.
+- Expanded the isolated phone suite to cover real entry from outside, iOS
+  Simulator wheel trains, trusted touch flicks, all four steps, reverse travel,
+  no queued input, missing touch lifecycle, multi-touch, missing frames,
+  four-frame-per-second playback, native exit from both endpoints and the
+  explicit back-to-top exit.
+
+## [0.15.3] - 2026-07-31
+
+### The phone process returns to its proven scroll behavior
+
+- Restored the last phone-tested process choreography from 0.15.1. The page,
+  sticky process stage and native scroll track stay together again: there is no
+  fixed overlay, body freeze or document scroll lock that can leave an empty
+  screen behind.
+- Kept the useful playback correction from the discarded controller round.
+  Pearl playback now follows real elapsed time, so an iPhone rendering four
+  frames per second drops frames instead of stretching one act from roughly
+  2.4 seconds to six or more.
+- Once the sticky stage has engaged, rapid phone flicks and iOS Simulator
+  trackpad trains are absorbed until the visible act reaches its station. This
+  first recovery gate deliberately lived only on the already-sticky stage; the
+  outside-entry gap it left is closed in 0.15.4.
+- The floating back-to-top arrow now releases root scroll snapping before its
+  smooth scroll begins, so the explicit skip route cannot be pulled back into
+  the process.
+- Kept the development-origin allowance needed for a Mac, iOS Simulator or
+  phone to receive the hydrated local preview through the Windows port proxy.
+
 ## [0.15.2] - 2026-07-31
 
 ### The process animation can no longer trap or skip on an iPhone

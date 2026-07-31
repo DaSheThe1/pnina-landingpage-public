@@ -6,8 +6,9 @@ import { resolve } from "node:path";
 const FRAME = readFileSync(
   resolve(process.cwd(), "public/images/poster-hero.jpg")
 );
+
 let server: Server;
-let intermediateMode: "ok" | "fail" = "ok";
+let failIntermediateFrames = false;
 let requestedFrames: string[] = [];
 
 test.skip(
@@ -30,12 +31,14 @@ test.beforeAll(async () => {
       return;
     }
     requestedFrames.push(path);
+
     const isProbe =
       path.endsWith("/f_001.webp") || path.endsWith("/f_180.webp");
-    if (intermediateMode === "fail" && !isProbe) {
+    if (failIntermediateFrames && !isProbe) {
       response.writeHead(404).end();
       return;
     }
+
     response.writeHead(200, {
       "Content-Type": "image/jpeg",
       "Cache-Control": "no-store",
@@ -43,6 +46,7 @@ test.beforeAll(async () => {
     });
     response.end(FRAME);
   });
+
   await new Promise<void>((resolveListen, reject) => {
     server.once("error", reject);
     server.listen(3199, "localhost", () => resolveListen());
@@ -55,173 +59,407 @@ test.afterAll(async () => {
   });
 });
 
-function serveSequence(intermediates: "ok" | "fail") {
-  intermediateMode = intermediates;
-  requestedFrames = [];
+async function stationOf(track: ReturnType<Page["locator"]>) {
+  return track.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const end = Math.max(1, rect.height - window.innerHeight);
+    const progress = Math.min(1, Math.max(0, -rect.top / end));
+    return Math.round(progress * 3) + 1;
+  });
 }
 
 async function openAtProcess(page: Page) {
   await page.goto("/");
-  const track = page.locator('[data-process-controller="mobile"]');
+  const track = page.locator("[data-process-track]");
   await expect(track).toHaveCount(1);
-  await track.evaluate((element) => {
+
+  const top = await track.evaluate((element) => {
     const rect = element.getBoundingClientRect();
-    window.scrollTo({
-      top: window.scrollY + rect.top,
-      behavior: "instant",
-    });
+    return window.scrollY + rect.top;
   });
-  await expect(track).toHaveAttribute("data-process-pinned", "");
-  await expect(track).toHaveAttribute("data-process-station", "1");
-  // Arrival deliberately spends the gesture/cooldown that reached the stage.
-  await page.waitForTimeout(500);
+  await page.evaluate((trackTop) => {
+    window.scrollTo({ top: trackTop, behavior: "instant" });
+  }, top);
+
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+  await expect.poll(() => stationOf(track)).toBe(1);
+  // Arrival spends the gesture that reached the section.
+  await page.waitForTimeout(650);
   return track;
 }
 
-async function verticalGesture(
+async function approachProcess(page: Page, distance = 240) {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await expect(track).toHaveCount(1);
+
+  const top = await track.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return window.scrollY + rect.top;
+  });
+  await page.evaluate(
+    ({ trackTop, before }) => {
+      window.scrollTo({
+        top: Math.max(0, trackTop - before),
+        behavior: "instant",
+      });
+    },
+    { trackTop: top, before: distance }
+  );
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+  return track;
+}
+
+async function trustedVerticalGesture(
   page: Page,
-  direction: "down" | "up",
-  pointerId = 1
+  direction: "down" | "up"
 ) {
+  const session = await page.context().newCDPSession(page);
+  const height = page.viewportSize()?.height ?? 844;
+  const startY =
+    direction === "down"
+      ? Math.min(650, height - 70)
+      : Math.max(90, height * 0.15);
+  const endY =
+    direction === "down"
+      ? Math.max(70, startY - 560)
+      : Math.min(height - 70, startY + 560);
+
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x: 195, y: startY, id: 1, force: 1 }],
+  });
+  for (let index = 1; index <= 7; index++) {
+    const progress = index / 7;
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [
+        {
+          x: 195,
+          y: startY + (endY - startY) * progress,
+          id: 1,
+          force: 1,
+        },
+      ],
+    });
+    await page.waitForTimeout(25);
+  }
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await session.detach();
+}
+
+async function trustedMultiFingerGesture(page: Page, fingers: 2 | 3) {
+  const session = await page.context().newCDPSession(page);
+  const points = Array.from({ length: fingers }, (_, index) => ({
+    x: 165 + index * 30,
+    y: 650,
+    id: index + 11,
+    force: 1,
+  }));
+
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: points,
+  });
+  for (let step = 1; step <= 5; step++) {
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: points.map((point) => ({
+        ...point,
+        y: 650 - step * 100,
+      })),
+    });
+    await page.waitForTimeout(25);
+  }
+  await session.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await session.detach();
+}
+
+async function trustedVerticalBurst(page: Page, count: number) {
+  const session = await page.context().newCDPSession(page);
+  for (let gesture = 0; gesture < count; gesture++) {
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchStart",
+      touchPoints: [{ x: 195, y: 650, id: gesture + 30, force: 1 }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: 195, y: 90, id: gesture + 30, force: 1 }],
+    });
+    await session.send("Input.dispatchTouchEvent", {
+      type: "touchEnd",
+      touchPoints: [],
+    });
+  }
+  await session.detach();
+}
+
+async function syntheticGestureWithoutEnd(page: Page) {
   const stage = page.locator(".process-scrub__stage");
-  const startY = direction === "down" ? 700 : 140;
-  const endY = direction === "down" ? 80 : 760;
-  await stage.dispatchEvent("pointerdown", {
-    pointerId,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 1,
-    clientX: 195,
-    clientY: startY,
-  });
-  // Several extreme moves are still one gesture and therefore one station.
-  await stage.dispatchEvent("pointermove", {
-    pointerId,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 1,
-    clientX: 195,
-    clientY: endY,
-  });
-  await stage.dispatchEvent("pointermove", {
-    pointerId,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 1,
-    clientX: 195,
-    clientY: direction === "down" ? 20 : 820,
-  });
-  await stage.dispatchEvent("pointerup", {
-    pointerId,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 0,
-    clientX: 195,
-    clientY: endY,
+  await stage.evaluate((element) => {
+    const touchAt = (identifier: number, clientY: number) =>
+      new Touch({
+        identifier,
+        target: element,
+        clientX: 195,
+        clientY,
+        pageX: 195,
+        pageY: clientY + window.scrollY,
+        screenX: 195,
+        screenY: clientY,
+      });
+    const start = touchAt(91, 650);
+    element.dispatchEvent(
+      new TouchEvent("touchstart", {
+        bubbles: true,
+        cancelable: true,
+        touches: [start],
+        targetTouches: [start],
+        changedTouches: [start],
+      })
+    );
+    const moved = touchAt(91, 80);
+    element.dispatchEvent(
+      new TouchEvent("touchmove", {
+        bubbles: true,
+        cancelable: true,
+        touches: [moved],
+        targetTouches: [moved],
+        changedTouches: [moved],
+      })
+    );
+    // Deliberately no touchend or touchcancel.
   });
 }
 
-test("mobile gestures move exactly one station and keep viewport geometry frozen", async ({
-  page,
-}) => {
-  serveSequence("ok");
-  await page.setViewportSize({ width: 390, height: 664 });
-  const track = await openAtProcess(page);
-
-  const frozenViewport = await track.evaluate((element) =>
-    Number.parseFloat(
-      getComputedStyle(element).getPropertyValue("--process-viewport")
-    )
+async function expectMobileIdle(
+  track: ReturnType<Page["locator"]>,
+  station: 1 | 2 | 3 | 4,
+  timeout = 4_000
+) {
+  await expect.poll(() => stationOf(track), { timeout }).toBe(station);
+  await expect(track).toHaveAttribute(
+    "data-process-navigation-phase",
+    "idle",
+    { timeout }
   );
-  expect(frozenViewport).toBeGreaterThan(600);
-  await expect
-    .poll(() => requestedFrames.length)
-    .toBeGreaterThanOrEqual(5);
-  expect(requestedFrames.slice(2, 5)).toEqual([
-    "/motion/pearl/m/f_061.webp",
-    "/motion/pearl/m/f_121.webp",
-    "/motion/pearl/m/f_179.webp",
-  ]);
+  await expect(track).toHaveAttribute(
+    "data-process-playback-settled",
+    "true",
+    { timeout }
+  );
+}
 
-  // Models Safari's toolbar changing the visible viewport while the stage is
-  // active. The station coordinate system must not move underneath a gesture.
-  await page.setViewportSize({ width: 390, height: 740 });
-  await expect
-    .poll(() =>
-      track.evaluate((element) =>
-        Number.parseFloat(
-          getComputedStyle(element).getPropertyValue("--process-viewport")
-        )
-      )
-    )
-    .toBe(frozenViewport);
+async function moveOneStation(
+  page: Page,
+  track: ReturnType<Page["locator"]>,
+  direction: "down" | "up",
+  station: 1 | 2 | 3 | 4
+) {
+  await trustedVerticalGesture(page, direction);
+  await expect.poll(() => stationOf(track)).toBe(station);
+  await expectMobileIdle(track, station);
+}
 
-  await verticalGesture(page, "down");
-  await expect(track).toHaveAttribute("data-process-station", "2");
-  await page.waitForTimeout(500);
-
-  // Two fingers cancel rather than buying two steps.
-  const stage = page.locator(".process-scrub__stage");
-  await stage.dispatchEvent("pointerdown", {
-    pointerId: 11,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 1,
-    clientX: 180,
-    clientY: 700,
-  });
-  await stage.dispatchEvent("pointerdown", {
-    pointerId: 12,
-    pointerType: "touch",
-    isPrimary: false,
-    buttons: 1,
-    clientX: 220,
-    clientY: 700,
-  });
-  await stage.dispatchEvent("pointermove", {
-    pointerId: 11,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 1,
-    clientX: 180,
-    clientY: 40,
-  });
-  await stage.dispatchEvent("pointerup", {
-    pointerId: 11,
-    pointerType: "touch",
-    isPrimary: true,
-    buttons: 0,
-    clientX: 180,
-    clientY: 40,
-  });
-  await stage.dispatchEvent("pointerup", {
-    pointerId: 12,
-    pointerType: "touch",
-    isPrimary: false,
-    buttons: 0,
-    clientX: 220,
-    clientY: 700,
-  });
-  await expect(track).toHaveAttribute("data-process-station", "2");
-
-  await verticalGesture(page, "down", 21);
-  await expect(track).toHaveAttribute("data-process-station", "3");
-  await page.waitForTimeout(500);
-  await verticalGesture(page, "down", 22);
-  await expect(track).toHaveAttribute("data-process-station", "4");
-  await page.waitForTimeout(500);
-
-  // A hard reverse gesture returns by one station, never through the sequence.
-  await verticalGesture(page, "up", 23);
-  await expect(track).toHaveAttribute("data-process-station", "3");
+test.beforeEach(() => {
+  failIntermediateFrames = false;
+  requestedFrames = [];
 });
 
-test("slow animation frames and failed media can never lock station navigation", async ({
+test("sequence detail remains deferred until the process approaches", async ({
   page,
 }) => {
-  // Four rAF callbacks per second reproduces the rate already observed while
-  // iPhone Safari decodes the sequence. The old 100ms delta cap took ~6 seconds
-  // per act at this rate.
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await expect(track).toHaveCount(1);
+  await expect.poll(() => requestedFrames.length).toBeGreaterThanOrEqual(2);
+  await page.waitForTimeout(300);
+
+  const intermediateRequests = () =>
+    requestedFrames.filter(
+      (path) => !path.endsWith("/f_001.webp") && !path.endsWith("/f_180.webp")
+    );
+  expect(intermediateRequests()).toEqual([]);
+
+  await track.evaluate((element) =>
+    element.scrollIntoView({ block: "start", behavior: "instant" })
+  );
+  await expect.poll(() => intermediateRequests().length).toBeGreaterThan(0);
+});
+
+test("a hard entry gesture cannot cross the process before step one", async ({
+  page,
+}) => {
+  const track = await approachProcess(page);
+  const before = await page.evaluate(() => window.scrollY);
+
+  // One trusted, high-travel wheel event models the iOS Simulator trackpad
+  // gesture that used to begin in the founder section and finish below the
+  // entire 300vh process track before its pinned-only controller ever ran.
+  await page.mouse.move(195, 650);
+  await page.mouse.wheel(0, 5_000);
+
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+  await expect.poll(() => stationOf(track)).toBe(1);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeLessThan(before + 1_000);
+});
+
+test("a phone flick entering from above lands on step one", async ({ page }) => {
+  const track = await approachProcess(page);
+
+  await trustedVerticalGesture(page, "down");
+
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+  await expectMobileIdle(track, 1);
+});
+
+test("iOS Simulator wheel input is discarded while an act is playing", async ({
+  page,
+}) => {
+  const track = await openAtProcess(page);
+
+  await page.mouse.move(195, 650);
+  await page.mouse.wheel(0, 120);
+  await expect.poll(() => stationOf(track)).toBe(2);
+  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
+
+  // This arrives after the previous cooldown-based implementation would have
+  // reopened, but before the visible 2.4-second act is finished.
+  await page.waitForTimeout(700);
+  await page.mouse.wheel(0, 120);
+  expect(await stationOf(track)).toBe(2);
+
+  await expectMobileIdle(track, 2);
+  await page.waitForTimeout(250);
+  expect(await stationOf(track)).toBe(2);
+
+  // No input was queued. Only this fresh post-settlement gesture may advance.
+  await page.mouse.wheel(0, 120);
+  await expect.poll(() => stationOf(track)).toBe(3);
+});
+
+test("a missing touchend cannot poison the next native gesture", async ({
+  page,
+}) => {
+  const track = await openAtProcess(page);
+
+  await syntheticGestureWithoutEnd(page);
+  await expectMobileIdle(track, 2);
+
+  // WebKit occasionally loses the end of a lifecycle across interruption. A
+  // new touchstart must reset that stale per-gesture state before navigating.
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(3);
+});
+
+test("the restored sticky track stays attached to the native document", async ({
+  page,
+}) => {
+  const track = await openAtProcess(page);
+  const canvas = track.locator("canvas");
+
+  expect(
+    await canvas.evaluate(
+      (element) => getComputedStyle(element.parentElement!).position
+    )
+  ).toBe("sticky");
+  expect(
+    await page.locator("body").evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { position: style.position, overflow: style.overflow };
+    })
+  ).toEqual({ position: "static", overflow: "visible" });
+  expect(
+    await page.locator("html").evaluate((element) => element.hasAttribute(
+      "data-process-scroll-locked"
+    ))
+  ).toBe(false);
+
+  // Parallel two- and three-finger vertical drags are not pinch zoom and may
+  // not buy a process station.
+  await trustedMultiFingerGesture(page, 2);
+  await trustedMultiFingerGesture(page, 3);
+  expect(await stationOf(track)).toBe(1);
+
+  await trustedVerticalGesture(page, "down");
+  await page.waitForTimeout(100);
+  expect(await stationOf(track)).toBe(2);
+  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
+
+  // Three more complete flicks happen immediately, then another after the old
+  // cooldown has elapsed but while the visible act is still playing. None may
+  // carry the root scroller through a later process station.
+  await trustedVerticalBurst(page, 3);
+  await page.waitForTimeout(700);
+  await trustedVerticalGesture(page, "down");
+  expect(await stationOf(track)).toBe(2);
+
+  await expectMobileIdle(track, 2);
+  // Refused input is discarded, never queued to run when the act settles.
+  await page.waitForTimeout(250);
+  expect(await stationOf(track)).toBe(2);
+  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(3);
+});
+
+test("fresh gestures traverse every step, reverse one step, and exit only after step four", async ({
+  page,
+}) => {
+  test.setTimeout(45_000);
+  const track = await openAtProcess(page);
+
+  await moveOneStation(page, track, "down", 2);
+  await moveOneStation(page, track, "down", 3);
+  await moveOneStation(page, track, "up", 2);
+  await moveOneStation(page, track, "down", 3);
+
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(4);
+  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
+
+  // An outward flick during the last act is consumed. It must not be remembered
+  // and replayed when the act reaches its endpoint.
+  await trustedVerticalGesture(page, "down");
+  await expectMobileIdle(track, 4);
+  await page.waitForTimeout(250);
+  expect(await stationOf(track)).toBe(4);
+  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
+
+  const beforeExit = await page.evaluate(() => window.scrollY);
+  await trustedVerticalGesture(page, "down");
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(beforeExit + 100);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+});
+
+test("four-frame-per-second playback still finishes in wall-clock time", async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     let nextId = 1;
     const timers = new Map<number, number>();
@@ -240,11 +478,18 @@ test("slow animation frames and failed media can never lock station navigation",
       timers.delete(id);
     };
   });
-  serveSequence("fail");
-  const track = await openAtProcess(page);
 
-  await verticalGesture(page, "down");
-  await expect(track).toHaveAttribute("data-process-station", "2");
+  const track = await openAtProcess(page);
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(2);
+  await page.waitForTimeout(300);
+  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
+  await trustedVerticalGesture(page, "down");
+  expect(await stationOf(track)).toBe(2);
+
+  // One act is 1/3 progress at 0.14 progress/second, or about 2.4 seconds.
+  // The former 100ms cap only reached ~0.18 after 3.4 seconds at this frame
+  // rate; the wall-clock implementation reaches the station.
   await expect
     .poll(
       () =>
@@ -254,26 +499,79 @@ test("slow animation frames and failed media can never lock station navigation",
       { timeout: 3_400 }
     )
     .toBeGreaterThan(0.32);
-
-  await verticalGesture(page, "down", 31);
-  await expect(track).toHaveAttribute("data-process-station", "3");
-  await page.waitForTimeout(500);
-  await verticalGesture(page, "down", 32);
-  await expect(track).toHaveAttribute("data-process-station", "4");
-  await page.waitForTimeout(500);
-  await verticalGesture(page, "down", 33);
-  await expect(track).not.toHaveAttribute("data-process-pinned", "");
 });
 
-test("back to top remains an immediate process bypass", async ({ page }) => {
-  serveSequence("ok");
+test("failed intermediate pictures cannot freeze page navigation", async ({
+  page,
+}) => {
+  test.setTimeout(45_000);
+  failIntermediateFrames = true;
   const track = await openAtProcess(page);
-  await verticalGesture(page, "down");
-  await expect(track).toHaveAttribute("data-process-station", "2");
+  await moveOneStation(page, track, "down", 2);
+  await moveOneStation(page, track, "down", 3);
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(4);
+
+  // The final outward gesture is also absorbed until step 4 has actually
+  // played. Failed image detail must neither release it early nor hold it after
+  // the wall-clock playhead reaches the prepared endpoint.
+  await page.waitForTimeout(100);
+  const beforeExit = await page.evaluate(() => window.scrollY);
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(4);
+  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
+
+  await expect
+    .poll(
+      () =>
+        track.evaluate((element) =>
+          Number.parseFloat(element.dataset.processPlayhead ?? "0")
+        ),
+      { timeout: 9_000 }
+    )
+    .toBeGreaterThan(0.999);
+  await expect(track).toHaveAttribute("data-process-playback-settled", "true");
+
+  await trustedVerticalGesture(page, "down");
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(beforeExit + 100);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+});
+
+test("a fresh upward gesture exits from step one", async ({ page }) => {
+  const track = await openAtProcess(page);
+  const beforeExit = await page.evaluate(() => window.scrollY);
+
+  await trustedVerticalGesture(page, "up");
+
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeLessThan(beforeExit - 100);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
+  await expect(track).toHaveAttribute(
+    "data-process-navigation-phase",
+    "outside"
+  );
+});
+
+test("back to top remains an immediate native escape", async ({ page }) => {
+  const track = await openAtProcess(page);
+  await trustedVerticalGesture(page, "down");
+  await expect.poll(() => stationOf(track)).toBe(2);
 
   await page.locator(".back-to-top-control").evaluate((button) => {
     (button as HTMLButtonElement).click();
   });
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(10);
-  await expect(track).not.toHaveAttribute("data-process-pinned", "");
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-scrub-pinned",
+    ""
+  );
 });

@@ -388,10 +388,11 @@ pnpm lint && pnpm typecheck && pnpm build   # or: ./scripts/dev/validate.sh
 `pnpm test:e2e` — runs against an isolated Next dev server. The harness boots,
 but a few older UI/navigation assertions are stale; see `docs/11-testing.md`
 for the current list. `pnpm test:motion` is the hermetic phone-process suite:
-it compiles against a local fake media origin and covers hard flicks,
-multi-touch, failed frames and four-frame-per-second playback. Do not "fix"
-test serving by changing `localePrefix` or renaming the middleware — both were
-tried and both make routing worse.
+it compiles against a local fake media origin and covers deferred loading,
+trusted native flicks, a missing touch lifecycle, multi-touch, failed frames,
+native boundary exit and four-frame-per-second playback. Do not "fix" test
+serving by changing `localePrefix` or renaming the middleware — both were tried
+and both make routing worse.
 
 ## Local preview (after applying changes)
 

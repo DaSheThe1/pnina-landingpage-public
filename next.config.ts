@@ -13,6 +13,13 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const isExport = process.env.STATIC_EXPORT === "true";
 
 const nextConfig: NextConfig = {
+  // The shared Windows port proxy exposes this WSL dev server through these
+  // host addresses. Without an explicit development-origin allowance, Next can
+  // return the server-rendered page while refusing the client runtime, leaving
+  // a phone or iOS Simulator on the static process cards. Production ignores
+  // this development-only option.
+  allowedDevOrigins: ["192.168.0.150", "100.87.244.34"],
+
   // Image handling, in every mode.
   //
   // The static export has no server, so Next's own optimizer never runs. The

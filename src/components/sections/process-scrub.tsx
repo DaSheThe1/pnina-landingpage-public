@@ -4,33 +4,28 @@
  * The "pearl reveal" process experience — a scroll-scrubbed frame sequence.
  *
  * Four stations map 1:1 to the four process steps: closed shell → half open →
- * pearl revealed → pearl risen. Scroll position drives which frame the canvas
- * shows, and the step's text enters in the last second of the motion that leads
- * to it. Desktop wheel input uses the established snap controller below.
- * Phones use `mobile-process-controller.ts`: four explicit states projected
- * onto the track, with no root scroll-snap dependency.
+ * pearl revealed → pearl risen. The sticky stage stays in the native document;
+ * there is no fixed overlay, body freeze or document scroll lock.
  *
- * Every behaviour here was validated with Daniel on real devices before landing
- * (see private-media/motion-masters/GENERATION-LOG.md for the full record):
+ * Desktop keeps the proven root-snap choreography in `applySnap`. Phones have
+ * one explicit navigation state machine in this file. Touch Events own vertical
+ * movement only after the sticky stage fills the viewport; wheel events cover
+ * the iOS Simulator trackpad path. Both adapters feed the same rule:
  *
- *  - One gesture advances exactly one step; a hard fling cannot skip the story.
- *    Desktop wheel input is held by `onWheel`. On mobile, native vertical
- *    momentum is disabled only while the stage is pinned and Pointer Events ask
- *    the discrete controller for one adjacent state. Rendering and media
- *    readiness do not participate in that decision.
- *    A SECOND round the same day closed the two ways a gesture could still get
- *    out of that rule, and both were the same bug on different inputs: the
- *    section stopped intercepting at a boundary, so a gesture that had just been
- *    carried to an end station was handed to the native scroller and rode
- *    straight out of the section. On the wheel that is `gestureSpent` being
- *    checked before the exit rule; on touch it is `touchOrigin`. The same round
- *    made the phone's next step CHEAPER — Daniel found the first cut too hard —
- *    by asking whether the step has arrived rather than whether its whole
- *    2.4s act has finished. See `GESTURE_QUIET_MS`, `TOUCH_COOLDOWN` and
- *    `scrubBeatIn`.
+ *  - the gesture entering from above lands on step 1 (from below, step 4);
+ *  - one fresh vertical gesture requests one adjacent step;
+ *  - while that step's wall-clock act is playing, all further input is consumed
+ *    and discarded rather than queued;
+ *  - only a fresh gesture after settlement may move again or exit an endpoint.
+ *
+ * A geometric backstop also compares the complete scroll segment between
+ * animation frames, so an async iOS scroll that jumps from above to below the
+ * whole 300vh track is still recognized as crossing the step-1 boundary.
+ * Mobile Safari remains a required manual gate before publication:
+ *
  *  - The canvas chases the scroll at a CONSTANT wall-clock rate (~2.4s per act)
- *    instead of mirroring it. Slow rAF delivery drops visual frames rather than
- *    extending an act or keeping the visitor locked.
+ *    instead of mirroring it. A slow renderer drops visual frames instead of
+ *    stretching the act and holding the visitor for 10-15 seconds.
  *  - Adjacent frames are alpha-blended while moving, but a settled station
  *    always draws ONE exact frame — blending two frames at a segment joint
  *    shows as a double exposure.
@@ -76,11 +71,10 @@
  * the right answer depends on how the finished frames read.
  */
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { createFrameStore } from "@/components/motion/frame-store";
-import { createMobileProcessController } from "@/components/motion/mobile-process-controller";
 import { type SequenceSource } from "@/components/motion/sequence-source";
 
 const STATIONS = 4;
@@ -118,6 +112,10 @@ const MAX_REACH = 0.25;
 const LOCK_MS = 1200;
 /** Scrub playback speed in progress-units/second: one act (1/3) in ~2.4s. */
 const SPEED = 0.14;
+/** Geometry uses fractional viewport pixels, so an end station may resolve to
+ *  0.9998 rather than 1 even when scroll position and playhead are both at
+ *  rest. This is under one fifth of a mobile frame and must count as settled. */
+const PLAYBACK_SETTLE_EPSILON = 0.001;
 /** ── WHEN THE STATION'S COPY IS ALLOWED IN (Daniel, 2026-07-31) ──
  *  *"You can make the text that appears at the end of the animation quicker by
  *  probably 1 second. Like, start the animation and when it appears, one second
@@ -161,6 +159,11 @@ const ESCAPE_MS = 700;
  *  touch in CSS px of travel since the last reading. */
 const INTENT_WHEEL_MIN = 2;
 const INTENT_TOUCH_MIN = 8;
+/** A fresh phone gesture that starts on the already-pinned stage is handled
+ *  before native vertical momentum begins. This is deliberately stage-local:
+ *  arrival and the rest of the page remain ordinary native scrolling. */
+const MOBILE_GESTURE_THRESHOLD = 42;
+const MOBILE_AXIS_DOMINANCE = 1.1;
 
 /** ── THE DESKTOP WHEEL TRAIN (see `onWheel`) ──
  *  How long the ACCUMULATOR remembers. Wheel travel closer together than this
@@ -274,6 +277,13 @@ const GESTURE_QUIET_MS = 550;
 const MOBILE_OMITTED_LINE = { step: 3, line: 1 } as const;
 
 type ProcessCopy = { title: string; lines: string[] };
+type MobileNavigationPhase =
+  | "outside"
+  | "entering"
+  | "idle"
+  | "animating"
+  | "exiting"
+  | "bypass";
 
 export type ProcessScrubProps = {
   /** Resolved by `useSequenceSource("pearl")` in `ProcessExperience`. */
@@ -330,30 +340,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
 
-    /**
-     * One viewport measurement owns the track, sticky stage and all JavaScript
-     * geometry. Safari's toolbar changes `innerHeight` while `svh` stays fixed
-     * and `vh` means the large viewport; mixing the three is how a station ends
-     * up between the CSS and JS targets. The live visual viewport is followed
-     * while approaching, then frozen for the pinned session.
-     */
-    let viewportHeight = Math.max(
-      1,
-      window.visualViewport?.height ?? window.innerHeight
-    );
-    let viewportFrozen = false;
-    let requestRender = () => {};
-    const syncViewportHeight = () => {
-      if (viewportFrozen) return;
-      viewportHeight = Math.max(
-        1,
-        window.visualViewport?.height ?? window.innerHeight
-      );
-      track.style.setProperty("--process-viewport", `${viewportHeight}px`);
-      requestRender();
-    };
-    syncViewportHeight();
-
     // Size the backing store HERE and not only through the JSX attributes.
     // The cleanup below zeroes it to release the bitmap, and React does not
     // restore an attribute it already believes it has set — so on any second
@@ -367,8 +353,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     // Phones fetch every 2nd frame — half the bytes and decoded memory; the
     // constant-rate playback plus blending hides the halved temporal detail.
     const step = isMobile ? 2 : 1;
-    const mobileControllerEnabled =
-      isMobile && typeof window.PointerEvent !== "undefined";
 
     /** Which frame each snap station rests on, snapped to the fetch grid. These
      *  are the images a visitor actually STOPS on, so the store fetches them
@@ -387,7 +371,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       frameBytes: dims.w * dims.h * 4,
       cut: isMobile ? "mobile" : "desktop",
       firstFrame,
-      onChange: () => requestRender(),
     });
 
     // Start fetching well before the section scrolls into view, so frame 0 is
@@ -578,6 +561,9 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  direction that armed it, so an intent the other way can cancel it. */
     let escapeUntil = 0;
     let escapeDir = 0;
+    /** Explicit navigation such as the floating back-to-top control must cross
+     *  the root snap zone without being pulled back to a process station. */
+    let scriptedBypass = false;
     /** Set by the wheel-train handler while it is driving a station move of its
      *  own; see `onWheel` and the `applySnap` branch that reads it. */
     let wheelMoveUntil = 0;
@@ -599,37 +585,19 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  drag's own first pixels immediately make that false, so asking again
      *  mid-drag would refuse every flick including the first. */
     let touchMayMove = false;
-    /** ── HAS THIS STATION ACTUALLY ARRIVED? ──
-     *  Written once a frame by the rAF loop, read by the touch clamp — it is
-     *  what "and only then can keep scrolling" means, in code.
-     *
-     *  It used to be `smoothP === targetP`: the playhead had to have finished
-     *  the WHOLE act, which at `SPEED` is 2.4 seconds. Daniel, 2026-07-31, on
-     *  the S25: *"We made it so you cannot scroll, and it's even harder to go
-     *  between phases in the animations on the phone, but we might have made it
-     *  too hard."* Two-and-a-half seconds of a flick doing nothing is a page
-     *  that feels broken, and the no-skip rule never needed that much.
-     *
-     *  So the test is now the one the visitor can SEE: the station's copy has
-     *  been allowed in (the same `nearSettle && nearStation` the beat cards are
-     *  toggled on). It is the honest form of "you have arrived at this step" —
-     *  and it keeps the self-tuning property that made the old rule attractive,
-     *  because it is a band around the target rather than a timer: a visitor
-     *  who advances while the canvas is still behind pushes the playhead
-     *  further behind, and the NEXT flick waits for it to catch up. One step
-     *  ahead of the frames is free; three is not. */
-    let scrubBeatIn = true;
+    /** Whether the visible playhead has reached the station the native track is
+     *  holding. A phone may not buy another station or leave the final one until
+     *  this is true: rapid double/triple flicks are absorbed while the current
+     *  wall-clock act plays. This used to open when the copy entered, roughly a
+     *  second early, which is how repeated iOS and Samsung flicks could still
+     *  advance through steps the animation had not shown. */
+    let scrubPlaybackSettled = true;
     const noteIntent = (dir: number) => {
       if (!dir) return;
       intentDir = dir;
       intentAt = performance.now();
     };
     const setSnap = (on: boolean) => {
-      if (mobileControllerEnabled) {
-        snapOn = false;
-        document.documentElement.style.scrollSnapType = "";
-        return;
-      }
       if (on === snapOn) return;
       snapOn = on;
       document.documentElement.style.scrollSnapType = on ? "y mandatory" : "";
@@ -639,7 +607,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     };
     const applySnap = () => {
       const r = track.getBoundingClientRect();
-      const vh = viewportHeight;
+      const vh = window.innerHeight;
       // How far the visitor has travelled into the track, and the offset of the
       // last station — which is also the last pixel at which the stage still
       // fills the viewport.
@@ -647,6 +615,15 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       const end = r.height - vh;
       lastEnd = Math.max(1, end);
       const now = performance.now();
+
+      if (scriptedBypass) {
+        lockAt = null;
+        cameFrom = 0;
+        setSnap(false);
+        if (y < -SNAP_EDGE || y > end + SNAP_EDGE) scriptedBypass = false;
+        return;
+      }
+
       // Speed and direction come from `scrollY`, NOT from the change in `y`:
       // `y` also moves when something ABOVE this section changes height (a photo
       // arriving, a reveal running), and a layout shift read as 300px of scroll
@@ -702,8 +679,9 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // covers every wheel gesture and every arrival: those behave exactly as
       // before.
       const mayEscape =
-        touchOrigin === null ||
-        (intentDir > 0 ? touchOrigin === STATIONS - 1 : touchOrigin === 0);
+        (!isMobile || scrubPlaybackSettled) &&
+        (touchOrigin === null ||
+          (intentDir > 0 ? touchOrigin === STATIONS - 1 : touchOrigin === 0));
       if (mayEscape && intentDir !== 0 && now - intentAt < GESTURE_MS) {
         if ((atFirst && intentDir < 0) || (atLast && intentDir > 0)) {
           escapeDir = intentDir;
@@ -784,23 +762,11 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       //
       //   • `TOUCH_COOLDOWN` has passed, the rate limit that absorbs the
       //     double-flick a visitor makes when she thinks nothing happened; and
-      //   • the step she is on has actually ARRIVED (`scrubBeatIn`).
+      //   • the visible playhead has completed the current act
+      //     (`scrubPlaybackSettled`).
       //
-      // ── HOW MUCH THAT SECOND CONDITION IS ALLOWED TO COST (2026-07-31) ──
-      // It used to be `smoothP === targetP`: the playhead had to finish the
-      // whole act, ~2.4 seconds, which was the literal form of *"the user should
-      // be forced to see each animation and only then can keep scrolling"*.
-      // Daniel then tested it on his S25 and drew the other line: *"we might
-      // have made it too hard."* Both are his, and the second is newer, so the
-      // gate is now the arrival of the step rather than the end of its film.
-      // The self-tuning property that made the old rule attractive survives —
-      // it is still a band around the playhead, so a visitor who gets two
-      // stations ahead of the frames waits for them to catch up — but one step
-      // ahead is free, and one step ahead is all a deliberate reader ever is.
-      //
-      // He accepted the cost of being carried through every step explicitly,
-      // and named the way out: the back-to-top button, which is a scripted
-      // scroll and never comes through here at all.
+      // The back-to-top button is the explicit skip route. Its scripted bypass
+      // releases root snapping before moving, so this gate cannot trap it.
       //
       // ⚠️ IT CANNOT TOUCH AN EXIT. The exit release above runs first and
       // `return`s, so at the first station scrolling out, or the last station
@@ -813,12 +779,10 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // The first cut only intervened once she had travelled a WHOLE station,
       // which meant every refused flick still scrolled a full act's worth before
       // being put back — and the canvas dutifully played that act forwards and
-      // then backwards at its constant rate, keeping `scrubBeatIn` false for
-      // seconds and refusing the next flick too. Measured: three quick flicks
-      // left the section unable to advance for over five seconds. So a flick
-      // that is not allowed to move a station is stopped as soon as it has
-      // meaningfully left the one it is on (`TOUCH_HOLD`), while a flick that IS
-      // allowed still gets its full station.
+      // then backwards at its constant rate. So a flick that is not allowed to
+      // move a station is stopped as soon as it has meaningfully left the one it
+      // is on (`TOUCH_HOLD`), while a flick that IS allowed still gets its full
+      // station.
       if (touchFrom !== null && y > 0 && y < end) {
         const stationPx = end / (STATIONS - 1);
         const travelled = y / stationPx - touchFrom;
@@ -968,11 +932,6 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     let smoothP = 0;
     let lastT = 0;
     let raf = 0;
-    const requestTick = () => {
-      if (raf) return;
-      raf = requestAnimationFrame((now) => tick(now));
-    };
-    requestRender = requestTick;
     /** Mirrors `data-scrub-pinned` on <html>, so the attribute is only written
      *  on the frame it actually changes. Written only through `notePinned`. */
     let pinnedNow = false;
@@ -994,7 +953,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
 
     const progress = () => {
       const r = track.getBoundingClientRect();
-      return Math.min(1, Math.max(0, -r.top / (r.height - viewportHeight)));
+      return Math.min(1, Math.max(0, -r.top / (r.height - window.innerHeight)));
     };
     /** Does the sticky stage fill the viewport right now?
      *
@@ -1006,7 +965,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  stops. Measured at 390×844 and 1440×900: the shortfall is 0.375px. */
     const pinned = () => {
       const r = track.getBoundingClientRect();
-      return r.top <= 0.5 && r.bottom >= viewportHeight - 0.5;
+      return r.top <= 0.5 && r.bottom >= window.innerHeight - 0.5;
     };
     /**
      * ── THE ONE PLACE THAT SEES THE STAGE ENGAGE ──
@@ -1056,12 +1015,8 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     const notePinned = (isPinned: boolean) => {
       if (isPinned === pinnedNow) return;
       pinnedNow = isPinned;
-      viewportFrozen = isPinned;
       document.documentElement.toggleAttribute("data-scrub-pinned", isPinned);
-      if (!isPinned) {
-        syncViewportHeight();
-        return;
-      }
+      if (!isPinned) return;
       gestureSpent = true;
       trainDelta = 0;
     };
@@ -1069,8 +1024,163 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      *  last station sits. Both are also the two ends of the pinned range. */
     const geometry = () => {
       const r = track.getBoundingClientRect();
-      const end = Math.max(1, r.height - viewportHeight);
+      const end = Math.max(1, r.height - window.innerHeight);
       return { y: -r.top, end };
+    };
+
+    /**
+     * ── PHONE NAVIGATION HAS ONE OWNER ──
+     *
+     * The desktop keeps the native snap choreography below. A phone does not:
+     * its async root scroller can cross this entire 300vh track before the rAF
+     * controller observes one position inside it. That is the bypass Daniel
+     * reproduced in the iOS Simulator on 2026-08-01.
+     *
+     * This phase is the only mobile answer to "may this input navigate?" Scroll
+     * position displays the answer but never grants permission by itself:
+     *
+     *   outside → entering → idle(n) → animating(n→n±1) → idle(n±1)
+     *                                      ↓
+     *                                  exiting
+     *
+     * `animating` consumes every gesture and queues nothing. Reaching the visual
+     * target changes it to `idle`; movement still requires a fresh gesture after
+     * that transition. The sticky stage remains in the native document and no
+     * body/root overflow or position style is ever changed.
+     */
+    let mobilePhase: MobileNavigationPhase = "outside";
+    let mobileStation = 0;
+    let mobileTargetP = 0;
+    let mobileLastObservedScrollY = window.scrollY;
+
+    const writeMobileState = () => {
+      track.dataset.processNavigationPhase = mobilePhase;
+      track.dataset.processNavigationStation = String(mobileStation + 1);
+    };
+
+    const setMobilePhase = (next: MobileNavigationPhase) => {
+      mobilePhase = next;
+      writeMobileState();
+    };
+
+    const placeMobileAt = (
+      station: number,
+      phase: "entering" | "animating",
+      alignPlayhead: boolean
+    ) => {
+      const next = Math.min(STATIONS - 1, Math.max(0, station));
+      const { y, end } = geometry();
+      const stationP = next / (STATIONS - 1);
+      const stationY = end * stationP;
+
+      mobileStation = next;
+      mobileTargetP = stationP;
+      setMobilePhase(phase);
+      scrubPlaybackSettled = false;
+      setSnap(false);
+      window.scrollTo({
+        top: window.scrollY + (stationY - y),
+        behavior: "instant",
+      });
+      lastScrollY = window.scrollY;
+      mobileLastObservedScrollY = window.scrollY;
+
+      // Entry is not an act. A visitor arriving from above sees frame one;
+      // arriving from below sees frame four. Playing the whole film merely
+      // because she approached from the other side would hold her for ~7s.
+      if (alignPlayhead) {
+        targetP = stationP;
+        smoothP = stationP;
+        lastSig = "";
+      }
+    };
+
+    const enterMobile = (station: 0 | 3) => {
+      placeMobileAt(station, "entering", true);
+    };
+
+    const moveMobile = (direction: number) => {
+      if (mobilePhase !== "idle") return "consumed" as const;
+      const next = mobileStation + direction;
+      if (next < 0 || next >= STATIONS) {
+        setMobilePhase("exiting");
+        setSnap(false);
+        return "exit" as const;
+      }
+      placeMobileAt(next, "animating", false);
+      return "moved" as const;
+    };
+
+    /**
+     * The event adapters catch boundary crossing before native movement when
+     * they can. This geometric backstop handles the case where iOS has already
+     * committed async momentum: compare the whole segment between observations,
+     * not only the current point. A jump from above the track to below it still
+     * crossed the top boundary and therefore enters at station one.
+     */
+    const reconcileMobileNavigation = () => {
+      const r = track.getBoundingClientRect();
+      const end = Math.max(1, r.height - window.innerHeight);
+      const scrollY = window.scrollY;
+      const trackTop = scrollY + r.top;
+      const trackEnd = trackTop + end;
+      const inside = scrollY >= trackTop - 0.5 && scrollY <= trackEnd + 0.5;
+
+      if (scriptedBypass || mobilePhase === "bypass") {
+        setSnap(false);
+        mobileLastObservedScrollY = scrollY;
+        return;
+      }
+
+      if (mobilePhase === "outside") {
+        const crossedFromAbove =
+          mobileLastObservedScrollY < trackTop && scrollY >= trackTop;
+        const crossedFromBelow =
+          mobileLastObservedScrollY > trackEnd && scrollY <= trackEnd;
+
+        if (crossedFromAbove) {
+          enterMobile(0);
+          return;
+        }
+        if (crossedFromBelow) {
+          enterMobile(3);
+          return;
+        }
+        if (inside) {
+          const station = Math.min(
+            STATIONS - 1,
+            Math.max(0, Math.round(((scrollY - trackTop) / end) * (STATIONS - 1)))
+          );
+          placeMobileAt(station, "entering", true);
+          return;
+        }
+
+        setSnap(false);
+        mobileLastObservedScrollY = scrollY;
+        return;
+      }
+
+      if (mobilePhase === "exiting") {
+        if (!inside) setMobilePhase("outside");
+        setSnap(false);
+        mobileLastObservedScrollY = scrollY;
+        return;
+      }
+
+      // While entering, idle or animating, position is a rendering of the state,
+      // not another source of truth. Clamp any late native momentum to the
+      // authoritative station without ever touching the body.
+      const stationY = end * mobileTargetP;
+      const y = scrollY - trackTop;
+      if (Math.abs(y - stationY) > 1) {
+        window.scrollTo({
+          top: scrollY + (stationY - y),
+          behavior: "instant",
+        });
+        lastScrollY = window.scrollY;
+      }
+      setSnap(false);
+      mobileLastObservedScrollY = window.scrollY;
     };
 
     // ── RAW INPUT, FOR ITS DIRECTION ONLY ──
@@ -1079,7 +1189,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
     // station, which the committed scroll position cannot say — see the note
     // above `snapOn`.
     let touchY = 0;
-    const onTouchStart = (event: TouchEvent) => {
+    const onLegacyTouchStart = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (touch) touchY = touch.clientY;
       // Where this flick begins, in stations. `null` unless the stage is
@@ -1093,18 +1203,12 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       const { y, end } = geometry();
       touchFrom = Math.round((y / end) * (STATIONS - 1));
       touchOrigin = touchFrom;
-      // …and whether this flick may advance at all, decided now, while the page
-      // is still where the last one left it. Both halves of the test are about
-      // the PREVIOUS flick: has the step it moved to actually arrived on screen
-      // (`scrubBeatIn` — read the note on it; this used to demand the whole
-      // 2.4s act and that is what Daniel called too hard), and has
-      // `TOUCH_COOLDOWN` lapsed. The rate limit is what absorbs the
-      // double-flick a visitor makes when she thinks nothing happened, and it
-      // is now the binding half of the test — the effective wait between two
-      // deliberate flicks went from ~2.4s to ~0.45s without loosening the
-      // no-skip rule at all.
+      // Whether this flick may advance is decided now, before its own movement
+      // can change the answer. The previous wall-clock act must be completely
+      // visible and the short double-flick cooldown must both have finished.
       touchMayMove =
-        scrubBeatIn && performance.now() - touchMovedAt >= TOUCH_COOLDOWN;
+        scrubPlaybackSettled &&
+        performance.now() - touchMovedAt >= TOUCH_COOLDOWN;
       // ── A NEW FINGER ENDS THE PREVIOUS GESTURE'S LOCK ──
       // The lock exists to spend the REMAINDER of a flick that has already had
       // its station (or of the one that scrolled her in). A finger landing on
@@ -1127,7 +1231,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // untouched.
       if (touchMayMove) lockAt = null;
     };
-    const onTouchMove = (event: TouchEvent) => {
+    const onLegacyTouchMove = (event: TouchEvent) => {
       const touch = event.touches[0];
       if (!touch) return;
       // Finger travelling UP drags the content up, which is scrolling DOWN.
@@ -1137,11 +1241,204 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       noteIntent(Math.sign(dy));
     };
 
+    let mobileTouchStartX = 0;
+    let mobileTouchStartY = 0;
+    let mobileTouchLastY = 0;
+    let mobileTouchOnStage = false;
+    let mobileTouchSpent = false;
+    let mobileTouchCancelled = false;
+    let mobileEntryCaptured = false;
+
+    const resetMobileTouch = () => {
+      mobileTouchOnStage = false;
+      mobileTouchSpent = false;
+      mobileTouchCancelled = false;
+      mobileEntryCaptured = false;
+    };
+
+    const onMobileTouchStart = (event: TouchEvent) => {
+      // A new native lifecycle is authoritative even if WebKit failed to
+      // deliver the previous touchend/touchcancel while the page backgrounded.
+      resetMobileTouch();
+      if (event.touches.length !== 1) {
+        mobileTouchCancelled = true;
+        return;
+      }
+      const touch = event.touches[0];
+      mobileTouchStartX = touch.clientX;
+      mobileTouchStartY = touch.clientY;
+      mobileTouchLastY = touch.clientY;
+      mobileTouchOnStage =
+        pinnedNow &&
+        event.target instanceof Node &&
+        stage.contains(event.target);
+    };
+
+    const onMobileTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        mobileTouchCancelled = true;
+        return;
+      }
+      const touch = event.touches[0];
+      const totalY = mobileTouchStartY - touch.clientY;
+      const totalX = mobileTouchStartX - touch.clientX;
+      const frameY = mobileTouchLastY - touch.clientY;
+      mobileTouchLastY = touch.clientY;
+
+      if (mobileEntryCaptured) {
+        if (event.cancelable) event.preventDefault();
+        return;
+      }
+
+      if (mobileTouchOnStage) {
+        if (
+          Math.abs(totalX) >= MOBILE_GESTURE_THRESHOLD &&
+          Math.abs(totalX) > Math.abs(totalY) * MOBILE_AXIS_DOMINANCE
+        ) {
+          mobileTouchCancelled = true;
+          return;
+        }
+        if (
+          mobileTouchCancelled ||
+          Math.abs(totalY) < 2 ||
+          Math.abs(totalY) < Math.abs(totalX) * MOBILE_AXIS_DOMINANCE
+        )
+          return;
+
+        // The stage owns the vertical axis even when navigation is refused.
+        // This is what discards gestures made during `animating`.
+        if (event.cancelable) event.preventDefault();
+        if (
+          mobileTouchSpent ||
+          Math.abs(totalY) < MOBILE_GESTURE_THRESHOLD
+        )
+          return;
+        mobileTouchSpent = true;
+
+        const direction = Math.sign(totalY);
+        const result = moveMobile(direction);
+        if (result !== "exit") return;
+
+        // `touch-action` has already assigned the vertical gesture to us, so a
+        // boundary exit must move the native document explicitly.
+        const { y, end } = geometry();
+        const outside =
+          direction < 0
+            ? -window.innerHeight * 0.35
+            : end + window.innerHeight * 0.35;
+        window.scrollTo({
+          top: window.scrollY + (outside - y),
+          behavior: "instant",
+        });
+        lastScrollY = window.scrollY;
+        mobileLastObservedScrollY = window.scrollY;
+        return;
+      }
+
+      // Entry began outside the stage, where scrolling stays native until the
+      // move that would cross a process boundary. That one move is cancelled and
+      // converted into an explicit arrival at step one (or four from below).
+      if (mobilePhase !== "outside" || !frameY) return;
+      const r = track.getBoundingClientRect();
+      const end = Math.max(1, r.height - window.innerHeight);
+      const scrollY = window.scrollY;
+      const trackTop = scrollY + r.top;
+      const trackEnd = trackTop + end;
+      const predicted = scrollY + frameY;
+      const fromAbove =
+        frameY > 0 && scrollY < trackTop && predicted >= trackTop;
+      const fromBelow =
+        frameY < 0 && scrollY > trackEnd && predicted <= trackEnd;
+      if (!fromAbove && !fromBelow) return;
+
+      if (event.cancelable) event.preventDefault();
+      mobileEntryCaptured = true;
+      mobileTouchSpent = true;
+      enterMobile(fromAbove ? 0 : 3);
+    };
+
+    const onMobileTouchEnd = () => {
+      resetMobileTouch();
+    };
+
     /** One wheel event in CSS pixels, whichever unit it arrived in. */
     const wheelPx = (event: WheelEvent) => {
       if (event.deltaMode === 1) return event.deltaY * 16;
-      if (event.deltaMode === 2) return event.deltaY * viewportHeight;
+      if (event.deltaMode === 2) return event.deltaY * window.innerHeight;
       return event.deltaY;
+    };
+
+    /**
+     * Mobile wheel input is the iOS Simulator's trackpad path. Unlike the old
+     * pinned-only handler, this one also owns the exact event that would cross
+     * into the process, so a 5,000px impulse cannot land below the whole track.
+     */
+    const onMobileWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) return; // browser pinch zoom
+      const px = wheelPx(event);
+      const direction = Math.sign(px);
+      if (!direction) return;
+
+      const now = performance.now();
+      const quietFor = now - lastWheelAt;
+      lastWheelAt = now;
+      if (quietFor > TRAIN_GAP) trainDelta = 0;
+      if (quietFor > GESTURE_QUIET_MS) gestureSpent = false;
+
+      if (scriptedBypass || mobilePhase === "bypass") return;
+
+      if (mobilePhase === "outside") {
+        const r = track.getBoundingClientRect();
+        const end = Math.max(1, r.height - window.innerHeight);
+        const scrollY = window.scrollY;
+        const trackTop = scrollY + r.top;
+        const trackEnd = trackTop + end;
+        const predicted = scrollY + px;
+        const fromAbove =
+          direction > 0 && scrollY < trackTop && predicted >= trackTop;
+        const fromBelow =
+          direction < 0 && scrollY > trackEnd && predicted <= trackEnd;
+        if (!fromAbove && !fromBelow) return;
+
+        event.preventDefault();
+        gestureSpent = true;
+        trainDelta = 0;
+        enterMobile(fromAbove ? 0 : 3);
+        return;
+      }
+
+      if (mobilePhase === "entering" || mobilePhase === "animating") {
+        event.preventDefault();
+        gestureSpent = true;
+        trainDelta = 0;
+        return;
+      }
+
+      if (mobilePhase === "exiting") return;
+
+      if (gestureSpent) {
+        event.preventDefault();
+        trainDelta = 0;
+        return;
+      }
+
+      // A genuinely fresh outward gesture at a completed boundary belongs to
+      // the page. Everything else is accumulated into one adjacent-step request.
+      const next = mobileStation + direction;
+      if (next < 0 || next >= STATIONS) {
+        setMobilePhase("exiting");
+        setSnap(false);
+        trainDelta = 0;
+        return;
+      }
+
+      event.preventDefault();
+      trainDelta += px;
+      if (Math.abs(trainDelta) < WHEEL_THRESHOLD) return;
+
+      gestureSpent = true;
+      trainDelta = 0;
+      moveMobile(direction);
     };
 
     /**
@@ -1233,6 +1530,10 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
      * so that it is the only place a `preventDefault` can happen.
      */
     const onWheel = (event: WheelEvent) => {
+      if (isMobile) {
+        onMobileWheel(event);
+        return;
+      }
       // Pinch-zoom arrives as a ctrl-wheel and is not a scroll.
       if (event.ctrlKey) return;
       const px = wheelPx(event);
@@ -1288,6 +1589,17 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         return;
       }
 
+      // Trackpads in the iOS Simulator arrive as wheel input. A fresh train may
+      // not advance or exit while the phone cut is still visibly playing the
+      // previous act. Spend the complete train so its late momentum cannot wake
+      // up after settlement and buy the next station.
+      if (isMobile && !scrubPlaybackSettled) {
+        event.preventDefault();
+        gestureSpent = true;
+        trainDelta = 0;
+        return;
+      }
+
       const { y, end } = geometry();
       if ((dir < 0 && y <= SNAP_EDGE) || (dir > 0 && y >= end - SNAP_EDGE)) {
         trainDelta = 0;
@@ -1332,34 +1644,42 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       });
     };
 
-    const mobileController = mobileControllerEnabled
-      ? createMobileProcessController({
-          track,
-          stage,
-          stationCount: STATIONS,
-          getViewportHeight: () => viewportHeight,
-          onStationChange: requestTick,
-          onPinnedChange: notePinned,
-          requestRender: requestTick,
-        })
-      : null;
+    const onScrollBypass = () => {
+      scriptedBypass = true;
+      if (isMobile) setMobilePhase("bypass");
+      lockAt = null;
+      cameFrom = 0;
+      setSnap(false);
+    };
 
-    if (!mobileControllerEnabled) {
-      window.addEventListener("touchstart", onTouchStart, { passive: true });
-      window.addEventListener("touchmove", onTouchMove, { passive: true });
-      window.addEventListener("wheel", onWheel, { passive: false });
+    if (isMobile) {
+      window.addEventListener("touchstart", onMobileTouchStart, {
+        passive: true,
+      });
+      window.addEventListener("touchmove", onMobileTouchMove, {
+        passive: false,
+      });
+      window.addEventListener("touchend", onMobileTouchEnd, { passive: true });
+      window.addEventListener("touchcancel", onMobileTouchEnd, {
+        passive: true,
+      });
+    } else {
+      window.addEventListener("touchstart", onLegacyTouchStart, {
+        passive: true,
+      });
+      window.addEventListener("touchmove", onLegacyTouchMove, {
+        passive: true,
+      });
     }
-    const visualViewport = window.visualViewport;
-    window.addEventListener("resize", syncViewportHeight);
-    visualViewport?.addEventListener("resize", syncViewportHeight);
-    document.addEventListener("visibilitychange", requestTick);
+    window.addEventListener("wheel", onWheel, { passive: false });
+    window.addEventListener("pnina:scroll-bypass", onScrollBypass);
 
-    function tick(now: number) {
-      raf = 0;
-      // Use the whole wall-clock interval. The old 100ms cap discarded time
-      // whenever iPhone Safari fell below 10fps, stretching one 2.4s act to six
-      // seconds and a queued three-act chase to the reported 10-15 seconds.
-      // Dropped frames now reduce visual detail; they never extend duration.
+    const tick = (now: number) => {
+      // Keep playback tied to elapsed time, not to the number of frames Safari
+      // happened to deliver. The former 100ms cap discarded most of every
+      // interval below 10fps: at 4fps one nominal 2.4-second act took about six
+      // seconds, and several queued acts produced the reported 10-15 second
+      // wait. A dropped render now drops visual detail, never elapsed time.
       const dt = lastT ? Math.max(0, (now - lastT) / 1000) : 0.016;
       lastT = now;
       targetP = progress();
@@ -1373,7 +1693,7 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // the playhead has crossed onto a different stored frame.
       store.focus(Math.round(smoothP * (frameCount - 1)));
       draw(smoothP, smoothP === targetP);
-      track!.dataset.processPlayhead = smoothP.toFixed(4);
+      track.dataset.processPlayhead = smoothP.toFixed(4);
 
       const station = Math.round(targetP * (STATIONS - 1));
       // Both bands carry the one-second lead — see TEXT_LEAD at the top of the
@@ -1386,30 +1706,28 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
         isMobile ||
         !STILL_STATIONS.includes(station as 1 | 2 | 3) ||
         Math.abs(smoothP - station / (STATIONS - 1)) <= STILL_BAND;
-      // The touch clamp asks this rather than a timer; see the note on
-      // `scrubBeatIn` and the branch in `applySnap` that holds a second flick.
-      //
-      // It is the beat card's own test with ONE difference, and the difference
-      // is what makes it usable: the card asks how far the playhead is from
-      // where the SCROLL is (`delta`), this asks how far it is from the STATION
-      // THE SECTION IS HOLDING HER ON. Those are the same number at rest and
-      // diverge only while a lock is fighting a fling — and that window is
-      // exactly when a visitor takes her next flick.
-      //
-      // Two measurements, both at 390×844, are why it is written this way:
-      //   • `targetP` is sampled at the top of this loop, BEFORE `applySnap`
-      //     pulls the overshoot back, so during a fight it reads a position she
-      //     never occupies. Rounding it to a station does not help — a 0.4
-      //     overshoot rounds to the NEXT station and the answer inverts.
-      //   • the fight lasts ~800ms after a flick, because the clamp's momentum
-      //     keeps arriving. So a second deliberate flick at 600ms or 700ms was
-      //     refused while one at 800ms was allowed: not a rate limit, a
-      //     misreading. `lockAt` is the section's own answer to "where is she",
-      //     and while it is set it is the only honest one.
-      const heldP = lockAt !== null ? lockAt / lastEnd : targetP;
-      scrubBeatIn =
-        Math.abs(smoothP - Math.round(heldP * (STATIONS - 1)) / (STATIONS - 1)) <
-          SETTLE_BAND && nearStation;
+      // Navigation compares against the station the lock is actually holding,
+      // not against a transient overshoot sampled before `applySnap` corrects
+      // it. Text keeps its earlier `nearSettle` entrance; only navigation uses
+      // this exact settlement result.
+      if (isMobile) {
+        scrubPlaybackSettled =
+          Math.abs(smoothP - mobileTargetP) <= PLAYBACK_SETTLE_EPSILON &&
+          Math.abs(targetP - mobileTargetP) <= PLAYBACK_SETTLE_EPSILON;
+        if (
+          scrubPlaybackSettled &&
+          (mobilePhase === "entering" || mobilePhase === "animating")
+        ) {
+          setMobilePhase("idle");
+        }
+      } else {
+        const heldP = lockAt !== null ? lockAt / lastEnd : targetP;
+        const heldStationP =
+          Math.round(heldP * (STATIONS - 1)) / (STATIONS - 1);
+        scrubPlaybackSettled =
+          Math.abs(smoothP - heldStationP) <= PLAYBACK_SETTLE_EPSILON;
+      }
+      track.dataset.processPlaybackSettled = String(scrubPlaybackSettled);
 
       beatRefs.current.forEach((b, i) => {
         if (!b) return;
@@ -1440,46 +1758,37 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
       // covered pixels are all canvas either way. (A wheel event landing between
       // two frames can beat this call to it by a millisecond or two — see
       // `notePinned` — which is the same instant by any measure that matters.)
-      if (mobileControllerEnabled) {
-        pillRef.current?.classList.toggle("scrub-on", pinnedNow);
-      } else {
-        const isPinned = pinned();
-        notePinned(isPinned);
-        pillRef.current?.classList.toggle("scrub-on", isPinned);
-        applySnap();
-      }
+      const isPinned = pinned();
+      notePinned(isPinned);
+      pillRef.current?.classList.toggle("scrub-on", isPinned);
+      if (isMobile) reconcileMobileNavigation();
+      else applySnap();
 
-      // Desktop's legacy snap/arrival controller still needs a continuous
-      // observer. The phone controller is event-driven and sleeps completely
-      // while parked; frame decoding wakes it through FrameStore.onChange.
-      if (
-        !mobileControllerEnabled ||
-        Math.abs(targetP - smoothP) > Number.EPSILON
-      ) {
-        requestTick();
-      } else {
-        lastT = 0;
-      }
-    }
-    requestTick();
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
 
     return () => {
       cancelAnimationFrame(raf);
       io.disconnect();
-      mobileController?.dispose();
       store.dispose();
-      if (!mobileControllerEnabled) {
-        window.removeEventListener("touchstart", onTouchStart);
-        window.removeEventListener("touchmove", onTouchMove);
-        window.removeEventListener("wheel", onWheel);
+      if (isMobile) {
+        window.removeEventListener("touchstart", onMobileTouchStart);
+        window.removeEventListener("touchmove", onMobileTouchMove);
+        window.removeEventListener("touchend", onMobileTouchEnd);
+        window.removeEventListener("touchcancel", onMobileTouchEnd);
+      } else {
+        window.removeEventListener("touchstart", onLegacyTouchStart);
+        window.removeEventListener("touchmove", onLegacyTouchMove);
       }
-      window.removeEventListener("resize", syncViewportHeight);
-      visualViewport?.removeEventListener("resize", syncViewportHeight);
-      document.removeEventListener("visibilitychange", requestTick);
+      window.removeEventListener("wheel", onWheel);
+      window.removeEventListener("pnina:scroll-bypass", onScrollBypass);
       document.documentElement.removeAttribute("data-scrub-pinned");
       document.documentElement.style.scrollSnapType = "";
       delete track.dataset.processPlayhead;
-      track.style.removeProperty("--process-viewport");
+      delete track.dataset.processPlaybackSettled;
+      delete track.dataset.processNavigationPhase;
+      delete track.dataset.processNavigationStation;
       // iOS keeps canvas backing stores alive aggressively; zeroing the
       // dimensions releases the bitmap on unmount.
       canvas.width = 0;
@@ -1488,32 +1797,22 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
   }, [source.baseUrl, source.frameCount, isMobile, firstFrame, dims, stationLabels]);
 
   return (
-    <div
-      ref={trackRef}
-      className="relative"
-      style={
-        {
-          "--process-viewport": "100dvh",
-          height: "calc(var(--process-viewport) * 3)",
-        } as CSSProperties
-      }
-    >
+    <div ref={trackRef} data-process-track="" className="relative h-[300vh]">
       {Array.from({ length: STATIONS }, (_, s) => (
         <div
           key={s}
           aria-hidden
           className="absolute h-px w-full"
           style={{
-            top: `calc((100% - var(--process-viewport)) * ${s / (STATIONS - 1)})`,
-            scrollSnapAlign: isMobile ? undefined : "start",
-            scrollSnapStop: isMobile ? undefined : "always",
+            top: `calc((100% - 100svh) * ${s / (STATIONS - 1)})`,
+            scrollSnapAlign: "start",
+            scrollSnapStop: "always",
           }}
         />
       ))}
       <div
         ref={stageRef}
-        className="process-scrub__stage sticky top-0 grid place-items-center overflow-hidden"
-        style={{ height: "var(--process-viewport)" }}
+        className="process-scrub__stage sticky top-0 grid h-svh place-items-center overflow-hidden"
       >
         <canvas
           ref={canvasRef}
@@ -1523,8 +1822,8 @@ export function ProcessScrub({ source, firstFrame }: ProcessScrubProps) {
           aria-label={t("motionAlt")}
           className={
             isMobile
-              ? "block h-full w-auto max-w-[100vw] object-cover"
-              : "block h-full w-screen object-cover"
+              ? "block h-svh w-auto max-w-[100vw] object-cover"
+              : "block h-svh w-screen object-cover"
           }
         />
         {steps.map((s, i) => (

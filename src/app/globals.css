@@ -2652,12 +2652,10 @@ html[data-a11y-emphasize-links="true"]
     transform 0.75s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
-/* The mobile process owns vertical movement only after its sticky stage fills
-   the frozen visual viewport. Pointer Events then advance one explicit station
-   at a time instead of asking iOS momentum + root scroll snap to agree after
-   the fact. Horizontal panning and pinch zoom remain browser-native. The
-   attribute is absent while approaching and leaving, so ordinary page scroll
-   reaches and exits the section normally. */
+/* A fresh phone gesture that starts after the sticky process stage has filled
+   the viewport is handled one station at a time by ProcessScrub. Only that
+   stage owns vertical panning; arrival and every other part of the document
+   remain native. Pinch zoom and horizontal panning stay browser-owned. */
 @media (max-width: 640px) {
   :root[data-scrub-pinned] .process-scrub__stage {
     touch-action: pan-x pinch-zoom;

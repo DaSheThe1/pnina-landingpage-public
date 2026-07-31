@@ -53,10 +53,9 @@ export function BackToTop() {
       type="button"
       aria-label={t("backToTop")}
       onClick={() => {
-        // The mobile process controller deliberately owns vertical movement
-        // while its stage is pinned. This explicit bypass keeps the owner's
-        // chosen skip route load-bearing instead of making a scripted scroll
-        // look like arriving momentum that should be held on a station.
+        // The process uses root scroll snap while it fills the screen. Release
+        // that snap before the owner's explicit skip route starts, otherwise
+        // the browser can pull the smooth scroll back to the current station.
         window.dispatchEvent(new Event("pnina:scroll-bypass"));
         window.scrollTo({
           top: 0,

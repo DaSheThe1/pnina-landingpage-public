@@ -25,7 +25,7 @@ pnpm test:e2e
 | `cookie-consent.spec.ts` | Hebrew consent UI, no Google request before opt-in, Consent Mode and withdrawal |
 | `lead-form.spec.ts` | validation, the optional question's privacy boundary, successful and failed submission paths |
 | `navigation.spec.ts` | header anchors and page links, logo, legal links and mobile menu |
-| `process-motion.spec.ts` | discrete phone steps, multi-touch, viewport changes, slow rAF, failed frames, exit and back-to-top |
+| `process-motion.spec.ts` | phone entry/state sequencing, repeated input, slow rAF, failed frames, exit and back-to-top |
 | `smoke.spec.ts` | every route, headings, console, RTL, alt text, contact details and WhatsApp prefill |
 
 The privacy assertions in `lead-form.spec.ts` and `contact-api.spec.ts` and the
@@ -42,20 +42,27 @@ pnpm test:motion
 That command compiles the app against a tiny local media origin owned by the
 spec. It never reaches the live R2 bucket. The suite asserts:
 
-- one hard pointer gesture moves one adjacent station;
-- a second pointer cancels instead of skipping;
-- forward and reverse movement cannot cross several stations;
-- the visual viewport stays frozen while Safari-like toolbar height changes;
+- sequence detail stays deferred until the process approaches;
+- hard touch and iOS Simulator wheel entry from above stop at step 1;
+- the process stage remains sticky inside the native document rather than
+  becoming a fixed overlay over a frozen body;
+- one trusted phone flick moves one adjacent station;
+- two- and three-finger vertical drags cannot buy a station;
+- rapid repeated touch and wheel input is discarded during playback and never
+  queued after settlement;
+- fresh gestures traverse all four stations, reverse one station at a time and
+  exit only after the endpoint act completes;
+- fresh outward gestures leave natively from both endpoint stations;
+- a missing touch-end lifecycle cannot poison the next native gesture;
 - four rAF callbacks per second still finish an act in wall-clock time;
-- failed intermediate frames cannot prevent station movement or exit;
-- the four station keyframes are requested before act-one detail;
-- the back-to-top control bypasses the pinned process immediately.
+- failed intermediate frames cannot prevent the native boundary exit;
+- the back-to-top control remains an immediate native escape.
 
-This is strong logic and browser-integration coverage, but Chromium phone
-emulation is not an iPhone. Linux Playwright cannot reproduce iOS Safari's
-asynchronous root scroller, toolbar physics, decoder pressure or memory limits.
-Final motion releases therefore still need a physical iPhone, a macOS iOS
-Simulator for WebKit behavior, or a cloud real-device service.
+This is useful Chromium browser-integration coverage, but it is not an iPhone.
+The macOS iOS Simulator runs Mobile Safari/WebKit and is the required behavioral
+check for root scrolling, snap behavior and toolbar changes. It still uses the
+Mac's CPU, GPU, memory and network, so final decode-speed and memory-pressure
+confidence needs a physical iPhone or cloud real-device pass.
 
 ### Current broad-suite debt
 
@@ -99,6 +106,8 @@ pnpm dev            # http://localhost:3006
 
 Check the funnel end to end on desktop and a phone viewport, the lead dialog, a
 submission landing on `/thank-you`, and the RTL layout. For the process motion,
-also test a hard flick, repeated deliberate flicks, reverse movement, the final
-outward exit, multi-touch, toolbar expansion/collapse and background/foreground
-on a real iPhone or real-device service.
+also test a hard flick, rapid repeated flicks during playback, reverse movement,
+outward exit from both end stations, multi-touch, pinch zoom, toolbar
+expansion/collapse, orientation change and background/foreground in the iOS
+Simulator. A physical iPhone or real-device service remains the final
+performance check.
