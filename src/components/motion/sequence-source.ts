@@ -67,6 +67,44 @@ export type SequenceSource = {
   frameCount: number;
 };
 
+export type SequenceSourceSet = {
+  mobile: SequenceSource;
+  desktop: SequenceSource;
+};
+
+/**
+ * Both responsive cuts, resolved without asking the browser for its width.
+ *
+ * ProcessExperience uses this during the server render so its final sticky
+ * geometry exists in the first HTML. The browser chooses a cut only when the
+ * media loader starts; changing orientation swaps files, never components or
+ * section height.
+ */
+export function getSequenceSourceSet(
+  collection: SequenceCollection
+): SequenceSourceSet | null {
+  const base = publicEnv.mediaBaseUrl;
+  if (!base) return null;
+
+  const root = `${base.replace(/\/+$/, "")}/motion/${collection}`;
+  const frameCount = SEQUENCE_FRAME_COUNTS[collection];
+
+  return {
+    mobile: {
+      baseUrl: `${root}/m`,
+      aspect: "9/16",
+      finalStillSrc: `${root}/m/final.webp`,
+      frameCount,
+    },
+    desktop: {
+      baseUrl: `${root}/d`,
+      aspect: "16/9",
+      finalStillSrc: `${root}/d/final.webp`,
+      frameCount,
+    },
+  };
+}
+
 /**
  * Returns null until the viewport is known (first client render) and whenever
  * no media CDN is configured — in both cases the sequence renders nothing at
@@ -86,18 +124,9 @@ export function useSequenceSource(
     return () => query.removeEventListener("change", apply);
   }, []);
 
-  const base = publicEnv.mediaBaseUrl;
-  if (!base || narrow === null) return null;
-
-  const baseUrl = `${base.replace(/\/+$/, "")}/motion/${collection}/${
-    narrow ? "m" : "d"
-  }`;
-  return {
-    baseUrl,
-    aspect: narrow ? "9/16" : "16/9",
-    finalStillSrc: `${baseUrl}/final.webp`,
-    frameCount: SEQUENCE_FRAME_COUNTS[collection],
-  };
+  const sources = getSequenceSourceSet(collection);
+  if (!sources || narrow === null) return null;
+  return narrow ? sources.mobile : sources.desktop;
 }
 
 /**

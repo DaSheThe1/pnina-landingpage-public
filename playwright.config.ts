@@ -18,7 +18,6 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 3100);
 const host = process.env.PLAYWRIGHT_HOST ?? "localhost";
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? `http://${host}:${port}`;
 const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEBSERVER === "1";
-const motionTests = process.env.PLAYWRIGHT_PROCESS_MOTION === "1";
 const artifactDir =
   process.env.PLAYWRIGHT_ARTIFACT_DIR ?? "/tmp/pnina-website-playwright";
 
@@ -109,12 +108,10 @@ export default defineConfig({
           // googletagmanager request before it can leave the browser.
           NEXT_PUBLIC_GA_ID: "G-PLAYWRIGHT",
 
-          // Hermetic media origin for motion tests. The process spec owns the
-          // tiny local server, so the suite never depends on the live R2 bucket
-          // or spends its bandwidth.
-          NEXT_PUBLIC_MEDIA_BASE_URL: motionTests
-            ? "http://localhost:3199"
-            : "",
+          // Large remote clips stay out of ordinary tests. The process scrub's
+          // compact, same-origin MP4 and poster are committed public assets, so
+          // its hermetic suite no longer needs a separate fake media server.
+          NEXT_PUBLIC_MEDIA_BASE_URL: "",
         },
       },
 });

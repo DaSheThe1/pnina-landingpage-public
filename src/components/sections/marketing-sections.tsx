@@ -1064,7 +1064,7 @@ export function AudienceSection() {
   const items = t.raw("items") as TitledText[];
 
   return (
-    <section className="bg-background px-6 py-12 sm:py-16">
+    <section className="process-boundary-surface bg-background px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <Reveal>
           <SectionHeading
@@ -1086,7 +1086,7 @@ export function AudienceSection() {
                 delay={(index % 4) * 80}
                 className="h-full"
               >
-                <div className="h-full rounded-2xl border border-foreground/[0.08] bg-surface-1/70 p-5 shadow-card backdrop-blur-sm">
+                <div className="process-boundary-card h-full rounded-2xl border border-foreground/[0.08] bg-surface-1/70 p-5 shadow-card backdrop-blur-sm">
                   <span
                     className={cn(
                       "flex h-10 w-10 items-center justify-center rounded-xl border",
@@ -1246,7 +1246,7 @@ export function FounderTeaser() {
   const portrait = media.founderTeaser;
 
   return (
-    <section className="bg-background px-6 py-12 sm:py-16">
+    <section className="process-boundary-surface bg-background px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <Reveal>
           <div className="ring-shine relative grid gap-10 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1 p-7 md:grid-cols-[auto_1fr] md:items-center md:gap-12 md:p-10">
@@ -1257,11 +1257,11 @@ export function FounderTeaser() {
                 one lit surface. */}
             <div
               aria-hidden
-              className="pointer-events-none absolute -start-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-gold/20 blur-[90px]"
+              className="process-founder-glow process-founder-glow--gold pointer-events-none absolute -start-24 top-1/2 h-72 w-72 -translate-y-1/2 rounded-full bg-gold/20 blur-[90px]"
             />
             <div
               aria-hidden
-              className="pointer-events-none absolute -end-20 bottom-0 h-56 w-56 rounded-full bg-brand/15 blur-[80px]"
+              className="process-founder-glow process-founder-glow--brand pointer-events-none absolute -end-20 bottom-0 h-56 w-56 rounded-full bg-brand/15 blur-[80px]"
             />
 
             {/* Portrait card */}

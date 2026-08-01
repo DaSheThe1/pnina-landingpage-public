@@ -160,7 +160,7 @@ export type FrameStoreOptions = {
   frameBytes: number;
   /** Which budget applies. */
   cut: keyof typeof PEAK_BYTES;
-  /** Frame 1, already downloaded and decoded by the probe. Never evicted. */
+  /** Frame 1, already downloaded by a poster or probe. Never evicted. */
   firstFrame: HTMLImageElement;
 };
 
@@ -236,9 +236,9 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
     anchors.push(i);
   }
 
-  // Frame 1 arrives already decoded, from the probe that decided this section
-  // may run at all. It is the one frame that is guaranteed drawable from the
-  // first paint, so it is pinned and never touched by eviction.
+  // Frame 1 arrives from the caller's poster/probe. It is the one frame that is
+  // guaranteed drawable when the store starts, so it is pinned and never
+  // touched by eviction.
   slots[0] = { state: "ready", src: firstFrame, img: firstFrame, pinned: true };
 
   const stills: Record<number, CanvasImageSource> = {};
@@ -506,7 +506,7 @@ export function createFrameStore(options: FrameStoreOptions): FrameStore {
       for (let i = 0; i <= lastIndex; i += step) {
         const slot = slots[i];
         if (!slot) continue;
-        // Frame 0's element belongs to the caller (it is the probe's image), so
+        // Frame 0's element belongs to the caller (poster/probe), so
         // only the bitmap side of a pinned slot is ours to free.
         slot.bitmap?.close();
         slot.bitmap = undefined;

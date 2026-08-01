@@ -10,10 +10,13 @@ import { usePrefersReducedMotion } from "@/components/motion/use-reduced-motion"
  * the thank-you page share one continuous, slowly drifting gradient.
  *
  * Two motions combine:
- *  - the blobs drift on their own slow CSS keyframe loops (`animate-drift-*`);
- *  - scrolling nudges the whole field — a gentle hue shift + parallax — driven
- *    by a single rAF-throttled scroll listener that writes `--bg-scroll`
- *    (0 → 1 down the page) which the CSS in `globals.css` reads.
+ *  - wide screens keep the five independently drifting colour blobs;
+ *  - phones use one combined gradient surface with one slow transform, avoiding
+ *    six filtered compositor layers around the process boundaries;
+ *  - on wider screens, scrolling nudges the whole field — a gentle hue shift +
+ *    parallax — driven by a single rAF-throttled listener that writes
+ *    `--bg-scroll` (0 → 1 down the page). Phones have no scroll-reactive
+ *    background transform: their one ambient layer drifts independently.
  *
  * When the accessibility panel's motion switch is on we skip the scroll wiring
  * entirely and let the
@@ -34,8 +37,13 @@ export function SiteBackground() {
       return;
     }
 
+    const wide = window.matchMedia("(min-width: 768px)");
     let raf = 0;
     const onScroll = () => {
+      if (!wide.matches) {
+        el.style.setProperty("--bg-scroll", "0");
+        return;
+      }
       if (raf) return;
       raf = requestAnimationFrame(() => {
         raf = 0;
@@ -60,12 +68,15 @@ export function SiteBackground() {
       });
     };
 
+    const onWidthChange = () => onScroll();
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
+    wide.addEventListener("change", onWidthChange);
     return () => {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      wide.removeEventListener("change", onWidthChange);
       if (raf) cancelAnimationFrame(raf);
     };
   }, [shouldReduceMotion]);

@@ -723,7 +723,7 @@
 
    THE ONE EXCLUSION: the process section's scrub overlay ("Not on the
    animation" — Daniel). Its cards are pinned back to the 0.12.0 sizes by a
-   scoped variable override on `.scrub-beat` / `.scrub-pill` further down this
+   scoped variable override on `.scrub-copy` / `.scrub-pill` further down this
    file, so raising a rung here cannot move them.
 
    So the BOTTOM SEVEN RUNGS of Tailwind's scale are re-pointed, once, here —
@@ -825,10 +825,10 @@
    above moves), the OLD scale is restored as scoped variables on the two
    overlay containers. Tailwind 4 compiles `text-base` to
    `font-size: var(--text-base)` and custom properties inherit, so every rung
-   used inside a `.scrub-beat` resolves to its 0.12.0 value while the rest of
+   used inside a `.scrub-copy` resolves to its 0.12.0 value while the rest of
    the page reads the raised one. Nothing here needs to be touched again unless
    Daniel asks for the animation's copy to grow too. */
-.scrub-beat,
+.scrub-copy,
 .scrub-pill {
   --text-xs: 0.875rem; /* 14px */
   --text-xs--line-height: calc(1.25 / 0.875);
@@ -845,7 +845,7 @@
 }
 
 @media (min-width: 640px) {
-  .scrub-beat,
+  .scrub-copy,
   .scrub-pill {
     --text-sm: 1.0625rem; /* 17px */
     --text-sm--line-height: calc(1.625 / 1.0625);
@@ -1347,44 +1347,76 @@
   background-size: 160px 160px;
 }
 
-/* ── §10a  WHILE THE PEARL STAGE IS PINNED, EVERYTHING BEHIND IT STANDS DOWN ──
-   `data-scrub-pinned` is stamped on <html> by the rAF loop in
-   src/components/sections/process-scrub.tsx for exactly as long as the scrub's
-   sticky stage fills the viewport. During that stretch the stage is an OPAQUE
-   canvas covering every pixel of the screen, so this whole field, its vignette
-   and its grain are being composited for nobody — while the scrub is asking the
-   same GPU for a full-viewport `drawImage` every frame it moves. On the phones
-   Daniel tested (an S25 Ultra and an iPhone 13/14) that contention is a
-   measurable part of the "super laggy between images".
-
-   What stands down is only the WORK, never the picture:
-     • the five blurred blobs stop their 34-52s drift loops. A paused animation
-       holds its current transform, so the layer under the canvas is identical to
-       the frame before — there is nothing to see and so nothing to pop when it
-       resumes;
-     • `will-change` is dropped, which releases five promoted compositor layers
-       (each a 38-52rem blurred radial) for the duration;
-     • the scroll-reactive `saturate()` filter — a whole-viewport filter that
-       re-evaluates on every scroll frame, and the single most expensive thing in
-       this block — is switched off. site-background.tsx separately stops writing
-       `--bg-scroll` while the attribute is set, so nothing is even asking for it.
-
-   Deliberately NOT hidden: `visibility`/`display` would be cheaper still, but a
-   sub-pixel rounding gap at the top or bottom edge of the stage would then show
-   the page background instead of the field, and that WOULD pop. Pausing costs
-   nothing and cannot. */
-:root[data-scrub-pinned] .site-bg {
-  filter: none;
-  transition: none;
+/* ── ONE MOBILE AMBIENT SURFACE, NOT SIX FILTERED LAYERS ────────────────
+   The sand plate is already a complete background image. On phones the colour
+   field above it therefore uses one combined radial-gradient surface with one
+   slow transform. The five desktop blobs are hidden rather than promoted,
+   blurred and animated independently. This keeps the same gold/peach/blue
+   atmosphere and motion-by-default contract while removing the layer-memory
+   pressure that made WebKit repaint surrounding sections after the pearl
+   stage uncovered them. */
+@keyframes bg-drift-mobile {
+  from {
+    transform: translate3d(-1.5%, -1%, 0) scale(1.04);
+  }
+  to {
+    transform: translate3d(1.5%, 1%, 0) scale(1.06);
+  }
 }
 
-:root[data-scrub-pinned] .site-bg__inner,
-:root[data-scrub-pinned] .site-bg__blob {
-  will-change: auto;
+@media (max-width: 767px) {
+  .site-bg__inner {
+    inset: -8%;
+    background:
+      radial-gradient(
+        circle at 12% 8%,
+        rgba(228, 182, 72, 0.07),
+        transparent 38%
+      ),
+      radial-gradient(
+        circle at 88% 18%,
+        rgba(232, 160, 120, 0.08),
+        transparent 36%
+      ),
+      radial-gradient(
+        circle at 82% 78%,
+        rgba(126, 169, 192, 0.06),
+        transparent 38%
+      ),
+      radial-gradient(
+        circle at 18% 88%,
+        rgba(222, 168, 124, 0.06),
+        transparent 36%
+      );
+    transition: none;
+    animation: bg-drift-mobile 44s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+
+  .site-bg__blob,
+  .site-bg__noise {
+    display: none;
+  }
 }
 
-:root[data-scrub-pinned] .site-bg__blob {
-  animation-play-state: paused;
+/* ── §10a  THE PEARL STAGE DOES NOT REBUILD THE PAGE BACKGROUND ─────────────
+   The former canvas/frame implementation paused the five blurred background
+   layers and dropped their compositor surfaces through the middle of the
+   process, then tried to "prewarm" them during its last 10%. A real iPhone can
+   cross that range in one momentum frame. WebKit then exposed the next section
+   before those surfaces had been rastered again, which is the several-second
+   blank/white boundary Daniel reproduced on both iPhone and Samsung.
+
+   The process now uses one browser-decoded video and no longer needs that
+   trade. The background keeps its already-painted surfaces for the whole visit.
+   Only the wide-screen saturate filter is neutralised while fully covered; on
+   phones that filter is absent already. Do not reintroduce pause, visibility,
+   display or will-change toggles at this boundary. */
+@media (min-width: 768px) {
+  :root[data-scrub-pinned] .site-bg {
+    filter: none;
+    transition: none;
+  }
 }
 
 /* ── §10b  …AND SO DOES THE HEADER, ENTIRELY ──
@@ -1409,8 +1441,10 @@
    live; a transition here is starved and reads as the bar glitching rather than
    changing. The previous background sheet lost its fade for exactly this
    reason, and the fade is what came back as a complaint. */
-:root[data-scrub-pinned] .site-header {
-  visibility: hidden;
+@media (min-width: 768px) {
+  :root[data-scrub-pinned] .site-header {
+    visibility: hidden;
+  }
 }
 
 /* ─────────────────────────  Utilities  ───────────────────────── */
@@ -1425,49 +1459,34 @@
    * IntersectionObserver each produced a blank page rather than an unanimated
    * one. On this site of all sites, content wins over choreography.
    *
-   * The hidden state exists only between the component ARMING an element
-   * (`data-reveal-ready`, which it does only for elements still below the fold)
-   * and RELEASING it (`data-reveal-shown`). Read the header comment in
-   * reveal.tsx before changing either selector.
+   * The pending state is a 16px transform only. `data-reveal-ready` arms it and
+   * `data-reveal-shown` returns it to the authored position; opacity stays at 1
+   * in both states. Read the header comment in reveal.tsx before changing
+   * either selector.
    *
    * ── THE THIRD ATTRIBUTE: `data-reveal-off` ──
-   * "Failing open" only holds while something is left to do the releasing. An
-   * IntersectionObserver that exists but never delivers — older Samsung
-   * Internet, some embedded webviews — armed the element and then abandoned it,
-   * which is how a paragraph went missing on a phone in July 2026 and stayed
-   * missing. `RevealGuard` (src/components/motion/reveal-guard.tsx) watches for
-   * exactly that and stamps `data-reveal-off` on any element that is well past
-   * the point where its reveal must have finished and is still transparent.
-   * EVERY reveal rule on this site — here and in the MOTION SYSTEM block below,
-   * §1 and its §7 mirror — excludes it, so the element drops back to plain,
-   * visible content. Add a reveal rule, add the exclusion.
-   *
-   * `will-change` is scoped to ONLY the armed-but-not-yet-shown state: once the
-   * one-shot fade is done we drop it back to `auto` so the element is no longer
-   * pinned as its own compositor layer. Leaving `will-change` on permanently
-   * made every revealed element a standing GPU layer; on mobile GPUs those
-   * layer tiles get evicted during scroll and, with nothing invalidating them,
-   * never re-raster, so content blanks out and stays blank. Do not move it to
-   * the base rule. */
+   * `data-reveal-off` is the process boundary's release valve: it removes even
+   * the 16px movement from neighboring sections. No reveal uses `will-change`;
+   * permanently promoted text layers were one cause of mobile tile eviction. */
   /* 620ms / 16px / the same ease as the scroll-driven version in the MOTION
      SYSTEM block at the bottom of this file. 800ms read as the page being slow
      rather than as the page being calm. Keep the two paths matched. */
   [data-reveal][data-reveal-ready] {
-    transition: opacity 0.62s cubic-bezier(0.16, 1, 0.3, 1),
-      transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1);
     transition-delay: var(--reveal-delay, 0ms);
   }
   [data-reveal][data-reveal-ready]:not([data-reveal-shown]):not(
       [data-reveal-off]
     ) {
-    opacity: 0;
+    /* Copy is never transparent. WebKit may delay a transform under pressure,
+       but a delayed rise is readable; a delayed opacity transition is a blank
+       section. */
+    opacity: 1;
     transform: translateY(16px);
-    will-change: opacity, transform;
   }
   [data-reveal][data-reveal-shown] {
     opacity: 1;
     transform: none;
-    will-change: auto;
   }
 
   .bg-dot {
@@ -1759,9 +1778,16 @@
 
   /* ── Page transition ── Enter animation replayed on every route change (the
      PageTransition wrapper re-keys its subtree by pathname). A gentle fade with
-     a micro-rise; reduced motion disables it via the global block below. */
+     a micro-rise; reduced motion disables it via the global block below.
+
+     `backwards`, not `both`: retaining the final `transform: none` keyframe
+     still computes to an identity matrix and traps the complete page in one
+     stacking/compositor context after the 550ms entrance is over. WebKit then
+     has to keep that enormous layer around the sticky process and its neighbor
+     surfaces. Releasing the transform after the entrance both removes that
+     pressure and lets the phone stage's local z-index cover the sticky header. */
   .page-enter {
-    animation: page-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: page-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   }
 
   /* ══════════  Offer nodes — OffersSection only  ══════════
@@ -2621,75 +2647,201 @@ html[data-a11y-emphasize-links="true"]
 }
 
 /* ── Process scrub (the pearl reveal inside #process) ─────────────────────
-   State classes toggled from `src/components/sections/process-scrub.tsx`. The
-   text cards are a directional carousel that follows the Hebrew reading flow:
-   a beat waits off-screen on the physical RIGHT, slides to centre when its
-   station settles, and leaves to the physical LEFT once the visitor scrolls
-   past it.
+   The motion and static versions are both server-rendered. The early
+   accessibility/data boot attributes and ProcessExperience expose exactly one
+   before paint, which is how the process keeps stable geometry for the normal
+   path while the in-site reduced-motion switch still gets the four cards and
+   downloads no frames. */
+.process-experience__static {
+  display: none;
+}
 
-   ── WHY THERE IS NO `prefers-reduced-motion: no-preference` GATE HERE ──
-   The branch this came from wrapped the transitions in that media query. It is
-   removed on purpose, and this is not a weakening:
+.process-experience[data-process-mode="static"] .process-experience__motion,
+:root[data-save-data="true"] .process-experience__motion,
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"])
+  .process-experience__motion {
+  display: none;
+}
 
-     • the component NEVER MOUNTS for a visitor who has asked for less motion
-       or less data — `ProcessExperience` renders the static four-card section
-       for her instead, and no frame is fetched (see that file's header);
-     • the global reduced-motion block a few rules above already freezes every
-       transition and keyframe on the page off the panel's "הפחתת תנועה" switch,
-       which since 2026-07-30 is the only thing that reduces motion here (the
-       device setting is deliberately not read anywhere — see that block);
-     • a media-query gate here would ALSO have to be mirrored by hand into §7
-       at the bottom of this file, the way §1/§2/§5/§6 are, or the evaluation
-       view would silently drift from the real one.
+.process-experience[data-process-mode="static"] .process-experience__static,
+:root[data-save-data="true"] .process-experience__static,
+:root[data-a11y-reduce-motion="true"]:not([data-motion="force"])
+  .process-experience__static {
+  display: block;
+}
 
-   One gate, in one place, is the whole point of that block. */
-.scrub-beat {
+/* Four stations need three complete viewport-length transitions after the
+   sticky stage has occupied one viewport. Wide screens use the ordinary 400svh
+   contract. Phones use the same four-view story measured in `lvh`, so Safari's
+   collapsing toolbar cannot compress it after entry. */
+.process-scrub {
+  height: 400svh;
+  min-height: 1600px;
+  background: var(--brand-deep);
+}
+
+.process-scrub__stage {
+  height: 100dvh;
+  min-height: 100svh;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      circle at 50% 42%,
+      color-mix(in srgb, var(--gold) 24%, transparent),
+      transparent 42%
+    ),
+    linear-gradient(160deg, var(--brand-deep), var(--brand));
+  z-index: 0;
+}
+
+.process-scrub__poster {
+  z-index: 0;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+:root[data-save-data="false"]:not([data-a11y-reduce-motion="true"])
+  .process-experience[data-process-mode="motion"]
+  .process-scrub__poster,
+:root[data-save-data="false"][data-motion="force"]
+  .process-experience[data-process-mode="motion"]
+  .process-scrub__poster {
+  background-image: url("/motion/pearl/process-desktop-poster.webp");
+}
+
+.process-scrub__video {
+  z-index: 1;
   opacity: 0;
-  transform: translateX(70vw);
+}
+
+.process-scrub__video[data-ready] {
+  opacity: 1;
+}
+
+/* One permanent translucent panel contains a four-slide rail. Its position is
+   derived directly from scroll progress, with a long hold around every station
+   and a short physical left/right travel between them. There is no time-based
+   copy animation, no queue and no second card background underneath the first.
+
+   The fill is deliberately a plain alpha, NOT backdrop-filter. At 68% over the
+   brightest possible video pixel it composites to about rgb(101,95,93):
+   #fff8f5 copy is 5.97:1 and #ffdff0 step type is 5.10:1. Thirty-two percent of
+   the pearl film still reads through it without making contrast frame-dependent. */
+.scrub-copy {
+  z-index: 3;
+  opacity: 1;
+  color: #fff8f5;
+  border-color: rgba(255, 248, 245, 0.24);
+  background: rgba(28, 20, 17, 0.68);
+  box-shadow: 0 18px 46px -28px rgba(0, 0, 0, 0.72);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   pointer-events: none;
-  transition:
-    opacity 0.55s ease,
-    transform 0.75s cubic-bezier(0.22, 0.8, 0.3, 1);
 }
 
-/* A fresh phone gesture that starts after the sticky process stage has filled
-   the viewport is handled one station at a time by ProcessScrub. Only that
-   stage owns vertical panning; arrival and every other part of the document
-   remain native. Pinch zoom and horizontal panning stay browser-owned. */
-@media (max-width: 640px) {
-  :root[data-scrub-pinned] .process-scrub__stage {
-    touch-action: pan-x pinch-zoom;
-    overscroll-behavior: contain;
-  }
+.scrub-copy__step {
+  color: #ffdff0;
 }
 
-.scrub-beat.scrub-gone {
-  opacity: 0;
-  transform: translateX(-70vw);
+.scrub-copy__rail {
+  width: 400%;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
-.scrub-beat.scrub-on {
-  opacity: 1;
-  transform: translateX(0);
+
+.scrub-copy__slide {
+  width: 25%;
+  background: transparent;
 }
+
 .scrub-pill {
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.scrub-pill.scrub-on {
+  z-index: 4;
   opacity: 1;
 }
+
 .scrub-arrow {
-  animation: scrub-bob 1.6s ease-in-out infinite;
+  opacity: 0.8;
 }
-@keyframes scrub-bob {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.55;
+
+@media (max-width: 640px) {
+  .process-scrub {
+    height: 400lvh;
+    min-height: 2600px;
   }
-  50% {
-    transform: translateY(6px);
-    opacity: 1;
+
+  /* The stage itself covers the sticky header on phones. Because that result
+     comes from local stacking, it starts and ends on the compositor's own
+     sticky boundary instead of waiting for a root attribute written by JS.
+     The back-to-top escape remains above it. */
+  .process-scrub__stage {
+    z-index: 60;
+  }
+
+  .back-to-top-control {
+    z-index: 70;
+  }
+
+  :root[data-save-data="false"]:not([data-a11y-reduce-motion="true"])
+    .process-experience[data-process-mode="motion"]
+    .process-scrub__poster,
+  :root[data-save-data="false"][data-motion="force"]
+    .process-experience[data-process-mode="motion"]
+    .process-scrub__poster {
+    background-image: url("/motion/pearl/process-mobile-poster.webp");
+  }
+}
+
+/* The two sections WebKit uncovers at the process boundaries must be complete
+   paint surfaces of their own on phones. Neither depends on the fixed sand,
+   filtered colour field or a backdrop sample before its copy can appear. */
+@media (max-width: 767px) {
+  section.process-boundary-surface.bg-background {
+    background-color: var(--canvas);
+    background-image: url("/images/sand-light-portrait.webp");
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-attachment: scroll;
+  }
+
+  .process-boundary-card {
+    background: var(--surface-1);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .process-founder-glow {
+    filter: none;
+  }
+
+  .process-founder-glow--gold {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--gold) 20%, transparent),
+      transparent 70%
+    );
+  }
+
+  .process-founder-glow--brand {
+    background: radial-gradient(
+      circle,
+      color-mix(in srgb, var(--brand) 15%, transparent),
+      transparent 70%
+    );
+  }
+}
+
+@media (max-width: 767px) and (prefers-color-scheme: dark) {
+  section.process-boundary-surface.bg-background {
+    background-image: url("/images/sand-dark-portrait.webp");
+  }
+}
+
+@media (max-width: 767px) {
+  html[data-a11y-enhanced-contrast="true"]
+    section.process-boundary-surface.bg-background {
+    background-image: none;
   }
 }
 
@@ -2720,8 +2872,8 @@ html[data-a11y-emphasize-links="true"]
    ─────────────────────────────────────────────────────────────── */
 
 /* ── 1. Scroll-driven reveal ──────────────────────────────────────
-   The calm version of the JS reveal in src/components/ui/reveal.tsx: same
-   gesture (fade + 16px rise), driven by the browser's own view-progress
+   The calm version of the JS reveal in src/components/ui/reveal.tsx: the same
+   16px rise, driven by the browser's own view-progress
    timeline instead of an IntersectionObserver, so it tracks the scroll
    linearly instead of firing a fixed-duration transition at a threshold.
 
@@ -2730,20 +2882,18 @@ html[data-a11y-emphasize-links="true"]
    attribute only ever appears on the JS path, and the two must never drive the
    same element at once.
 
-   `both` fill (not `forwards`) is deliberate: without the backwards fill the
-   element would render fully opaque for the first few pixels of its entry and
-   then blink out as the range starts. A timeline that cannot resolve at all —
-   a detached subtree, no scroll container anywhere — is INACTIVE, and an
-   inactive timeline applies no effect, so the element keeps its base (visible)
-   style. That is the safe failure.
+   `both` fill (not `forwards`) keeps the transform at the start and end of its
+   range. A timeline that cannot resolve at all — a detached subtree, no scroll
+   container anywhere — is INACTIVE, and an inactive timeline applies no
+   effect, so the element keeps its base (visible) style.
 
    ⚠️ THE UNSAFE ONE, AND IT IS NOT RARE: `view()` resolves against the NEAREST
    SCROLL CONTAINER, not against the viewport, and `overflow: hidden` makes an
    element a scroll container. A `[data-reveal]` under such an ancestor gets a
    perfectly valid, perfectly ACTIVE timeline measured against a box that never
    scrolls — so it freezes at whatever progress that fixed geometry happens to
-   give it, which is usually somewhere half-faded, forever. It is not inactive
-   and `both` does not save it. Same for a `position: fixed` subtree.
+   give it. Copy remains opaque, but the movement is wrong. Same for a
+   `position: fixed` subtree.
 
    So: no [data-reveal] may sit inside `overflow-hidden` (or `-x-`/`-y-`, or
    `auto`/`scroll`, or a fixed subtree). This bit the testimonials section, the
@@ -2763,11 +2913,9 @@ html[data-a11y-emphasize-links="true"]
        want the reason for the clip sitting next to the thing being clipped. */
 @keyframes reveal-rise {
   from {
-    opacity: 0;
     transform: translate3d(0, 16px, 0);
   }
   to {
-    opacity: 1;
     transform: none;
   }
 }
@@ -2781,17 +2929,20 @@ html[data-a11y-emphasize-links="true"]
 
      ── AND ON TWO MORE THINGS, BOTH ADDED 2026-07-31 ──
      `:root[data-reveal-engine="css"]` — the flag `reveal-boot-script.ts` stamps
-     before the first paint when the browser parses `view()` AND JavaScript is
-     running. `@supports` above proves only the first of those. Without the
-     second there is nothing on the page that can rescue an element the timeline
-     abandons, and this rule starts every element it touches at `opacity: 0`, so
-     it must not run at all. No JS, no hiding: the sections simply render.
-     `:not([data-reveal-off])` — the release valve `RevealGuard` uses when the
-     timeline reports support, arms the element and then never advances. Read
-     the header of reveal-guard.tsx; that pair is the whole fix for the blank
-     paragraphs reported on a Samsung phone on 2026-07-31. */
+     before the first paint when the browser parses `view()` and JavaScript is
+     running. `@supports` proves only the first of those. No JS means no
+     transform, while the content stays readable either way.
+     `:not([data-reveal-off])` is the process boundary's release valve.
+
+     ── REPEATABLE REVEALS ONLY (2026-08-01) ──
+     The view timeline is reversible. That is correct only for an explicit
+     `once={false}`; Reveal marks those rare targets with
+     `data-reveal-repeat`. Ordinary one-time reveals use IntersectionObserver,
+     finish before a process boundary exposes them and remain settled. */
   :root[data-reveal-engine="css"]:not([data-a11y-reduce-motion="true"])
-    [data-reveal]:not([data-reveal-ready]):not([data-reveal-off]) {
+    [data-reveal][data-reveal-repeat]:not([data-reveal-ready]):not(
+      [data-reveal-off]
+    ) {
     animation: reveal-rise linear both;
     animation-timeline: view();
     /* Staggered items get their whole range shifted a few percent later by
@@ -3198,13 +3349,14 @@ html[data-a11y-emphasize-links="true"]
         Any edit to §1, §2, §5 or §6 has to be mirrored here or the evaluation
         view silently drifts from the real one. */
 @supports (animation-timeline: view()) {
-  /* §1 — scroll-driven reveal. Carries §1's two fail-safe conditions as well:
-     `[data-reveal-engine="css"]` (JavaScript is alive, so `RevealGuard` is on
-     the page to rescue anything the timeline abandons) and the
-     `:not([data-reveal-off])` release valve. Keeping both here also keeps this
-     selector at §1's specificity, which is what the note above promises. */
+  /* §1 — scroll-driven reveal. Carries §1's engine flag and the process
+     boundary's `:not([data-reveal-off])` release valve. Keeping both here also
+     keeps this selector at §1's specificity, which is what the note above
+     promises. */
   :root[data-reveal-engine="css"][data-motion="force"]
-    [data-reveal]:not([data-reveal-ready]):not([data-reveal-off]) {
+    [data-reveal][data-reveal-repeat]:not([data-reveal-ready]):not(
+      [data-reveal-off]
+    ) {
     animation: reveal-rise linear both;
     animation-timeline: view();
     animation-range: var(--reveal-range, entry 8% cover 26%);

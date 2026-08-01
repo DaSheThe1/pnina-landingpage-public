@@ -21,9 +21,10 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
 
   return (
-    // `site-header` is the hook for one CSS rule: the bar is hidden outright
-    // while the pearl stage is pinned (globals.css §10b). Nothing else styles
-    // it by that name.
+    // `site-header` is the hook for one wide-screen CSS rule: the bar is hidden
+    // while the pearl stage is pinned (globals.css §10b). On phones the stage
+    // covers it through local stacking, so WebKit does not wait for a global
+    // style change at either process boundary.
     <header className="site-header sticky top-0 z-50">
       {/* ── THE HEADER HAS ITS OWN BACKGROUND AGAIN, EXCEPT ON THE ANIMATION ──
           (2026-07-31, Daniel — reversing his own call of the day before.)
@@ -62,13 +63,10 @@ export function SiteHeader() {
           background. Daniel asked first for the bar to be transparent over the
           animation and then, testing on a second Samsung, for the rest of it
           too: *"in the animation part probably hide header completely."* That
-          is done in CSS, off the `data-scrub-pinned` attribute the scrub
-          already stamps on <html> (globals.css §10b, beside the rule that
-          quiets the page background for the same state) — the `site-header`
-          class on this element is the hook. It is an INSTANT flip with no
-          transition, deliberately: any transition on this bar is starved while
-          the sand floor and the scrub are both live, and a starved transition
-          reads as glitching. That is documented history here, not a preference.
+          is local on phones: the stage stacks above this bar and uncovers it at
+          its own sticky boundary. Wide screens use the `data-scrub-pinned`
+          attribute in globals.css §10b. Neither path transitions the bar:
+          a starved fade reads as a rendering glitch, not as choreography.
 
           The mobile menu panel below is solid for its own reasons — see the
           note on it. */}

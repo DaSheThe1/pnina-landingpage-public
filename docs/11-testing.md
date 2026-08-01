@@ -25,7 +25,7 @@ pnpm test:e2e
 | `cookie-consent.spec.ts` | Hebrew consent UI, no Google request before opt-in, Consent Mode and withdrawal |
 | `lead-form.spec.ts` | validation, the optional question's privacy boundary, successful and failed submission paths |
 | `navigation.spec.ts` | header anchors and page links, logo, legal links and mobile menu |
-| `process-motion.spec.ts` | phone entry/state sequencing, repeated input, slow rAF, failed frames, exit and back-to-top |
+| `process-motion.spec.ts` | stable cold-load geometry, native scroll progress, step transitions, failed video, single-asset media, static gates, reload restoration and neighboring-section readiness |
 | `smoke.spec.ts` | every route, headings, console, RTL, alt text, contact details and WhatsApp prefill |
 
 The privacy assertions in `lead-form.spec.ts` and `contact-api.spec.ts` and the
@@ -39,28 +39,37 @@ Run the phone process tests separately:
 pnpm test:motion
 ```
 
-That command compiles the app against a tiny local media origin owned by the
-spec. It never reaches the live R2 bucket. The suite asserts:
+The process video and poster are compact same-origin public assets, so the
+suite is hermetic without a fake R2 server. It asserts:
 
-- sequence detail stays deferred until the process approaches;
-- hard touch and iOS Simulator wheel entry from above stop at step 1;
-- the process stage remains sticky inside the native document rather than
-  becoming a fixed overlay over a frozen body;
-- one trusted phone flick moves one adjacent station;
-- two- and three-finger vertical drags cannot buy a station;
-- rapid repeated touch and wheel input is discarded during playback and never
-  queued after settlement;
-- fresh gestures traverse all four stations, reverse one station at a time and
-  exit only after the endpoint act completes;
-- fresh outward gestures leave natively from both endpoint stations;
-- a missing touch-end lifecycle cannot poison the next native gesture;
-- four rAF callbacks per second still finish an act in wall-clock time;
-- failed intermediate frames cannot prevent the native boundary exit;
+- the final phone shell, local poster and step 1 exist before video responds,
+  and delayed media cannot shift the following section;
+- one translucent dark panel remains present while its four-copy rail crosses
+  horizontally, with valid copy at every tested progress value;
+- the phone overlay uses the concise visual edition while the semantic story
+  remains complete, and desktop keeps the full copy on the physical right;
+- a slow 72px held drag advances one adjacent step in either direction, a 20px
+  movement stays put, one large multi-finger gesture cannot skip stations, and
+  outward gestures from the two endpoint steps still leave the process;
+- non-touch releases settle to the nearest step, while a fresh touch replaces
+  an in-flight target instead of allowing it to run later;
+- a hard phone-sized native scroll distance cannot cross the full `400lvh`
+  process, and scrolling is not cancelled, snapped or body-locked;
+- failed video leaves the poster, correct copy and following page usable;
+- mobile uses one MP4 asset and no WebP frame burst (the browser may issue
+  several byte-range requests against that one file while seeking);
+- both the in-site reduced-motion choice and Save-Data expose all four static
+  cards and make zero process-media requests;
+- the page sections on both sides are fully visible before either process edge
+  exposes them; their phone surfaces carry a local static sand plate, their
+  cards do not sample a backdrop, and no reveal is allowed to make content
+  transparent;
+- reloading from inside the process starts at the top;
 - the back-to-top control remains an immediate native escape.
 
 This is useful Chromium browser-integration coverage, but it is not an iPhone.
 The macOS iOS Simulator runs Mobile Safari/WebKit and is the required behavioral
-check for root scrolling, snap behavior and toolbar changes. It still uses the
+check for root scrolling, sticky behavior and toolbar changes. It still uses the
 Mac's CPU, GPU, memory and network, so final decode-speed and memory-pressure
 confidence needs a physical iPhone or cloud real-device pass.
 
@@ -106,8 +115,8 @@ pnpm dev            # http://localhost:3006
 
 Check the funnel end to end on desktop and a phone viewport, the lead dialog, a
 submission landing on `/thank-you`, and the RTL layout. For the process motion,
-also test a hard flick, rapid repeated flicks during playback, reverse movement,
-outward exit from both end stations, multi-touch, pinch zoom, toolbar
-expansion/collapse, orientation change and background/foreground in the iOS
-Simulator. A physical iPhone or real-device service remains the final
-performance check.
+also test slow and hard flicks in both directions, stopping between step
+boundaries, two- and three-finger movement, pinch zoom, toolbar
+expansion/collapse, rotation, refresh from the middle, a cold cache, a failed
+video request and background/foreground in the iOS Simulator. A physical
+iPhone or real-device service remains the final performance check.

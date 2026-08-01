@@ -1,19 +1,15 @@
 import { expect, test, type Page } from "@playwright/test";
-import { createServer, type Server } from "node:http";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
 
-const FRAME = readFileSync(
-  resolve(process.cwd(), "public/images/poster-hero.jpg")
-);
+const PROCESS_MEDIA_PATH = "/motion/pearl/";
+const PROCESS_VIDEO_GLOB = "**/motion/pearl/process-*.mp4";
 
-let server: Server;
-let failIntermediateFrames = false;
-let requestedFrames: string[] = [];
+let failVideo = false;
+let videoDelayMs = 0;
+let requestedMedia: string[] = [];
 
 test.skip(
   process.env.PLAYWRIGHT_PROCESS_MOTION !== "1",
-  "Run through pnpm test:motion so the isolated media origin is compiled in."
+  "Run through pnpm test:motion."
 );
 
 test.use({
@@ -23,548 +19,757 @@ test.use({
   deviceScaleFactor: 3,
 });
 
-test.beforeAll(async () => {
-  server = createServer((request, response) => {
-    const path = new URL(request.url ?? "/", "http://localhost:3199").pathname;
-    if (!path.startsWith("/motion/pearl/")) {
-      response.writeHead(404).end();
-      return;
-    }
-    requestedFrames.push(path);
+test.beforeEach(async ({ page }) => {
+  failVideo = false;
+  videoDelayMs = 0;
+  requestedMedia = [];
 
-    const isProbe =
-      path.endsWith("/f_001.webp") || path.endsWith("/f_180.webp");
-    if (failIntermediateFrames && !isProbe) {
-      response.writeHead(404).end();
-      return;
-    }
-
-    response.writeHead(200, {
-      "Content-Type": "image/jpeg",
-      "Cache-Control": "no-store",
-      "Content-Length": FRAME.byteLength,
-    });
-    response.end(FRAME);
+  page.on("request", (request) => {
+    const path = new URL(request.url()).pathname;
+    if (path.startsWith(PROCESS_MEDIA_PATH)) requestedMedia.push(path);
   });
 
-  await new Promise<void>((resolveListen, reject) => {
-    server.once("error", reject);
-    server.listen(3199, "localhost", () => resolveListen());
+  await page.route(PROCESS_VIDEO_GLOB, async (route) => {
+    if (videoDelayMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, videoDelayMs));
+    }
+    if (failVideo) {
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
   });
 });
 
-test.afterAll(async () => {
-  await new Promise<void>((resolveClose, reject) => {
-    server.close((error) => (error ? reject(error) : resolveClose()));
-  });
-});
-
-async function stationOf(track: ReturnType<Page["locator"]>) {
+async function trackTop(track: ReturnType<Page["locator"]>) {
   return track.evaluate((element) => {
-    const rect = element.getBoundingClientRect();
-    const end = Math.max(1, rect.height - window.innerHeight);
-    const progress = Math.min(1, Math.max(0, -rect.top / end));
-    return Math.round(progress * 3) + 1;
-  });
-}
-
-async function openAtProcess(page: Page) {
-  await page.goto("/");
-  const track = page.locator("[data-process-track]");
-  await expect(track).toHaveCount(1);
-
-  const top = await track.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return window.scrollY + rect.top;
   });
-  await page.evaluate((trackTop) => {
-    window.scrollTo({ top: trackTop, behavior: "instant" });
-  }, top);
-
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-scrub-pinned",
-    ""
-  );
-  await expect.poll(() => stationOf(track)).toBe(1);
-  // Arrival spends the gesture that reached the section.
-  await page.waitForTimeout(650);
-  return track;
 }
 
-async function approachProcess(page: Page, distance = 240) {
-  await page.goto("/");
+async function goToProgress(
+  page: Page,
+  track: ReturnType<Page["locator"]>,
+  progress: number,
+  options: { holdTouch?: boolean } = {}
+) {
+  /*
+   * Keep synthetic positioning deterministic by default. Tests that exercise
+   * the real settle explicitly release this touch after choosing a midpoint.
+   */
+  if (options.holdTouch ?? true) {
+    await page.evaluate(() =>
+      window.dispatchEvent(new Event("touchstart"))
+    );
+  }
+  const geometry = await track.evaluate((element) => {
+    const stage = element.querySelector<HTMLElement>(
+      ".process-scrub__stage"
+    );
+    const rect = element.getBoundingClientRect();
+    return {
+      top: window.scrollY + rect.top,
+      travel: Math.max(1, rect.height - (stage?.getBoundingClientRect().height ?? window.innerHeight)),
+    };
+  });
+  await page.evaluate(
+    ({ top, travel, value }) => {
+      window.scrollTo({
+        top: top + travel * value,
+        behavior: "instant",
+      });
+    },
+    { ...geometry, value: progress }
+  );
+  await expect
+    .poll(() =>
+      track
+        .getAttribute("data-process-progress")
+        .then((value) => Number.parseFloat(value ?? "0"))
+    )
+    .toBeCloseTo(progress, 2);
+}
+
+async function releaseTouch(page: Page) {
+  await page.evaluate(() => {
+    const event = new Event("touchend");
+    Object.defineProperty(event, "touches", { value: { length: 0 } });
+    window.dispatchEvent(event);
+  });
+}
+
+async function beginTouch(page: Page, touches = 1) {
+  await page.evaluate((touchCount) => {
+    const event = new Event("touchstart");
+    Object.defineProperty(event, "touches", {
+      value: { length: touchCount },
+    });
+    window.dispatchEvent(event);
+  }, touches);
+}
+
+async function endTouch(page: Page, touches = 0) {
+  await page.evaluate((touchCount) => {
+    const event = new Event("touchend");
+    Object.defineProperty(event, "touches", {
+      value: { length: touchCount },
+    });
+    window.dispatchEvent(event);
+  }, touches);
+}
+
+async function heldTouchScroll(page: Page, distance: number) {
+  await beginTouch(page);
+  // Holding before one continuous move exercises the slow-drag path without
+  // manufacturing several programmatic scrollend events.
+  await page.waitForTimeout(180);
+  await page.evaluate(
+    (amount) =>
+      window.scrollBy({ top: amount, behavior: "instant" }),
+    distance
+  );
+  await page.waitForTimeout(45);
+  await endTouch(page);
+}
+
+async function expectProcessStep(
+  track: ReturnType<Page["locator"]>,
+  step: number
+) {
+  await expect(track).toHaveAttribute(
+    "data-process-active-step",
+    String(step)
+  );
+  await expect
+    .poll(() =>
+      track
+        .getAttribute("data-process-progress")
+        .then((value) => Number.parseFloat(value ?? "0"))
+    )
+    .toBeCloseTo((step - 1) / 3, 2);
+  await expect(track).not.toHaveAttribute("data-process-settling");
+}
+
+async function copyRailState(track: ReturnType<Page["locator"]>) {
+  return track.evaluate((element) => {
+    const panel = element.querySelector<HTMLElement>(".scrub-copy");
+    const rail = element.querySelector<HTMLElement>(".scrub-copy__rail");
+    const panelRect = panel?.getBoundingClientRect();
+    const railRect = rail?.getBoundingClientRect();
+    return {
+      panel: panelRect
+        ? {
+            left: panelRect.left,
+            right: panelRect.right,
+            innerLeft: panelRect.left + panel!.clientLeft,
+            top: panelRect.top,
+            bottom: panelRect.bottom,
+            background: getComputedStyle(panel!).backgroundColor,
+            color: getComputedStyle(panel!).color,
+            backdrop: getComputedStyle(panel!).backdropFilter,
+            height: panelRect.height,
+            opacity: Number.parseFloat(getComputedStyle(panel!).opacity),
+          }
+        : null,
+      rail: railRect
+        ? {
+            left: railRect.left,
+            width: railRect.width,
+            transform: getComputedStyle(rail!).transform,
+          }
+        : null,
+      slides: [
+        ...element.querySelectorAll<HTMLElement>(".scrub-copy__slide"),
+      ].map((slide) => {
+        const rect = slide.getBoundingClientRect();
+        const style = getComputedStyle(slide);
+        return {
+          left: rect.left,
+          right: rect.right,
+          background: style.backgroundColor,
+          opacity: Number.parseFloat(style.opacity),
+          intersectsPanel:
+            !!panelRect &&
+            rect.right > panelRect.left &&
+            rect.left < panelRect.right &&
+            rect.bottom > panelRect.top &&
+            rect.top < panelRect.bottom,
+        };
+      }),
+    };
+  });
+}
+
+async function neighboringRevealOpacity(
+  track: ReturnType<Page["locator"]>,
+  side: "before" | "after"
+) {
+  return track.evaluate((element, neighboringSide) => {
+    const process = element.closest("#process");
+    const section =
+      neighboringSide === "before"
+        ? process?.previousElementSibling
+        : process?.nextElementSibling;
+    const reveal = section?.querySelector<HTMLElement>("[data-reveal]");
+    return reveal ? Number.parseFloat(getComputedStyle(reveal).opacity) : -1;
+  }, side);
+}
+
+test("final phone geometry, poster and step one exist before video succeeds", async ({
+  page,
+}) => {
+  videoDelayMs = 2_000;
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+
   const track = page.locator("[data-process-track]");
   await expect(track).toHaveCount(1);
+  await expect(track).toHaveAttribute("data-process-active-step", "1");
 
-  const top = await track.evaluate((element) => {
+  const firstHeight = await track.evaluate(
+    (element) => (element as HTMLElement).offsetHeight
+  );
+  expect(firstHeight).toBeGreaterThanOrEqual(3_000);
+  const firstAudienceTop = await page.locator("#audience").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return window.scrollY + rect.top;
+  });
+
+  const poster = track.locator(".process-scrub__poster");
+  await expect
+    .poll(() =>
+      poster.evaluate((element) => getComputedStyle(element).backgroundImage)
+    )
+    .toContain("process-mobile-poster.webp");
+
+  const copy = await copyRailState(track);
+  expect(copy.panel?.opacity).toBe(1);
+  expect(copy.panel?.background).toBe("rgba(28, 20, 17, 0.68)");
+  expect(copy.panel?.color).toBe("rgb(255, 248, 245)");
+  expect(copy.panel?.backdrop).toBe("none");
+  expect(copy.slides[0].intersectsPanel).toBe(true);
+  expect(copy.slides.every((slide) => slide.background === "rgba(0, 0, 0, 0)")).toBe(
+    true
+  );
+
+  await page.waitForTimeout(700);
+  expect(
+    await track.evaluate((element) => (element as HTMLElement).offsetHeight)
+  ).toBe(firstHeight);
+  expect(
+    await page.locator("#audience").evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return window.scrollY + rect.top;
+    })
+  ).toBeCloseTo(firstAudienceTop, 0);
+});
+
+test("one translucent panel carries a real scroll-linked horizontal text rail", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+
+  await goToProgress(page, track, 1 / 6, { holdTouch: true });
+  const halfway = await copyRailState(track);
+  expect(halfway.panel?.opacity).toBe(1);
+  expect(halfway.rail?.transform).not.toBe("none");
+  expect(halfway.slides[0].intersectsPanel).toBe(true);
+  expect(halfway.slides[1].intersectsPanel).toBe(true);
+  expect(halfway.slides.every((slide) => slide.opacity === 1)).toBe(true);
+
+  await goToProgress(page, track, 1 / 3);
+  await expect(track).toHaveAttribute("data-process-active-step", "2");
+  const settled = await copyRailState(track);
+  expect(settled.slides[1].intersectsPanel).toBe(true);
+  expect(settled.slides[1].left).toBeCloseTo(
+    settled.panel?.innerLeft ?? 0,
+    0
+  );
+  expect(settled.slides[1].opacity).toBe(1);
+  await releaseTouch(page);
+});
+
+test("phone visual copy is concise while the complete story remains available", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  const copy = await track.evaluate((element) => {
+    const steps = [
+      ...element.querySelectorAll<HTMLElement>("[data-process-copy-step]"),
+    ];
+    const display = (selector: string, step: number) =>
+      getComputedStyle(
+        steps[step - 1].querySelector<HTMLElement>(selector)!
+      ).display;
+    return {
+      panelHeight: element
+        .querySelector<HTMLElement>("[data-process-copy-panel]")!
+        .getBoundingClientRect().height,
+      stepTwoTitle:
+        steps[1].querySelector<HTMLElement>(
+          "[data-process-copy-title]"
+        )!.innerText,
+      stepTwoSecondLine: display(
+        '[data-process-copy-line="2"]',
+        2
+      ),
+      stepThreeFourthLine: display(
+        '[data-process-copy-line="4"]',
+        3
+      ),
+      stepFourSecondLine: display(
+        '[data-process-copy-line="2"]',
+        4
+      ),
+      endpoint: display("[data-process-copy-endpoint]", 4),
+      semanticSteps:
+        element.querySelectorAll(":scope > .sr-only li").length,
+    };
+  });
+
+  expect(copy.panelHeight).toBeLessThan(300);
+  expect(copy.stepTwoTitle).toBe("אנחנו מבינות יחד איפה את היום");
+  expect(copy.stepTwoSecondLine).toBe("none");
+  expect(copy.stepThreeFourthLine).toBe("none");
+  expect(copy.stepFourSecondLine).toBe("none");
+  expect(copy.endpoint).toBe("none");
+  expect(copy.semanticSteps).toBe(4);
+});
+
+test("a released phone scroll settles to the closest step and replaces an interrupted target", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+
+  // Position 1.38 is closer to step 2 than step 3.
+  await goToProgress(page, track, 0.46, { holdTouch: true });
+  await releaseTouch(page);
+  await expect
+    .poll(() =>
+      track
+        .getAttribute("data-process-progress")
+        .then((value) => Number.parseFloat(value ?? "0"))
+    )
+    .toBeCloseTo(1 / 3, 2);
+  await expect(track).toHaveAttribute("data-process-active-step", "2");
+  await expect(track).not.toHaveAttribute("data-process-settling");
+
+  // Position 1.62 is closer to step 3, so settling initially aims there.
+  await goToProgress(page, track, 0.54, { holdTouch: true });
+  await releaseTouch(page);
+  await expect(track).toHaveAttribute("data-process-settling", "3");
+
+  // A fresh touch replaces that target; no stale step-3 move may run later.
+  await goToProgress(page, track, 0.46, { holdTouch: true });
+  await releaseTouch(page);
+  await expect
+    .poll(() =>
+      track
+        .getAttribute("data-process-progress")
+        .then((value) => Number.parseFloat(value ?? "0"))
+    )
+    .toBeCloseTo(1 / 3, 2);
+  await page.waitForTimeout(500);
+  await expect(track).toHaveAttribute("data-process-active-step", "2");
+  await expect(track).not.toHaveAttribute("data-process-settling");
+});
+
+test("slow short phone drags advance one step forward and backward", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await expect(track).toHaveAttribute("data-process-controller", "ready");
+
+  await goToProgress(page, track, 0, { holdTouch: true });
+  await releaseTouch(page);
+  await expectProcessStep(track, 1);
+
+  // 72px is well below half of the ~585px station distance on this phone.
+  await heldTouchScroll(page, 72);
+  await expectProcessStep(track, 2);
+  await heldTouchScroll(page, 72);
+  await expectProcessStep(track, 3);
+  await heldTouchScroll(page, 72);
+  await expectProcessStep(track, 4);
+
+  await heldTouchScroll(page, -72);
+  await expectProcessStep(track, 3);
+
+  // A tiny accidental movement still returns to the current station.
+  await heldTouchScroll(page, 20);
+  await expectProcessStep(track, 3);
+});
+
+test("one touch gesture cannot skip stations and endpoint gestures still exit", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await expect(track).toHaveAttribute("data-process-controller", "ready");
+
+  await goToProgress(page, track, 0, { holdTouch: true });
+  await releaseTouch(page);
+  await expectProcessStep(track, 1);
+
+  // Simulate a large momentum result plus a second finger: it is still one
+  // gesture, so it may request only the adjacent station.
+  await beginTouch(page);
+  await beginTouch(page, 2);
+  await page.evaluate(() =>
+    window.scrollBy({ top: 1_400, behavior: "instant" })
+  );
+  await endTouch(page, 1);
+  await page.waitForTimeout(60);
+  await endTouch(page);
+  await expectProcessStep(track, 2);
+
+  await goToProgress(page, track, 1, { holdTouch: true });
+  await releaseTouch(page);
+  await expectProcessStep(track, 4);
+  const finalStationY = await page.evaluate(() => window.scrollY);
+
+  // Only a gesture that starts on the final station may leave downward.
+  await heldTouchScroll(page, 120);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(finalStationY + 80);
+  await expect(track).not.toHaveAttribute("data-process-settling");
+  await expect(page.locator("#audience")).toBeInViewport();
+});
+
+test("desktop keeps full copy on the physical right and does not auto-settle", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await goToProgress(page, track, 0.46, { holdTouch: false });
+  await page.waitForTimeout(500);
+
+  const state = await track.evaluate((element) => {
+    const panel = element.querySelector<HTMLElement>(
+      "[data-process-copy-panel]"
+    )!;
+    const stepTwo = element.querySelector<HTMLElement>(
+      '[data-process-copy-step="2"]'
+    )!;
+    return {
+      panel: panel.getBoundingClientRect().toJSON(),
+      viewportWidth: window.innerWidth,
+      progress: Number.parseFloat(
+        element.getAttribute("data-process-progress") ?? "0"
+      ),
+      settling: element.hasAttribute("data-process-settling"),
+      title: stepTwo.querySelector<HTMLElement>(
+        "[data-process-copy-title]"
+      )!.innerText,
+      secondLine: getComputedStyle(
+        stepTwo.querySelector<HTMLElement>(
+          '[data-process-copy-line="2"]'
+        )!
+      ).display,
+      endpoint: getComputedStyle(
+        element.querySelector<HTMLElement>(
+          "[data-process-copy-endpoint]"
+        )!
+      ).display,
+    };
+  });
+
+  expect(state.panel.left).toBeGreaterThan(state.viewportWidth / 2);
+  expect(state.panel.right).toBeLessThanOrEqual(state.viewportWidth);
+  expect(state.progress).toBeCloseTo(0.46, 2);
+  expect(state.settling).toBe(false);
+  expect(state.title).toBe(
+    "אנחנו מבינות יחד איפה את נמצאת היום"
+  );
+  expect(state.secondLine).toBe("block");
+  expect(state.endpoint).toBe("block");
+});
+
+test("one hard phone-sized native gesture cannot cross the whole process", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  const top = await trackTop(track);
+  const height = await track.evaluate(
+    (element) => (element as HTMLElement).offsetHeight
+  );
+
+  await page.evaluate(
+    (value) => window.scrollTo({ top: value, behavior: "instant" }),
+    top
+  );
+  await page.evaluate(() =>
+    window.scrollBy({ top: 2_200, behavior: "instant" })
+  );
+
+  const scrollY = await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeGreaterThan(top + 1_000)
+    .then(() => page.evaluate(() => window.scrollY));
+  expect(scrollY).toBeLessThanOrEqual(top + height - 844 + 1);
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-process-scroll-locked",
+    ""
+  );
+  expect(
+    await page.locator("body").evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { overflow: style.overflow, position: style.position };
+    })
+  ).toEqual({ overflow: "visible", position: "static" });
+  expect(
+    (await copyRailState(track)).slides.some(
+      (slide) => slide.intersectsPanel && slide.opacity === 1
+    )
+  ).toBe(true);
+});
+
+test("failed video leaves poster, step four and following navigation usable", async ({
+  page,
+}) => {
+  failVideo = true;
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await goToProgress(page, track, 1);
+
+  await expect(track).toHaveAttribute("data-process-active-step", "4");
+  await expect(track).toHaveAttribute("data-process-media-failed", "true");
+  const finalCopy = await copyRailState(track);
+  expect(finalCopy.slides[3].intersectsPanel).toBe(true);
+  expect(finalCopy.slides[3].opacity).toBe(1);
+  expect(
+    await track
+      .locator(".process-scrub__poster")
+      .evaluate((element) => getComputedStyle(element).backgroundImage)
+  ).toContain("process-mobile-poster.webp");
+
+  const audienceTop = await page.locator("#audience").evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return window.scrollY + rect.top;
   });
   await page.evaluate(
-    ({ trackTop, before }) => {
-      window.scrollTo({
-        top: Math.max(0, trackTop - before),
-        behavior: "instant",
-      });
-    },
-    { trackTop: top, before: distance }
+    (top) => window.scrollTo({ top: top + 100, behavior: "instant" }),
+    audienceTop
   );
-  await expect(page.locator("html")).not.toHaveAttribute(
-    "data-scrub-pinned",
-    ""
-  );
-  return track;
-}
-
-async function trustedVerticalGesture(
-  page: Page,
-  direction: "down" | "up"
-) {
-  const session = await page.context().newCDPSession(page);
-  const height = page.viewportSize()?.height ?? 844;
-  const startY =
-    direction === "down"
-      ? Math.min(650, height - 70)
-      : Math.max(90, height * 0.15);
-  const endY =
-    direction === "down"
-      ? Math.max(70, startY - 560)
-      : Math.min(height - 70, startY + 560);
-
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: [{ x: 195, y: startY, id: 1, force: 1 }],
-  });
-  for (let index = 1; index <= 7; index++) {
-    const progress = index / 7;
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [
-        {
-          x: 195,
-          y: startY + (endY - startY) * progress,
-          id: 1,
-          force: 1,
-        },
-      ],
-    });
-    await page.waitForTimeout(25);
-  }
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await session.detach();
-}
-
-async function trustedMultiFingerGesture(page: Page, fingers: 2 | 3) {
-  const session = await page.context().newCDPSession(page);
-  const points = Array.from({ length: fingers }, (_, index) => ({
-    x: 165 + index * 30,
-    y: 650,
-    id: index + 11,
-    force: 1,
-  }));
-
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchStart",
-    touchPoints: points,
-  });
-  for (let step = 1; step <= 5; step++) {
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: points.map((point) => ({
-        ...point,
-        y: 650 - step * 100,
-      })),
-    });
-    await page.waitForTimeout(25);
-  }
-  await session.send("Input.dispatchTouchEvent", {
-    type: "touchEnd",
-    touchPoints: [],
-  });
-  await session.detach();
-}
-
-async function trustedVerticalBurst(page: Page, count: number) {
-  const session = await page.context().newCDPSession(page);
-  for (let gesture = 0; gesture < count; gesture++) {
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchStart",
-      touchPoints: [{ x: 195, y: 650, id: gesture + 30, force: 1 }],
-    });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchMove",
-      touchPoints: [{ x: 195, y: 90, id: gesture + 30, force: 1 }],
-    });
-    await session.send("Input.dispatchTouchEvent", {
-      type: "touchEnd",
-      touchPoints: [],
-    });
-  }
-  await session.detach();
-}
-
-async function syntheticGestureWithoutEnd(page: Page) {
-  const stage = page.locator(".process-scrub__stage");
-  await stage.evaluate((element) => {
-    const touchAt = (identifier: number, clientY: number) =>
-      new Touch({
-        identifier,
-        target: element,
-        clientX: 195,
-        clientY,
-        pageX: 195,
-        pageY: clientY + window.scrollY,
-        screenX: 195,
-        screenY: clientY,
-      });
-    const start = touchAt(91, 650);
-    element.dispatchEvent(
-      new TouchEvent("touchstart", {
-        bubbles: true,
-        cancelable: true,
-        touches: [start],
-        targetTouches: [start],
-        changedTouches: [start],
-      })
-    );
-    const moved = touchAt(91, 80);
-    element.dispatchEvent(
-      new TouchEvent("touchmove", {
-        bubbles: true,
-        cancelable: true,
-        touches: [moved],
-        targetTouches: [moved],
-        changedTouches: [moved],
-      })
-    );
-    // Deliberately no touchend or touchcancel.
-  });
-}
-
-async function expectMobileIdle(
-  track: ReturnType<Page["locator"]>,
-  station: 1 | 2 | 3 | 4,
-  timeout = 4_000
-) {
-  await expect.poll(() => stationOf(track), { timeout }).toBe(station);
-  await expect(track).toHaveAttribute(
-    "data-process-navigation-phase",
-    "idle",
-    { timeout }
-  );
-  await expect(track).toHaveAttribute(
-    "data-process-playback-settled",
-    "true",
-    { timeout }
-  );
-}
-
-async function moveOneStation(
-  page: Page,
-  track: ReturnType<Page["locator"]>,
-  direction: "down" | "up",
-  station: 1 | 2 | 3 | 4
-) {
-  await trustedVerticalGesture(page, direction);
-  await expect.poll(() => stationOf(track)).toBe(station);
-  await expectMobileIdle(track, station);
-}
-
-test.beforeEach(() => {
-  failIntermediateFrames = false;
-  requestedFrames = [];
+  await expect(page.locator("#audience")).toBeInViewport();
 });
 
-test("sequence detail remains deferred until the process approaches", async ({
+test("the phone process uses one video asset instead of a WebP frame burst", async ({
   page,
 }) => {
   await page.goto("/");
   const track = page.locator("[data-process-track]");
-  await expect(track).toHaveCount(1);
-  await expect.poll(() => requestedFrames.length).toBeGreaterThanOrEqual(2);
-  await page.waitForTimeout(300);
+  await goToProgress(page, track, 0.05);
 
-  const intermediateRequests = () =>
-    requestedFrames.filter(
-      (path) => !path.endsWith("/f_001.webp") && !path.endsWith("/f_180.webp")
-    );
-  expect(intermediateRequests()).toEqual([]);
-
-  await track.evaluate((element) =>
-    element.scrollIntoView({ block: "start", behavior: "instant" })
-  );
-  await expect.poll(() => intermediateRequests().length).toBeGreaterThan(0);
-});
-
-test("a hard entry gesture cannot cross the process before step one", async ({
-  page,
-}) => {
-  const track = await approachProcess(page);
-  const before = await page.evaluate(() => window.scrollY);
-
-  // One trusted, high-travel wheel event models the iOS Simulator trackpad
-  // gesture that used to begin in the founder section and finish below the
-  // entire 300vh process track before its pinned-only controller ever ran.
-  await page.mouse.move(195, 650);
-  await page.mouse.wheel(0, 5_000);
-
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-scrub-pinned",
-    ""
-  );
-  await expect.poll(() => stationOf(track)).toBe(1);
   await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeLessThan(before + 1_000);
-});
-
-test("a phone flick entering from above lands on step one", async ({ page }) => {
-  const track = await approachProcess(page);
-
-  await trustedVerticalGesture(page, "down");
-
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-scrub-pinned",
-    ""
-  );
-  await expectMobileIdle(track, 1);
-});
-
-test("iOS Simulator wheel input is discarded while an act is playing", async ({
-  page,
-}) => {
-  const track = await openAtProcess(page);
-
-  await page.mouse.move(195, 650);
-  await page.mouse.wheel(0, 120);
-  await expect.poll(() => stationOf(track)).toBe(2);
-  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
-
-  // This arrives after the previous cooldown-based implementation would have
-  // reopened, but before the visible 2.4-second act is finished.
-  await page.waitForTimeout(700);
-  await page.mouse.wheel(0, 120);
-  expect(await stationOf(track)).toBe(2);
-
-  await expectMobileIdle(track, 2);
-  await page.waitForTimeout(250);
-  expect(await stationOf(track)).toBe(2);
-
-  // No input was queued. Only this fresh post-settlement gesture may advance.
-  await page.mouse.wheel(0, 120);
-  await expect.poll(() => stationOf(track)).toBe(3);
-});
-
-test("a missing touchend cannot poison the next native gesture", async ({
-  page,
-}) => {
-  const track = await openAtProcess(page);
-
-  await syntheticGestureWithoutEnd(page);
-  await expectMobileIdle(track, 2);
-
-  // WebKit occasionally loses the end of a lifecycle across interruption. A
-  // new touchstart must reset that stale per-gesture state before navigating.
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(3);
-});
-
-test("the restored sticky track stays attached to the native document", async ({
-  page,
-}) => {
-  const track = await openAtProcess(page);
-  const canvas = track.locator("canvas");
-
-  expect(
-    await canvas.evaluate(
-      (element) => getComputedStyle(element.parentElement!).position
+    .poll(
+      () =>
+        new Set(
+          requestedMedia.filter((path) =>
+            path.endsWith("process-mobile.mp4")
+          )
+        ).size
     )
-  ).toBe("sticky");
-  expect(
-    await page.locator("body").evaluate((element) => {
-      const style = getComputedStyle(element);
-      return { position: style.position, overflow: style.overflow };
-    })
-  ).toEqual({ position: "static", overflow: "visible" });
-  expect(
-    await page.locator("html").evaluate((element) => element.hasAttribute(
-      "data-process-scroll-locked"
-    ))
-  ).toBe(false);
-
-  // Parallel two- and three-finger vertical drags are not pinch zoom and may
-  // not buy a process station.
-  await trustedMultiFingerGesture(page, 2);
-  await trustedMultiFingerGesture(page, 3);
-  expect(await stationOf(track)).toBe(1);
-
-  await trustedVerticalGesture(page, "down");
-  await page.waitForTimeout(100);
-  expect(await stationOf(track)).toBe(2);
-  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
-
-  // Three more complete flicks happen immediately, then another after the old
-  // cooldown has elapsed but while the visible act is still playing. None may
-  // carry the root scroller through a later process station.
-  await trustedVerticalBurst(page, 3);
-  await page.waitForTimeout(700);
-  await trustedVerticalGesture(page, "down");
-  expect(await stationOf(track)).toBe(2);
-
-  await expectMobileIdle(track, 2);
-  // Refused input is discarded, never queued to run when the act settles.
-  await page.waitForTimeout(250);
-  expect(await stationOf(track)).toBe(2);
-  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(3);
-});
-
-test("fresh gestures traverse every step, reverse one step, and exit only after step four", async ({
-  page,
-}) => {
-  test.setTimeout(45_000);
-  const track = await openAtProcess(page);
-
-  await moveOneStation(page, track, "down", 2);
-  await moveOneStation(page, track, "down", 3);
-  await moveOneStation(page, track, "up", 2);
-  await moveOneStation(page, track, "down", 3);
-
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(4);
-  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
-
-  // An outward flick during the last act is consumed. It must not be remembered
-  // and replayed when the act reaches its endpoint.
-  await trustedVerticalGesture(page, "down");
-  await expectMobileIdle(track, 4);
-  await page.waitForTimeout(250);
-  expect(await stationOf(track)).toBe(4);
-  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
-
-  const beforeExit = await page.evaluate(() => window.scrollY);
-  await trustedVerticalGesture(page, "down");
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeGreaterThan(beforeExit + 100);
-  await expect(page.locator("html")).not.toHaveAttribute(
-    "data-scrub-pinned",
-    ""
+    .toBe(1);
+  expect(requestedMedia.some((path) => /\/f_\d+\.webp$/.test(path))).toBe(
+    false
   );
+  // A video element may issue a few byte-range requests while seeking; they
+  // all target the same asset and are not a frame-file burst.
+  expect(
+    requestedMedia.filter((path) => path.endsWith(".mp4")).length
+  ).toBeLessThanOrEqual(6);
 });
 
-test("four-frame-per-second playback still finishes in wall-clock time", async ({
+test("the in-site reduced-motion choice shows all cards and requests no process media", async ({
   page,
 }) => {
   await page.addInitScript(() => {
-    let nextId = 1;
-    const timers = new Map<number, number>();
-    window.requestAnimationFrame = (callback: FrameRequestCallback) => {
-      const id = nextId++;
-      const timer = window.setTimeout(() => {
-        timers.delete(id);
-        callback(performance.now());
-      }, 250);
-      timers.set(id, timer);
-      return id;
-    };
-    window.cancelAnimationFrame = (id: number) => {
-      const timer = timers.get(id);
-      if (timer !== undefined) window.clearTimeout(timer);
-      timers.delete(id);
-    };
+    window.localStorage.setItem(
+      "penina-accessibility",
+      JSON.stringify({
+        version: 1,
+        preferences: {
+          textScale: 100,
+          enhancedContrast: false,
+          comfortableSpacing: false,
+          reduceMotion: true,
+          emphasizeLinks: false,
+        },
+      })
+    );
   });
 
-  const track = await openAtProcess(page);
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(2);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  const experience = page.locator(".process-experience");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-a11y-reduce-motion",
+    "true"
+  );
+  expect(
+    await experience
+      .locator(".process-experience__motion")
+      .evaluate((element) => getComputedStyle(element).display)
+  ).toBe("none");
+  expect(
+    await experience
+      .locator(".process-experience__static")
+      .evaluate((element) => getComputedStyle(element).display)
+  ).toBe("block");
+  await expect(
+    experience.locator(".process-experience__static article")
+  ).toHaveCount(4);
   await page.waitForTimeout(300);
-  await expect(track).toHaveAttribute("data-process-playback-settled", "false");
-  await trustedVerticalGesture(page, "down");
-  expect(await stationOf(track)).toBe(2);
-
-  // One act is 1/3 progress at 0.14 progress/second, or about 2.4 seconds.
-  // The former 100ms cap only reached ~0.18 after 3.4 seconds at this frame
-  // rate; the wall-clock implementation reaches the station.
-  await expect
-    .poll(
-      () =>
-        track.evaluate((element) =>
-          Number.parseFloat(element.dataset.processPlayhead ?? "0")
-        ),
-      { timeout: 3_400 }
-    )
-    .toBeGreaterThan(0.32);
+  expect(requestedMedia).toEqual([]);
 });
 
-test("failed intermediate pictures cannot freeze page navigation", async ({
+test("Save-Data exposes static cards before paint and requests no process media", async ({
   page,
 }) => {
-  test.setTimeout(45_000);
-  failIntermediateFrames = true;
-  const track = await openAtProcess(page);
-  await moveOneStation(page, track, "down", 2);
-  await moveOneStation(page, track, "down", 3);
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(4);
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "connection", {
+      configurable: true,
+      value: {
+        saveData: true,
+        addEventListener() {},
+        removeEventListener() {},
+      },
+    });
+  });
 
-  // The final outward gesture is also absorbed until step 4 has actually
-  // played. Failed image detail must neither release it early nor hold it after
-  // the wall-clock playhead reaches the prepared endpoint.
-  await page.waitForTimeout(100);
-  const beforeExit = await page.evaluate(() => window.scrollY);
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(4);
-  await expect(page.locator("html")).toHaveAttribute("data-scrub-pinned", "");
-
-  await expect
-    .poll(
-      () =>
-        track.evaluate((element) =>
-          Number.parseFloat(element.dataset.processPlayhead ?? "0")
-        ),
-      { timeout: 9_000 }
-    )
-    .toBeGreaterThan(0.999);
-  await expect(track).toHaveAttribute("data-process-playback-settled", "true");
-
-  await trustedVerticalGesture(page, "down");
-  await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeGreaterThan(beforeExit + 100);
-  await expect(page.locator("html")).not.toHaveAttribute(
-    "data-scrub-pinned",
-    ""
-  );
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("html")).toHaveAttribute("data-save-data", "true");
+  expect(
+    await page
+      .locator(".process-experience__motion")
+      .evaluate((element) => getComputedStyle(element).display)
+  ).toBe("none");
+  expect(
+    await page
+      .locator(".process-experience__static")
+      .evaluate((element) => getComputedStyle(element).display)
+  ).toBe("block");
+  await page.waitForTimeout(300);
+  expect(requestedMedia).toEqual([]);
 });
 
-test("a fresh upward gesture exits from step one", async ({ page }) => {
-  const track = await openAtProcess(page);
-  const beforeExit = await page.evaluate(() => window.scrollY);
+test("neighboring sections remain painted at both process boundaries", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
 
-  await trustedVerticalGesture(page, "up");
-
+  await goToProgress(page, track, 0.02);
   await expect
-    .poll(() => page.evaluate(() => window.scrollY))
-    .toBeLessThan(beforeExit - 100);
-  await expect(page.locator("html")).not.toHaveAttribute(
-    "data-scrub-pinned",
-    ""
+    .poll(() => neighboringRevealOpacity(track, "before"))
+    .toBe(1);
+
+  await goToProgress(page, track, 0.98);
+  await expect
+    .poll(() => neighboringRevealOpacity(track, "after"))
+    .toBe(1);
+
+  expect(
+    await page
+      .locator("[data-reveal]")
+      .evaluateAll((elements) =>
+        elements.every(
+          (element) => Number.parseFloat(getComputedStyle(element).opacity) === 1
+        )
+      )
+  ).toBe(true);
+
+  const boundaryPaint = await track.evaluate((element) => {
+    const process = element.closest("#process");
+    const before = process?.previousElementSibling;
+    const after = process?.nextElementSibling;
+    const beforeSurface =
+      before?.matches(".process-boundary-surface")
+        ? before
+        : before?.querySelector(".process-boundary-surface");
+    const afterSurface =
+      after?.matches(".process-boundary-surface")
+        ? after
+        : after?.querySelector(".process-boundary-surface");
+    const state = (surface: Element | null | undefined) => {
+      if (!surface) return null;
+      const style = getComputedStyle(surface);
+      return {
+        backgroundColor: style.backgroundColor,
+        backgroundImage: style.backgroundImage,
+        backgroundAttachment: style.backgroundAttachment,
+      };
+    };
+    const audienceCard = after?.querySelector<HTMLElement>(
+      ".process-boundary-card"
+    );
+    const founderGlow = before?.querySelector<HTMLElement>(
+      ".process-founder-glow"
+    );
+    return {
+      before: state(beforeSurface),
+      after: state(afterSurface),
+      audienceBackdrop: audienceCard
+        ? getComputedStyle(audienceCard).backdropFilter
+        : null,
+      founderFilter: founderGlow
+        ? getComputedStyle(founderGlow).filter
+        : null,
+      mobileBlobs: [
+        ...document.querySelectorAll<HTMLElement>(".site-bg__blob"),
+      ].map((blob) => getComputedStyle(blob).display),
+      ambientAnimation: getComputedStyle(
+        document.querySelector<HTMLElement>(".site-bg__inner")!
+      ).animationName,
+    };
+  });
+  expect(boundaryPaint.before?.backgroundColor).toBe(
+    "rgb(251, 247, 241)"
   );
-  await expect(track).toHaveAttribute(
-    "data-process-navigation-phase",
-    "outside"
+  expect(boundaryPaint.before?.backgroundImage).toContain(
+    "sand-light-portrait.webp"
   );
+  expect(boundaryPaint.before?.backgroundAttachment).toBe("scroll");
+  expect(boundaryPaint.after?.backgroundColor).toBe(
+    "rgb(251, 247, 241)"
+  );
+  expect(boundaryPaint.after?.backgroundImage).toContain(
+    "sand-light-portrait.webp"
+  );
+  expect(boundaryPaint.after?.backgroundAttachment).toBe("scroll");
+  expect(boundaryPaint.audienceBackdrop).toBe("none");
+  expect(boundaryPaint.founderFilter).toBe("none");
+  expect(boundaryPaint.mobileBlobs.every((display) => display === "none")).toBe(
+    true
+  );
+  expect(boundaryPaint.ambientAnimation).toContain("bg-drift-mobile");
+});
+
+test("a real reload starts at the top rather than restoring the process position", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await goToProgress(page, track, 0.7);
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(1_000);
+
+  await page.reload();
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY), { timeout: 5_000 })
+    .toBeLessThan(5);
 });
 
 test("back to top remains an immediate native escape", async ({ page }) => {
-  const track = await openAtProcess(page);
-  await trustedVerticalGesture(page, "down");
-  await expect.poll(() => stationOf(track)).toBe(2);
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await goToProgress(page, track, 0.6);
 
   await page.locator(".back-to-top-control").evaluate((button) => {
     (button as HTMLButtonElement).click();

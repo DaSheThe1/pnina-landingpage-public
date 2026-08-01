@@ -23,7 +23,7 @@ import { BackToTop, ScrollProgress } from "@/components/layout/scroll-utils";
 import { SiteBackground } from "@/components/layout/site-background";
 import { HoverLayer } from "@/components/motion/hover-layer";
 import { REVEAL_BOOT_SCRIPT } from "@/components/motion/reveal-boot-script";
-import { RevealGuard } from "@/components/motion/reveal-guard";
+import { PAGE_BOOT_SCRIPT } from "@/components/layout/page-boot-script";
 import { SandFloor } from "@/components/motion/sand-floor";
 import { EvalMotionScript } from "@/components/eval/eval-motion-script";
 import { EvalOverrides } from "@/components/eval/eval-overrides";
@@ -282,8 +282,8 @@ export default async function LocaleLayout({
       dir={dir}
       data-scroll-behavior="smooth"
       className={`${assistant.variable} ${bonaNova.variable} ${bellefair.variable} ${frankRuhl.variable} ${notoSerifHebrew.variable} ${davidLibre.variable} ${assistantDisplay.variable} h-full antialiased`}
-      // Two inline scripts below stamp attributes on this element before React
-      // hydrates: the accessibility boot script (`data-a11y-*`) and the eval
+      // Inline boot scripts below stamp attributes on this element before React
+      // hydrates: Save-Data, accessibility choices (`data-a11y-*`) and the eval
       // motion knob (`data-motion` / `data-accent`). Server HTML therefore
       // legitimately differs from the first client frame here.
       suppressHydrationWarning
@@ -296,22 +296,24 @@ export default async function LocaleLayout({
           the whole viewport, hero included, and put the sand back under a wash.
           The body's own background is set to `transparent` in globals.css. */}
       <body className="flex min-h-full flex-col text-foreground">
-        {/* TEMPORARY (2026-07 review round), and FIRST on purpose: the sticky
+        {/* First by necessity: reload restoration and Save-Data have to settle
+            before page content or media URLs are parsed. */}
+        <script dangerouslySetInnerHTML={{ __html: PAGE_BOOT_SCRIPT }} />
+        {/* TEMPORARY (2026-07 review round), and next on purpose: the sticky
             `?motion=force` knob has to resolve before the first paint, so this
             runs synchronously ahead of everything below it. For anyone who has
             never typed the parameter it reads two empty values and stops.
             src/components/eval/eval-motion-script.tsx. */}
         <EvalMotionScript />
         {/* Parser-blocking and next in the body: apply stored accessibility
-            preferences (or the OS motion seed) before the first paint, so a
+            preferences before the first paint, so a
             visitor who asked for larger text or less motion never sees one
             frame of the other rendering.
             src/components/accessibility/a11y-boot-script.ts. */}
         <script dangerouslySetInnerHTML={{ __html: A11Y_BOOT_SCRIPT }} />
-        {/* Also parser-blocking, and for the same reason: it decides whether the
-            scroll reveal is allowed to hide anything at all, and that decision
-            has to be made before the first paint or a reader watches a
-            paragraph she is already looking at blink out.
+        {/* Also parser-blocking: it selects the supported reveal engine before
+            the first paint. Reveals are transform-only, so content stays
+            readable even if either engine later fails.
             src/components/motion/reveal-boot-script.ts. */}
         <script dangerouslySetInnerHTML={{ __html: REVEAL_BOOT_SCRIPT }} />
         <NextIntlClientProvider messages={clientMessages}>
@@ -320,12 +322,6 @@ export default async function LocaleLayout({
               `usePrefersReducedMotion`, so it has to sit above them. */}
           <AccessibilityProvider>
             <SkipLink />
-            {/* The safety net under both reveal paths: it releases any section
-                that is still transparent long after its reveal should have
-                finished, so a browser whose timeline or observer quietly does
-                nothing shows the text instead of a blank strip.
-                src/components/motion/reveal-guard.tsx. */}
-            <RevealGuard />
             <SiteBackground />
             {/* The sand floor: a graded photograph fixed behind the whole site
                 for EVERY visitor, plus a WebGL layer that stirs it under the

@@ -17,7 +17,7 @@ type RevealProps = {
 };
 
 /**
- * Fade-and-rise as an element scrolls into view.
+ * A small rise as an element scrolls into view.
  *
  * ── IT FAILS OPEN, AND THAT IS THE POINT ──
  * This used to be the other way round: `globals.css` set `[data-reveal]
@@ -28,21 +28,11 @@ type RevealProps = {
  * simply never fires. The result was not "no animation" — it was a blank page
  * for a woman looking for help.
  *
- * So the CSS now hides NOTHING by default. The hidden state only exists while
- * this component has explicitly asked for it (`data-reveal-ready`) and has not
- * yet released it (`data-reveal-shown`). Server HTML, no-JS, dead-JS and
- * no-observer all render the content plainly visible.
- *
- * ── AND "FAILS OPEN" NOW MEANS "IS FORCED OPEN IF IT DOES NOT" (2026-07-31) ──
- * There was still one way to lose the text: arm an element, then have the thing
- * that was supposed to release it never do so. An IntersectionObserver that
- * exists but never delivers, a `view()` timeline that reports support and never
- * advances. Both left a paragraph blank forever on a Samsung phone, which is
- * what `RevealGuard` (src/components/motion/reveal-guard.tsx) now watches for:
- * anything still transparent well past the end of its own reveal range gets
- * `data-reveal-off`, and every reveal rule in globals.css excludes that
- * attribute. Nothing on this site may depend on an animation running in order
- * to be readable.
+ * CSS now hides NOTHING at any point. `data-reveal-ready` offsets a future
+ * element by 16px and `data-reveal-shown` returns it to its authored position,
+ * but opacity remains 1 throughout. A missing observer or timeline can
+ * therefore cost the movement only; it cannot cost a paragraph. Server HTML,
+ * no-JS, dead-JS and no-observer all remain plainly readable.
  *
  * ── WHY ABOVE-THE-FOLD CONTENT DOES NOT ANIMATE ──
  * Anything already inside the viewport when this mounts goes straight to
@@ -54,17 +44,16 @@ type RevealProps = {
  * calm rather than as a stutter.
  *
  * Reduced motion is handled twice over: globals.css forces every [data-reveal]
- * visible outright (for the device preference AND for the accessibility
- * panel's own switch), and `usePrefersReducedMotion` below stops this component
- * arming the element at all.
+ * visible outright for the accessibility panel's own switch, and
+ * `usePrefersReducedMotion` below stops this component arming the element at
+ * all. The device preference is deliberately not one of this site's inputs;
+ * see AGENTS.md rule 5.
  *
  * ── THE BROWSER DOES THIS BETTER, WHEN IT CAN ──
- * Where CSS scroll-driven animations exist, globals.css drives the same fade
- * off a `view()` timeline and this component does NOTHING but render its
- * children with the attribute: no observer, no state, no re-render on scroll,
- * and the reveal tracks the scroll linearly instead of firing a fixed-duration
- * transition once a threshold trips. It also then works with JavaScript
- * disabled. The observer below is the fallback for everything else.
+ * A `view()` timeline is only valid for a reveal that is explicitly allowed to
+ * repeat. A timeline is reversible by definition, so one-time reveals use the
+ * observer on every browser and the CSS path is reserved for an explicit
+ * `once={false}`.
  */
 
 /** Milliseconds → a shift of the scroll RANGE, which is what a stagger is on a
@@ -82,8 +71,9 @@ const RANGE_SHIFT_PER_STEP = 4; // percent
  *  the same attribute. Reading the attribute rather than re-running
  *  `CSS.supports` here is what makes it impossible for the two to disagree and
  *  end up either double-driving an element or driving it with neither. */
-function cssDrivesReveals() {
+function cssDrivesReveals(once: boolean) {
   return (
+    !once &&
     typeof document !== "undefined" &&
     document.documentElement.getAttribute("data-reveal-engine") === "css"
   );
@@ -101,25 +91,31 @@ export function Reveal({
   const shouldReduceMotion = usePrefersReducedMotion();
   // "open"    → no attributes, plainly visible. The server state, and the
   //             resting state for anything we decide not to animate.
-  // "pending" → armed and hidden, waiting to scroll into view.
-  // "shown"   → armed and revealed, with the transition.
+  // "pending" → armed and shifted slightly, waiting to scroll into view.
+  // "shown"   → returned to its authored position with the transition.
   const [state, setState] = useState<"open" | "pending" | "shown">("open");
 
   useEffect(() => {
     const node = ref.current;
     if (!node) return;
 
-    // Less motion asked for, by the device or by the accessibility panel:
-    // never arm. The element stays plainly visible and no observer is created.
+    // Less motion asked for in the accessibility panel: never arm. The element
+    // stays plainly visible and no observer is created.
     if (shouldReduceMotion) return;
 
-    // CSS is driving this element (see globals.css → MOTION SYSTEM §1). Leave
-    // it open: arming it here would hide it behind an observer AND animate it
-    // off the timeline at the same time.
-    if (cssDrivesReveals()) return;
+    // CSS may drive only an explicitly repeating reveal. The normal one-time
+    // path must reach `shown` and stay there when the visitor scrolls back.
+    if (cssDrivesReveals(once)) return;
 
     // No observer (very old browsers, some embedded webviews): leave it open.
     if (typeof IntersectionObserver === "undefined") return;
+    // The parser-blocking boot probe must have received an initial callback
+    // before we let an observer arm anything. A missing or delayed lifecycle
+    // fails open immediately.
+    if (
+      document.documentElement.getAttribute("data-reveal-observer") !== "ok"
+    )
+      return;
 
     // Already on screen? Never hide it — see the note above.
     const rect = node.getBoundingClientRect();
@@ -143,7 +139,11 @@ export function Reveal({
           }
         });
       },
-      { threshold: 0.15, rootMargin: "0px 0px -8% 0px" }
+      // Pre-arm in both directions. At the process endpoints the neighboring
+      // section sits just beyond the viewport, covered by the opaque stage;
+      // this margin lets its one-time transition finish before a fresh exit
+      // gesture can expose it.
+      { threshold: 0.01, rootMargin: "25% 0px" }
     );
 
     observer.observe(node);
@@ -164,6 +164,8 @@ export function Reveal({
     <Tag
       ref={ref}
       data-reveal=""
+      // Only this opt-in is allowed onto the reversible CSS view timeline.
+      data-reveal-repeat={once ? undefined : ""}
       // Presence, not value — the CSS selectors are attribute-existence checks.
       data-reveal-ready={
         shouldReduceMotion || state === "open" ? undefined : ""

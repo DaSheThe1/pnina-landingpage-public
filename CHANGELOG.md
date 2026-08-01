@@ -12,6 +12,76 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.16.2] - 2026-08-01
+
+### A normal held swipe changes one process step
+
+- Made phone step changes follow the direction of a deliberate touch gesture
+  instead of requiring the final scroll position to cross half of the next
+  station. A slow 42-64px document movement now works like a quick flick.
+- Limited one completed touch gesture, including a multi-finger gesture, to one
+  adjacent step. Tiny accidental movement still returns to the current step.
+- Kept ordinary page exits at both ends: an outward gesture that begins on step
+  1 or step 4 leaves the process without being pulled back.
+- Guarded the settling destination against stale browser completion events and
+  allowed a 3px endpoint tolerance for fractional mobile scroll geometry.
+
+## [0.16.1] - 2026-08-01
+
+### The pearl and each step can be seen together
+
+- Replaced the process copy's opaque paper block with one contrast-safe
+  translucent warm-black panel. The film remains visible through it without
+  adding backdrop blur or another expensive WebKit filter.
+- Tightened only the phone overlay: step 2 has a shorter heading and one fewer
+  sentence, steps 3 and 4 lose their redundant closing lines, and the complete
+  approved copy remains in the desktop, static and screen-reader versions.
+- Returned the desktop copy panel to the physical right, leaving the shell and
+  pearl visible on the left.
+- Added a gentle phone-only settle after native scrolling has completely
+  stopped. It chooses the closest step, is replaced by a fresh gesture and
+  never installs CSS scroll snap, locks the page or cancels touch input.
+- Restored the sand photograph behind the sections beside the process with a
+  local static paint surface. It keeps the finished site appearance without
+  making Safari rebuild the fixed, filtered background at either boundary.
+
+## [0.16.0] - 2026-08-01
+
+### The process is a stable native-scroll story
+
+- Rebuilt the pearl process around ordinary page scrolling. It no longer
+  cancels touch or wheel input, locks the page, snaps stations or waits for an
+  animation act before allowing the visitor to continue.
+- Put the final four-chapter shell and step 1 in the first page rendering. The
+  section no longer begins as a card grid and changes height several seconds
+  later after remote probes, so cold loads cannot move or hide the following
+  page. Phones use a fixed `400lvh` track with a 2,600px floor, so Safari's
+  collapsing toolbar cannot compress the four stations into an empty jump.
+- Kept step information on screen throughout the journey with one warm paper
+  panel. Its four-copy rail rests at each station and follows scroll through
+  the handoff, so the current words move left as the next enter from the right
+  without two opaque cards piling on top of each other. A fast flick may
+  advance quickly but always resolves to valid copy.
+- Replaced the phone's WebP/ImageBitmap canvas runtime with one short-keyframe
+  H.264 scrub file and a local first-frame poster. Mobile now uses one 3.6 MB
+  video asset instead of a burst of frame files and no longer holds an
+  80 MB decoded-image window while Safari is painting the surrounding page.
+  Missing or late video leaves the poster, copy and native navigation usable.
+- Kept the complete four-card version for the site's own reduced-motion switch
+  and Save-Data, with no pearl requests in either mode.
+- Made content reveals transform-only so readable copy is never transparent.
+  On phones, the process neighbors now paint as opaque surfaces without
+  backdrop blur, and the five filtered ambient blobs become one transform-only
+  gradient field. The completed route entrance also releases its page-wide
+  identity transform instead of retaining one enormous compositor layer. The
+  two neighboring sections are permanently released from their one-time
+  reveal.
+- A browser reload now starts at the top instead of restoring a position inside
+  the process. Normal back/forward restoration is unchanged.
+- Replaced the forced-station tests with cold delayed-video, stable-geometry,
+  single-panel rail, native-scroll distance, failed-video, single-asset,
+  static-mode, opaque-boundary and reload regressions.
+
 ## [0.15.4] - 2026-08-01
 
 ### Phone process navigation has one enforceable sequence

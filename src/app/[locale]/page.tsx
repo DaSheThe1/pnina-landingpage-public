@@ -86,10 +86,11 @@ export default async function Home({
           argument in the header comment still holds — her story is still
           first; only the how-it-works and the who-it-is-for swapped places.
 
-          `ProcessExperience`, not `ProcessSection`: it renders the static four
-          cards on the server and for every visitor who has asked for less
-          motion or less data, and upgrades to the scroll-scrubbed pearl only
-          when the frames actually exist. Same anchor, same copy either way. */}
+          `ProcessExperience`, not `ProcessSection`: its final native-scroll
+          shell is present in the first server HTML and never waits for video
+          before occupying its real height. The in-site reduced-motion switch
+          and Save-Data expose the separately rendered four-card version and
+          download no process media. Same anchor, same copy either way. */}
       <section id={sectionIds.process} className="scroll-mt-20">
         <ProcessExperience />
       </section>

@@ -12,7 +12,11 @@ import { usePathname } from "next/navigation";
  * the global reduced-motion rule neutralises the animation.
  *
  * The wrapper is a transparent flex column so the inner <main className="flex-1">
- * still grows to push the footer down (sticky-footer layout preserved).
+ * still grows to push the footer down (sticky-footer layout preserved). Its
+ * animation deliberately does not retain a transform after 550ms: a finished
+ * identity transform would keep the entire page in one compositor/stacking
+ * context forever, which is expensive on WebKit and prevents the phone process
+ * stage from locally covering the sticky header.
  */
 export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
