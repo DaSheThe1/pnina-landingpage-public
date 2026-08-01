@@ -12,6 +12,15 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.16.3] - 2026-08-01
+
+### Returning above the completed process no longer pulls the page back
+
+- Let a fast reverse gesture that begins on step 4 and finishes above the whole
+  process leave naturally instead of correcting the page back down to step 3.
+- Kept normal reverse steps unchanged when the gesture finishes inside the
+  process, and kept the first forward journey limited to one step per gesture.
+
 ## [0.16.2] - 2026-08-01
 
 ### A normal held swipe changes one process step

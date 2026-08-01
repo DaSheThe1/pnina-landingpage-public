@@ -441,6 +441,37 @@ test("one touch gesture cannot skip stations and endpoint gestures still exit", 
   await expect(page.locator("#audience")).toBeInViewport();
 });
 
+test("a reverse fling after step four may leave above without being pulled back", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const track = page.locator("[data-process-track]");
+  await expect(track).toHaveAttribute("data-process-controller", "ready");
+
+  await goToProgress(page, track, 1, { holdTouch: true });
+  await releaseTouch(page);
+  await expectProcessStep(track, 4);
+
+  const top = await trackTop(track);
+  const reverseDestination = top - 900;
+  await beginTouch(page);
+  await page.evaluate(
+    (target) =>
+      window.scrollTo({ top: target, behavior: "instant" }),
+    reverseDestination
+  );
+  await endTouch(page);
+
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeLessThan(top - 800);
+  await page.waitForTimeout(700);
+  await expect
+    .poll(() => page.evaluate(() => window.scrollY))
+    .toBeCloseTo(reverseDestination, 0);
+  await expect(track).not.toHaveAttribute("data-process-settling");
+});
+
 test("desktop keeps full copy on the physical right and does not auto-settle", async ({
   page,
 }) => {

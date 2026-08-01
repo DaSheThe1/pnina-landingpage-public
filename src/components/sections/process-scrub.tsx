@@ -432,14 +432,28 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
             gesture.startStation === 0 && direction < 0;
           const leavingFromLast =
             gesture.startStation === STATIONS - 1 && direction > 0;
+          const completedReverseExit =
+            gesture.startStation === STATIONS - 1 &&
+            direction < 0 &&
+            geometry.rawProgress < 0 &&
+            !isWithinJourney(geometry);
 
           /*
            * A gesture that STARTS at an endpoint and points out of the process
            * belongs entirely to the page. Every other deliberate phone gesture
-           * advances one station at most, even if the browser gives a fast
-           * flick enough momentum to travel farther.
+           * advances one station at most, even if the browser gives a fast flick
+           * enough momentum to travel farther.
+           *
+           * One completed-story exception is equally deliberate: if a reverse
+           * gesture starts on step 4 and native momentum finishes above the
+           * WHOLE journey, do not pull the visitor back down to step 3. A short
+           * reverse gesture still finishes inside and therefore moves one step.
            */
-          if (leavingFromFirst || leavingFromLast) {
+          if (
+            leavingFromFirst ||
+            leavingFromLast ||
+            completedReverseExit
+          ) {
             clearSettlingState();
             return;
           }

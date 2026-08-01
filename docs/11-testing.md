@@ -51,6 +51,8 @@ suite is hermetic without a fake R2 server. It asserts:
 - a slow 72px held drag advances one adjacent step in either direction, a 20px
   movement stays put, one large multi-finger gesture cannot skip stations, and
   outward gestures from the two endpoint steps still leave the process;
+- after reaching step 4, a fast reverse gesture that finishes above the entire
+  process remains above instead of being corrected back down to step 3;
 - non-touch releases settle to the nearest step, while a fresh touch replaces
   an in-flight target instead of allowing it to run later;
 - a hard phone-sized native scroll distance cannot cross the full `400lvh`
