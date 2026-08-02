@@ -131,12 +131,15 @@
                                      said readability rides on the opaque cards
                                      ("most of our text is inside squares").
                                      At #4d3d33 it is 5.74:1, so every rung of
-                                     this ladder now clears AA on every surface
-                                     on the site, sand included. The trade was
-                                     bought back by darkening, not by putting
-                                     the veil back — `--background` is still
-                                     `transparent` and the photograph still
-                                     shows at full strength.
+                                     this ladder cleared AA on every surface on
+                                     the site, sand included, with the veil off.
+                                     ⚠️ 0.17.0: the plate is no longer that
+                                     sand. It is Pnina's sunset photograph,
+                                     which is far darker, and the veil came BACK
+                                     at 40% to pay for it — this rung is the one
+                                     that set the number (4.78:1 on the plate's
+                                     floor, against 4.41 at 34%). The full
+                                     arithmetic is beside `--background` below.
 
    Non-text contrast (WCAG 1.4.11, ≥3:1):
      --input #8a7d70 — 3.75:1 on canvas, 4.00:1 on white, 3.39:1 on --surface-2.
@@ -167,7 +170,9 @@
      `bg-canvas`) wherever a solid opaque fill is genuinely needed — the sticky
      header backdrop, scrollbars, dialogs.
 
-     ── `--background` IS THE PAPER VEIL, AND IT IS LOAD-BEARING (0.12.1) ──
+     ── `--paper-veil` IS THE PAPER VEIL, AND IT IS LOAD-BEARING ──
+     (It was `--background`, painted per section, until 0.17.0 — see the long
+     note on `body::before` for why that had to stop.)
      It used to be `transparent`, so every `bg-background` section was a plain
      window onto whatever was behind the page. It is a translucent cream now, and
      that one number decides how much of the sand photograph in §10 a visitor
@@ -175,14 +180,16 @@
      site paints it (24 of them), so it is the ONLY lever that has to be pulled:
      there is no per-page background anywhere, and there must not be one.
 
-     Read it together with §10. The sand is opaque and unblended, so it shows at
+     Read it together with §10. The plate is opaque and unblended, so it shows at
      100% wherever nothing is laid over it — the hero, and a soft band at every
-     join between two sections (see `--paper-fade`). Where type sits, this veil is
+     join between two sections. Where type sits, this veil is
      the paper it sits on, and the darkest background a glyph can land on is
 
-         v × 247/255 (canvas)  +  (1−v) × 193/255 (the plate's floor)
+         v × 247/255 (canvas)  +  (1−v) × FLOOR (the plate's floor)
 
-     which the ink ladder below is sized against.
+     which the ink ladder below is sized against. FLOOR was 193/255 while the
+     plate was Daniel's sand; it is 133/255 now that the plate is Pnina's
+     photograph, which is the whole reason the number below moved again.
 
      ── 84 → 55 (2026-07-30). THE VEIL WAS THE "SINGLE COLOUR BACKGROUND" ──
      Daniel, looking at 0.13.0: *"I like the sand currently that is in the
@@ -236,15 +243,65 @@
      the whole viewport including the hero, every section would paint it a second
      time, and the sand would be back where it started. */
   --canvas: #fbf7f1;
-  /* Daniel, 2026-07-30, launch night: "Just put the color that we have and if
-     something is not really seen, well I will tell you myself. Stop
-     remeasuring... Just use our photo. Can you just use also the one shade
-     that is used in the top parts of the page?" The veil is OFF: every band
-     shows the photograph exactly like the bare hero. Readability rides on the
-     opaque cards ("most of our text is inside squares"), and Daniel eyeballs
-     the rest. If small text over open sand bothers him later, raise this back
-     toward 55% (the last measured-safe value with the current inks). */
+  /* ── OFF → 34% (0.17.0). THE PLATE CHANGED UNDER IT ──
+     Daniel turned this OFF on launch night: "Just put the color that we have and
+     if something is not really seen, well I will tell you myself. Stop
+     remeasuring... Just use our photo." That was the right call FOR THAT PLATE.
+     His sand was floored at 195/255 by `grade-sand.mjs`, so the darkest pixel a
+     glyph could land on was already 7.5:1 against `--foreground` with no veil at
+     all — the veil genuinely was not buying anything.
+
+     Pnina's photograph is not that. It is a real sunset with a sea, a shadow
+     under the shell and a dark crevice between the valves, and its darkest one
+     percent measured **linear L 0.115, i.e. 2.64:1** against `--foreground` and
+     1.37:1 against `--subtle-foreground`. Off is not a preference there, it is
+     unreadable text on a page written for women in distress.
+
+     The gap is paid in two places rather than one, because paying it entirely on
+     either side ruins something:
+       • the plate takes a shadow knee up to linear L 0.24 (`FLOOR` in
+         `extend-sunset.mjs`), which touches 17% of the frame and removes the
+         black tail. Flooring it all the way back to the sand's 0.47 would have
+         lifted more than half the picture — its median is 0.418 — and thrown the
+         sunset away to preserve an old number;
+       • and this veil takes the rest, at 40%.
+
+     Measured on the shipped plates against the floor the encoder actually holds
+     (linear L 0.225 desktop / 0.218 phone; only a handful of encoder-artefact
+     pixels in 3.7M fall below it, so this is the real worst case rather than a
+     comfortable percentile). Phone plate, the tighter of the two:
+
+                              veil off     veil 34%     veil 40%
+       --foreground             4.29 ✗       7.15         7.74
+       --muted-foreground       3.16 ✗       5.27         5.71
+       --subtle-foreground      2.65 ✗       4.41 ✗       4.78
+
+     Desktop is roomier at every rung (7.84 / 5.78 / 4.84).
+
+     34% was the first candidate and it misses by 0.19 on the smallest type on
+     the site, which is exactly the pair that has caught every previous version
+     of this number. 40% clears it.
+
+     40% is still well clear of the 55% that shipped before and a long way from
+     the 84% Daniel called a "single colour background": her photograph reaches
+     the screen at 60% under type, and at 100% in the hero and at every section
+     join. It should still read as her picture, which is the point of it.
+
+     ── AFTER DARK THIS STAYS OFF, AND THE REASON IS THE OTHER END ──
+     In light the number that binds is the plate's DARKEST pixel. After dark the
+     ink is white and the sun is the problem, so the dark plates are graded into
+     a narrow band just above the dark canvas (`DARK_LO`/`DARK_HI` in
+     `extend-sunset.mjs`) instead. Their brightest pixel measures 6.24:1 against
+     `--subtle-foreground` with no veil at all, so the dark scheme keeps the
+     photograph at full strength on every band.
+
+     If it reads too veiled, the honest lever is the ink ladder or the plate's
+     FLOOR — not this number on its own. The two move together. */
   --background: transparent;
+  /* The one veil, read by `body::before` above. `--background` stays
+     `transparent` — see the long note beside that rule for why the veil is no
+     longer a property of sections. */
+  --paper-veil: rgba(251, 247, 241, 0.4);
   --surface-1: #ffffff;
   --surface-2: #f4ebe0;
   --surface-3: #f6dcd0;
@@ -368,95 +425,96 @@
      elevated surface, which is a legal border and would be an illegal label. */
   --gold-line: #d9a92a; /* hue 44° */
 
-  /* ── THE PINK — THE ACCENT, as of 0.11.4, ACTUALLY PINK as of 0.12.x ──
-     Daniel, 2026-07-30, after looking at all three side by side: "pink again
-     looks better as contrast", and pink ships.
+  /* ── THE ACCENT — HER SEA, as of 0.17.0. IT WAS PINK UNTIL 2026-08-02 ──
+     Pnina's colour brief came in two passes on the same day, and the second one
+     is the one that governs. First: לבן · שמנת · בז' · אפרסק עדין · זהב עדין ·
+     חום טבעי · תכלת־כסף, to read as רוגע · תקווה · חוזק · אלגנטיות · נשיות ·
+     אור. Then, looking at the result: *"less dark, more colours of sea, sea
+     water, beach"* — שנהב · פנינה · תכלת · טורקיז · silver.
 
-     ⚠️ READ THIS BEFORE DESATURATING ANYTHING BELOW. The family shipped at hue
-     348-352° and saturation 30-43%, which was a mauve: on the cream canvas
-     `--rose-deep` (#8a4855) read as a brownish plum, and Daniel said three
-     separate times that he could not see any pink on the buttons. He was right.
-     A colour that has to be explained is the wrong colour, so the whole family
-     moved to a saturated pink that a non-designer calls "pink" without being
-     told — first to hue 339-344° at 48-62% saturation (0.13.0), and then to
-     where it is now.
+     So the accent is the SEA: a turquoise at the light end deepening to a teal
+     at the end that has to carry near-white ink.
 
-     ── AND THEN IT MOVED AGAIN, TO THE LIVE SITE'S PINK (2026-07-30) ──
-     Daniel, with peninaphaff.com open beside the redesign: *"I think the pink
-     colour is nicer on the version that is currently live. Can you check that out
-     to see if it looks better?"* The live site runs a cooler ORCHID/MAGENTA at
-     **hue 327-333°**, and the difference from the 342° rose is not subtle at the
-     dark end: 342° at 33% lightness goes toward wine, 330° stays pink.
+     ⚠️ THIS REVERSES A RULE DANIEL SET, AND HE IS THE ONE WHO REVERSED IT.
+     The block that stood here said "do not desaturate it back toward brown", and
+     it said so because he asked for a visible pink three separate times across
+     0.11.4-0.13.0 — a mauve at hue 348-352°, then a rose at 342°, and finally
+     the live site's orchid-magenta at 327-333° chosen with peninaphaff.com open
+     beside the redesign. None of that was wrong; it was decided before the
+     client had seen it. Asked directly on 2026-08-02, he chose her list. The
+     pink is preserved token for token behind `?accent=pink` in §11.
 
-     Three rungs are the live site's own values, unchanged, because they are the
-     ones a visitor actually reads — the filled CTA (#8a1f58), its hover
-     (#74184a) and the pink you set type in (#a32d6b). The rest of the family was
-     hue-shifted 342° → 330° at its EXISTING lightness and saturation rather than
-     copied, for two reasons: the decorative rungs here do jobs the live site has
-     no equivalent of (`--halo` is a wash behind a whole panel, `--rose-line` is a
-     1px hairline), and copying its much darker decorative pink into those would
-     have put a heavy magenta bloom across the free-call panel.
+     ── WHY THE ACCENT IS COOL WHILE THE PAGE IS WARM ──
+     This is the one thing here that is a design decision rather than a
+     transcription, so it is worth defending. The background photograph is a warm
+     peach sunset over sand; her own first list was warm too, and the first cut of
+     this family answered it literally with a peach-to-terracotta ramp. That cut
+     FAILED for a reason worth remembering: `--brand-accent` (the bronze) sits at
+     hue 26° and `--gold-deep` at 37°, so any warm accent is within about ten
+     degrees of colours the site already uses for its ink and its metal. The
+     button stopped being an accent and became "the brown one, but redder" — the
+     exact "everything is brown" failure the pink was originally introduced to
+     fix, arrived at from the other direction.
 
-     The dark scheme is hue-shifted the same way and deliberately does NOT take
-     the live site's dark values: those pair a DARK fill (#a8336d) with white ink
-     and then hover to a near-white pink, which would erase the label on hover.
-     Dark keeps this site's own inversion — a lit pink fill carrying near-black
-     ink — because a dark fill on a dark canvas is a hole rather than a button.
+     Turquoise solves both problems at once. It is on her list (טורקיז), it is
+     the literal colour of the sea in her own photograph, and it is roughly
+     COMPLEMENTARY to the peach behind it — so the CTA separates from the page by
+     hue rather than by being darker than everything else, which is what "less
+     dark" asks for. The warm family is not gone: `--brand` still carries every
+     wash, `--gold` still carries every hairline. The accent simply stopped
+     competing with them.
 
-     The move is nearly free and mostly a gain: the filled CTA went from 5.18:1
-     with its ink to **8.27:1**, and the loud `.cta-hot` gradient's lightest stop
-     from 4.79:1 to **7.16:1** — so the "there is no headroom at the light end"
-     warning that governed the old family no longer binds.
+     ⚠️ DO NOT WARM THIS BACK UP toward the sand. Two cuts have now been lost
+     that way, and each time the failure looked the same: the button and the page
+     agreed so closely that nothing read as a call to action.
 
-     It is still dusty and still unmistakably pink (it is nowhere near bubblegum,
-     which lives at 85%+ saturation and would be wrong on this site for the
-     reasons rule 4 in CLAUDE.md gives).
+     The deep end is held at **hue 190°** and the light end at 184-186°, which
+     keeps the whole family clear of `--teal` (#7ea9c0, hue 200°) — the site's
+     existing silver-blue reassurance colour, which is a low-alpha chip tint and
+     must stay a different job from the CTA.
 
-     It still pairs with — it does not replace — the bright gold: the gold stays
-     on the hairlines, the arrow, the node rings and the eyebrow marks, which is
-     the rose-gold pairing rather than two accents arguing.
-
-     ⚠️ PENDING PNINA. Her own palette list says cream, peach, gold, natural
-     brown, silver-blue. Pink is adjacent to her "אפרסק עדין" and Daniel has
-     chosen it, but blessing a new brand colour is hers. docs/12 §D records it as
-     open. `?accent=amber` (globals.css §11) is the pre-0.11.4 rendering if she
-     says no.
+     THE NAMES STAY `--rose-*`. They describe nothing now, which is exactly the
+     situation the `plum`/`teal` step-tint keys are already in (see STEP_TINTS in
+     marketing-sections.tsx): they are token references, only the values changed,
+     and renaming 88 call sites for a hue change is churn with a merge conflict
+     attached.
 
      The rungs, measured against the light `--canvas` (#fbf7f1) unless stated, on
      the same discipline as the gold family above:
 
-       --rose       #e28fb9   2.22:1   DECORATIVE ONLY. Never a glyph.
-                                       hsl(330 59% 72%) — the 342° rose turned to
-                                       the new hue at the same value, because this
-                                       is `--halo` and a panel-wide wash cannot
-                                       take the live site's much darker pink.
-       --rose-line  #dd7fae   2.55:1   HAIRLINES ONLY — a 1px decorative rule.
-       --rose-ink   #a32d6b   6.26:1   the pink you may set TYPE in — the live
-                                       site's own value (5.66 on --surface-2,
-                                       5.11 on the peach --surface-3, 5.00 on
-                                       --rose-soft — the tightest, and the reason
-                                       this value is not lighter). Every one of
-                                       those four is BETTER than the 342° rose it
-                                       replaced (5.86 / 5.30 / 4.78 / 5.25) and
-                                       far better than the mauve before that.
-       --rose-soft  #f7d6e6            the blush wash --rose-ink sits on; the
-                                       live site's, and a touch more saturated
-                                       than the #fbe6ec it replaced.
-       --rose-deep  #8a1f58            the filled CTA, hsl(328 63% 33%), the live
-                                       site's own fill. --cta-ink (#fff8f5) on it
-                                       is 8.27:1, up from 5.18:1 — this is the
-                                       rung Daniel was looking at when he said the
-                                       live pink was nicer.
-       --rose-cta-hover #74184a        the pressed/hover fill, 10.14:1 with the
+       --rose       #6ed1d8   1.67:1   DECORATIVE ONLY. Never a glyph. This is
+                                       `--halo`, the wash behind a whole panel,
+                                       and it is her אפרסק עדין at full strength.
+                                       Lighter than the pink it replaced (2.22:1)
+                                       because peach at this hue simply is — it
+                                       carries no type, so nothing binds on it.
+       --rose-line  #4dbac7   2.15:1   HAIRLINES ONLY — a 1px decorative rule.
+       --rose-ink   #1d677c   5.99:1   the accent you may set TYPE in (5.42 on
+                                       --surface-2, 4.89 on the peach
+                                       --surface-3, 5.72 on --rose-soft — the
+                                       four surfaces these labels land on, all
+                                       clear). Slightly roomier than the pink's
+                                       6.26 / 5.66 / 5.11 / 5.00.
+       --rose-soft  #fbe7da            the peach wash --rose-ink sits on. It is
+                                       deliberately close to --surface-3
+                                       (#f6dcd0), which was ALREADY a soft peach:
+                                       her palette and this site's surfaces were
+                                       never far apart, which is why the swap is
+                                       a hue move and not a redesign.
+       --rose-deep  #1e6876            the filled CTA, hsl(190 59% 29%).
+                                       --cta-ink (#fff8f5) on it is 6.07:1, and
+                                       as TYPE it is 5.97:1 on the canvas, 5.40
+                                       on --surface-2, 4.87 on --surface-3.
+       --rose-cta-hover #155160        the pressed/hover fill, 8.41:1 with the
                                        same ink. Hover goes DARKER in light and
                                        LIGHTER after dark; both directions read
                                        as "pressed" on their own canvas. */
-  --rose: #e28fb9;
-  --rose-line: #dd7fae;
-  --rose-ink: #a32d6b;
-  --rose-soft: #f7d6e6;
-  --rose-deep: #8a1f58;
-  --rose-cta-hover: #74184a;
+  --rose: #6ed1d8;
+  --rose-line: #4dbac7;
+  --rose-ink: #1d677c;
+  --rose-soft: #e2f6f8;
+  --rose-deep: #1e6876;
+  --rose-cta-hover: #155160;
 
   /* ── THE ACCENT ROLES (see §11, the `?accent=` switcher) ────────────
      The filled CTA's variables and the colour of warm light on a panel, split out
@@ -479,22 +537,21 @@
      the panel, the light under the action column and the bloom behind the button
      all read it, so the light around a rose button is rose light. */
   --cta-fill: var(--rose-deep);
-  /* The live site's near-white, a hair pinker than the #fff8f2 this replaced.
-     8.27:1 on --cta-fill. */
+  /* A warm near-white. 6.07:1 on --cta-fill, 8.41:1 on the hover fill. */
   --cta-ink: #fff8f5;
   --cta-fill-hover: var(--rose-cta-hover);
   --cta-image: none;
   --cta-image-hover: none;
-  /* These four are the rose family written out as rgba() because a shadow needs
-     an alpha. They MUST be re-derived whenever the family moves, or the button's
-     rim and bloom stay on the old hue while its fill leaves — which is exactly
-     the drift `--headline-accent` exists to prevent. Edge is
-     --rose-cta-hover (#74184a), glow is --rose-deep (#8a1f58), and the hover
-     edge is --rose (#e28fb9). */
-  --cta-edge: rgba(116, 24, 74, 0.42);
-  --cta-glow: rgba(138, 31, 88, 0.5);
-  --cta-edge-hover: rgba(226, 143, 185, 0.7);
-  --cta-glow-hover: rgba(138, 31, 88, 0.72);
+  /* These four are the accent family written out as rgba() because a shadow
+     needs an alpha. They MUST be re-derived whenever the family moves, or the
+     button's rim and bloom stay on the old hue while its fill leaves — which is
+     exactly the drift `--headline-accent` exists to prevent. Edge is
+     --rose-cta-hover (#155160), glow is --rose-deep (#1e6876), and the hover
+     edge is --rose (#6ed1d8). */
+  --cta-edge: rgba(21, 81, 96, 0.42);
+  --cta-glow: rgba(30, 104, 118, 0.5);
+  --cta-edge-hover: rgba(110, 209, 216, 0.7);
+  --cta-glow-hover: rgba(30, 104, 118, 0.72);
   --halo: var(--rose);
 
   /* ── THE HEADLINE ACCENT (0.12.x) ─────────────────────────────────
@@ -502,23 +559,24 @@
      second line ("דווקא בזכות מה שעברת"), `.text-gradient` on the section
      headings, and `.text-shimmer` on the thank-you page.
 
-     Daniel, 2026-07-30: the pink he asked for has to be in the buttons AND in
+     Daniel, 2026-07-30: the accent he asked for has to be in the buttons AND in
      the header's second line. It was `--brand-accent` — the bronze — which is
-     why the headline read brown next to a pink button. So this is not a NEW
+     why the headline read brown next to a coloured button. So this is not a NEW
      colour: it is literally `--rose-deep`, the filled CTA's own fill, promoted
      to a role name so the headline and the button can never drift apart again.
+     That construction is what carried the family through the 0.17.0 hue move
+     without a single call site changing.
 
      Measured as TYPE, in both schemes:
-       light  #8a1f58  8.14:1 on --canvas, 7.36:1 on --surface-2,
-                       6.64:1 on the peach --surface-3
-       dark   #e28fb9  7.32:1 on --canvas, 5.57:1 on the elevated --surface-3
+       light  #1e6876  5.97:1 on --canvas, 5.40:1 on --surface-2,
+                       4.87:1 on the peach --surface-3
+       dark   #8bdee4  11.66:1 on --canvas, 11.09:1 on the elevated --surface-3
 
-     Every one of those clears 4.5:1 now, which the 342° rose did not: it landed
-     at 4.17:1 on the peach surface and survived only because every call site is
-     display type at 2xl and up (33.6px+), where WCAG's floor is 3:1. That
-     licence is no longer being used, and it should not be reclaimed. If you
-     reach for this token at body size, use `--rose-ink` (6.26 / 5.66 / 5.11)
-     instead — that is exactly what it is for. */
+     Every one of those clears 4.5:1 comfortably. Do not reclaim the old licence
+     of running this token at 3:1 because every call site is display type — it
+     has not been needed since 0.12.x and it is not needed now. If you reach for
+     this token at body size, use `--rose-ink` (5.99 / 5.42 / 4.89) instead —
+     that is exactly what it is for. */
   --headline-accent: var(--rose-deep);
 
   /* ── THE ACCENT'S INK (0.12.0) ────────────────────────────────────
@@ -532,11 +590,11 @@
      for the text and the backgrounds of the stuff around the text; I don't think
      they are complementary." He was right about this pair specifically. Those
      labels were `--gold-deep`, a honey AMBER at hue 37°, and since 0.11.4 they
-     sit on a wash whose light is the PINK at hue ~342°. Warm orange type
-     on a pink ground is the classic muddy pair: neither colour is wrong, they
-     just argue, and at label size the argument reads as dirt.
+     sat on a wash whose light was the PINK at hue ~342°. Warm orange type on a
+     pink ground is the classic muddy pair: neither colour is wrong, they just
+     argue, and at label size the argument reads as dirt.
 
-     Pink ink on pink light is complementary by construction, and it ties the
+     Accent ink on accent light is complementary by construction, and it ties the
      label to the button it is standing next to. It also follows a rule this file
      already states, rather than inventing one: "if a small label does not
      strictly need to be gold, prefer brown type with a bright-gold mark beside
@@ -544,12 +602,19 @@
      shell/pearl node), so the gold on that line was always meant to be the mark,
      not the letters.
 
-     Measured, on the surfaces these labels actually land on, after the pink
-     correction: 5.86:1 on `--canvas`, 5.25:1 on `--rose-soft`, 5.30:1 on
-     `--surface-2`, and 5.5:1 on the pink-washed free-call panel. The amber it
-     replaced measured 5.62 / 5.26, so this is a like-for-like swap and not a
-     contrast trade — and it is now slightly ROOMIER than the mauve that shipped
-     before (5.55 / 5.01 / 5.03).
+     ⚠️ AND THE 0.17.0 MOVE BROUGHT THAT ARGUMENT BACK WITHIN 11 DEGREES OF THE
+     PAIR IT WAS SETTLING. The accent is now a terracotta at hue 6° sitting on a
+     peach wash, with `--gold-deep` at 37° never far away, so the "warm on warm"
+     risk is real again in a way it was not while the accent was magenta. It is
+     survivable here for one reason only: `--rose-ink` and `--rose-soft` are the
+     same family, 18° apart, so the label reads as the deep end of its own wash
+     rather than as a second colour arguing with it. Putting `--gold-deep` back
+     on this line would be the muddy pair again. Do not.
+
+     Measured, on the surfaces these labels actually land on: 5.99:1 on
+     `--canvas`, 5.72:1 on `--rose-soft`, 5.42:1 on `--surface-2`, 4.89:1 on the
+     peach `--surface-3`. Every rung is roomier than the pink it replaced
+     (5.86 / 5.25 / 5.30) and than the mauve before that (5.55 / 5.01 / 5.03).
 
      NOT the same thing as shadcn's `--accent` / `--accent-foreground` pair three
      blocks down, which is a component background and its label. This is type on
@@ -911,10 +976,21 @@
     color: var(--foreground);
   }
 
-  /* Display headlines wear BONA NOVA AT A REAL 700 — a Hebrew serif with an
-     actual bold master. Body, labels and card titles (h3+) stay on Assistant.
+  /* Display headlines wear NOTO SANS HEBREW AT A REAL 700 — the face Pnina's own
+     Canva document is set in, which is not the one she named. She asked for
+     "Comika"; Comika has no Hebrew glyphs, so every Hebrew word in her document
+     is Canva substituting a fallback, and the fallback is what she has been
+     looking at and likes. It was identified by measurement, not by eye; the
+     evidence is written out at the head of `src/app/[locale]/layout.tsx`.
+     Body, labels and card titles (h3+) are on HEEBO, the free stand-in for the
+     "Helvetica World" she asked for on the body copy.
 
-     WEIGHT: 700, and it is a real one. Daniel asked three times for bold
+     ⚠️ HEADLINE AND BODY ARE NOW BOTH SANS. The separation that used to come
+     free from serif-against-sans is now carried by weight and size alone. If a
+     heading stops reading as a heading, fix it with size or tracking — do NOT
+     reintroduce a display serif, because both faces here are the client's.
+
+     WEIGHT: 700, and it is a real master. Daniel asked three times for bold
      headlines ("make the text bold… either choose a bold font or just choose a
      font which has boldness"), and 0.12.0's answer — Bellefair, a single-master
      display face, plus a 0.4px `-webkit-text-stroke` standing in for the weight
@@ -922,31 +998,30 @@
      GONE from this file: they were compensation for a missing bold, and a face
      with a bold does not need compensating. Do not re-add them; if a headline
      needs more weight now, it has `font-weight` like everything else.
+     Her document sets this face LIGHT. That is right for a welcome letter on a
+     photograph and wrong for an h1 that has to name a woman's trauma: her
+     family, our weight. Do not set the headlines light to match the Canva page.
 
-     WHY BONA NOVA and not the other four candidates: the note at the head of
-     `src/app/[locale]/layout.tsx` records the rendered comparison. Short version
-     — it is the only one of the five that is heavy at 700 and still elegant
-     rather than blunt (Frank Ruhl), enormous (Noto Serif Hebrew), office-default
-     (David Libre) or simply the body face again (Assistant 800).
+     LETTER-SPACING: -0.008em, carried over unchanged from Bona Nova. Noto Sans
+     Hebrew at 700 sets a little tighter than Bona Nova did, so this is if
+     anything conservative; it stays at half the -0.012em Frank Ruhl needed
+     because closing a Hebrew sans further starts to fill the counters of ה, ע
+     and ק, which is worse here than in a serif.
 
-     LETTER-SPACING: -0.008em. Zero was tuned for Bellefair, which is narrow and
-     needed every bit of its sidebearing. Bona Nova at 700 sets wider and a whisker
-     of negative tracking stops the long Hebrew hero line from feeling loose; it
-     is deliberately HALF the -0.012em Frank Ruhl needed, because closing this
-     face further starts to fill the counters of ה, ע and ק.
+     LINE-HEIGHT 1.15 is unchanged and still right: Hebrew has no descenders to
+     speak of and this face has a tall waist, same as the two before it.
 
-     LINE-HEIGHT 1.15 is unchanged and still right: Bona Nova has short
-     descenders and a tall waist, exactly like the face it replaced.
-
-     ⚠️ NUMERALS — `lining-nums` IS MANDATORY, NOT A REFINEMENT. Bona Nova sets
-     OLDSTYLE figures by default, so without this line "₪990" and the
-     process-spine "01" ride up and down off the baseline mid-word. It used to be
-     a special-case rule for the `?font=bonanova` variant in §8; now that this IS
-     the face, it belongs on the base rule. Deleting it breaks every number set
-     in a heading.
-     (Assistant's own digits share one advance width by design and it ships no
-     `tnum` feature, which is why there is deliberately no `tabular-nums` class
-     anywhere on this site.)
+     NUMERALS: there is deliberately NO `font-variant-numeric` here any more.
+     Bona Nova needed `lining-nums` because it sets OLDSTYLE figures, and while
+     it was the shipped face that declaration was mandatory. Noto Sans Hebrew and
+     Heebo both set LINING figures by default — measured at 200px, their ten
+     digits share a baseline to within 2px, where Bona Nova spreads 50px — so
+     "₪990" and the process-spine "01" sit flat with nothing asked for. The
+     declaration has moved to the one place it still does work: the
+     `?font=bonanova` rule in §8. Do not restore it here on the belief that it is
+     free insurance; it is a claim about the face, and the face changed.
+     (Heebo's digits are uniform-width by design and it ships no `tnum` feature,
+     which is why there is still deliberately no `tabular-nums` on this site.)
 
      SIZE: the ~+12% compensation added in 0.12.0 for Bellefair's small-on-the-em
      letters is KEPT, and it was re-judged rather than assumed — Bona Nova's
@@ -982,22 +1057,21 @@
      it. */
   h1,
   h2 {
-    font-family: var(--font-display), Georgia, "Times New Roman", serif;
+    /* The fallback stack is a SANS now, and that matters: the display face is
+       Noto Sans Hebrew, so a serif fallback would swap species mid-load. */
+    font-family: var(--font-display), "Segoe UI", system-ui, sans-serif;
     font-weight: 700;
     letter-spacing: -0.008em;
     line-height: 1.15;
-    font-variant-numeric: lining-nums;
   }
 
   /* `.font-display` opts a non-heading element into the same face, so it needs
-     the same weight and the same figures — otherwise a `.font-display` element
-     renders Bona Nova at 400 with oldstyle numerals, which is how the
-     process-spine "01" and the quote pull-outs would silently drift off the
-     headline treatment. `.free-anchor__free` overrides both in §9 on purpose:
-     it is re-pointed to the BODY face. */
+     the same weight — otherwise a `.font-display` element renders the display
+     family at 400, which is how the process-spine "01" and the quote pull-outs
+     would silently drift off the headline treatment. `.free-anchor__free`
+     overrides this in §9 on purpose: it is re-pointed to the BODY face. */
   .font-display {
     font-weight: 700;
-    font-variant-numeric: lining-nums;
   }
 
   /* Themed scrollbar — quiet, ink-on-paper */
@@ -1583,9 +1657,15 @@
     mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
   }
 
-  /* Opt an element into the display serif (see the h1/h2 base rule). */
+  /* Opt an element into the display face (see the h1/h2 base rule).
+     The fallback stack has to MATCH that rule's — it was still
+     `Georgia, "Times New Roman", serif` after 0.17.0 moved the display face from
+     Bona Nova to Noto Sans Hebrew, so on the one load where the webfont has not
+     arrived yet, every `.font-display` element rendered in a serif while every
+     h1 and h2 beside it rendered in a sans. Two rules, one face: keep them in
+     step. */
   .font-display {
-    font-family: var(--font-display), Georgia, serif;
+    font-family: var(--font-display), "Segoe UI", system-ui, sans-serif;
   }
 
   /* Highlighted headline text — the second half of a two-part heading.
@@ -1990,20 +2070,29 @@
      * stops the extension doing work that is already done. */
     color-scheme: dark;
 
-    /* Surfaces — warm-dim brown paper. `--canvas` is the solid base, and
-       `--background` is the paper veil over the sand, inverted with the scheme:
-       the same 55% of the canvas (ONE number for both schemes — this block
-       re-points `--canvas`, not `--background`), which after dark DARKENS the
-       plate instead of lightening it. The direction flips but the job does not — light ink needs
-       its background held DOWN, so the veil protects `--subtle-foreground`
-       (#a29a8f, which needs ≤52/255) against the plate's 49/255 crests exactly as
-       the cream one protects #715e53 on paper. The token's own note in `:root`
-       has the arithmetic.
+    /* Surfaces — warm-dim brown paper. `--canvas` is the solid base.
        Note the light-mode order is inverted here on purpose: `--surface-2` is
        the SUNKEN surface (darker than the canvas) and `--surface-3` is the
        ELEVATED one, because a tint that steps up from cream has to step down
        from brown to keep meaning the same thing. */
     --canvas: #1c1611;
+    /* ⚠️ THE VEIL IS OFF AFTER DARK, AND THIS LINE IS WHAT MAKES IT SO.
+       In light, `--background` is a 40% cream over the plate because the plate's
+       DARKEST pixel is what binds against dark ink. After dark the ink is white
+       and the binding pixel is the BRIGHTEST one, which is handled upstream
+       instead: `extend-sunset.mjs` grades the dark plates into a narrow band
+       (`DARK_LO`/`DARK_HI`) whose brightest pixel is already 6.24:1 against
+       `--subtle-foreground` unaided (6.24 desktop, 6.12 phone).
+       Without this line the dark scheme would INHERIT the light cream from
+       `:root` — a 40% cream wash laid over every band of a dark page — which is
+       exactly the bug 0.17.0 shipped for about an hour. The two schemes want
+       opposite veils, so neither can be derived from the other. */
+    --background: transparent;
+    /* Off after dark — see the note on this line above. The dark plates are
+       graded so their brightest pixel already clears the ink unaided, and a
+       CREAM sheet over a dark page is exactly the bug this token shipped with
+       for an hour. */
+    --paper-veil: transparent;
     --surface-2: #221b15; /* sunken */
     --surface-1: #27201a; /* cards */
     --surface-3: #352c25; /* elevated */
@@ -2047,33 +2136,36 @@
     --gold-soft: #3c2d16; /* a deep tint: a BACKGROUND here, not a wash */
     --gold-line: #cfa33a; /* hue 42° */
 
-    /* The pink, by lamplight — and it moved to the same hue 339-344° the light
-       block did, for the same reason: the mauve read brown-ish on paper and
-       washed-out grey-pink after dark. The readable rung goes LIGHT, exactly as
-       `--gold-deep` does: --rose-ink is 10.48:1 on this canvas and 7.98:1 on the
-       elevated --surface-3. --rose-soft inverts from a pale wash to a deep tint,
-       i.e. a BACKGROUND here. --rose-deep is the CTA fill and carries
-       near-black warm ink (--cta-ink #1d0f15 on it is 7.72:1), because a pink
-       dark enough to hold cream ink is a maroon hole on this canvas. Hover goes
-       LIGHTER here and darker in light; both read as "pressed" on their own
-       canvas. */
-    --rose: #e9a3c6;
-    --rose-line: #d98bb2;
-    --rose-ink: #f0a6c9; /* the live site's dark pink type — 9.39:1 here */
-    --rose-soft: #4a1c31; /* the live site's dark tint */
-    --rose-deep: #e28fb9;
-    --rose-cta-hover: #e79cc2;
+    /* Her peach, by lamplight — hue-shifted with the light block in 0.17.0
+       (327-333° magenta → 17-21° peach; see the long note in `:root`). Nothing
+       structural changed here, which is the point: the dark scheme was always an
+       INVERSION of the family rather than a copy of it, so moving the family
+       moved this with it.
 
-    /* The accent roles, after dark. `--cta-fill` and `--halo` follow the rose
-       tokens above on their own (they are `var()`s), but the INK flips: the CTA
-       inverts from a deep rose carrying cream to a lit rose carrying near-black,
+       The readable rung goes LIGHT, exactly as `--gold-deep` does: --rose-ink is
+       9.82:1 on this canvas and 9.34:1 on the elevated --surface-3. --rose-soft
+       inverts from a pale wash to a deep tint, i.e. a BACKGROUND here (--rose-ink
+       on it is 8.25:1). --rose-deep is the CTA fill and carries near-black warm
+       ink (--cta-ink #1d0f0b on it is 10.69:1), because a peach dark enough to
+       hold cream ink is a brown hole on this canvas. Hover goes LIGHTER here and
+       darker in light; both read as "pressed" on their own canvas. */
+    --rose: #94e0e6;
+    --rose-line: #7dcbd4;
+    --rose-ink: #86e3ea;
+    --rose-soft: #16333b;
+    --rose-deep: #8bdee4;
+    --rose-cta-hover: #aae9ee;
+
+    /* The accent roles, after dark. `--cta-fill` and `--halo` follow the tokens
+       above on their own (they are `var()`s), but the INK flips: the CTA inverts
+       from a deep terracotta carrying cream to a lit peach carrying near-black,
        for the same reason the brown CTA always has (a dark fill on a dark canvas
        is a hole, not a button). */
-    --cta-ink: #1d0f15; /* 7.83:1 on --rose-deep */
-    --cta-edge: rgba(29, 15, 21, 0.5);
-    --cta-glow: rgba(226, 143, 185, 0.32); /* = --rose-deep #e28fb9 */
-    --cta-edge-hover: rgba(29, 15, 21, 0.6);
-    --cta-glow-hover: rgba(226, 143, 185, 0.48);
+    --cta-ink: #06171a; /* 11.93:1 on --rose-deep, 13.6:1 on the hover fill */
+    --cta-edge: rgba(6, 23, 26, 0.5);
+    --cta-glow: rgba(139, 222, 228, 0.32); /* = --rose-deep #8bdee4 */
+    --cta-edge-hover: rgba(6, 23, 26, 0.6);
+    --cta-glow-hover: rgba(139, 222, 228, 0.48);
 
     --card: #27201a;
     --card-foreground: #e5dfd6;
@@ -2477,28 +2569,31 @@ html[data-a11y-enhanced-contrast="true"] :focus-visible {
    2026-07 redesign. Everything the redesign added has to be re-pointed here as
    well, or the CTA, its halo and the accent labels keep their paper-mode values
    on a black canvas and quietly fail the very contrast this option promises.
-   The rose ladder inverts the way the dark scheme's does: pale for type, deep
-   for fills, and the filled CTA carries near-black ink on a bright rose. */
+   The accent ladder inverts the way the dark scheme's does: pale for type, deep
+   for fills, and the filled CTA carries near-black ink on a bright peach.
+   Hue-shifted with the rest of the family in 0.17.0; this palette is deliberately
+   the MOST saturated rendering of the accent on the site, because a reader who
+   asked for more contrast should not also be asked to find a subtle colour. */
 html[data-a11y-enhanced-contrast="true"] {
-  --rose: #ff9bc9;
-  --rose-line: #ffc3de;
-  --rose-ink: #ff9bc9;
-  --rose-soft: #260b18;
-  --rose-deep: #ffc3de;
+  --rose: #8ae9f2;
+  --rose-line: #b8f2f8;
+  --rose-ink: #8ae9f2;
+  --rose-soft: #061e23;
+  --rose-deep: #b8f2f8;
   --rose-cta-hover: #ffffff;
   --gold-line: #f3c95e;
 
-  --cta-fill: #ffc3de;
-  --cta-ink: #12060b;
+  --cta-fill: #b8f2f8;
+  --cta-ink: #040f12;
   --cta-fill-hover: #ffffff;
   --cta-image: none;
   --cta-image-hover: none;
   --cta-edge: rgba(255, 255, 255, 0.7);
-  --cta-glow: rgba(255, 155, 201, 0.45);
+  --cta-glow: rgba(138, 233, 242, 0.45);
   --cta-edge-hover: rgba(255, 255, 255, 0.9);
-  --cta-glow-hover: rgba(255, 155, 201, 0.65);
-  --halo: #ff9bc9;
-  --accent-ink: #ff9bc9;
+  --cta-glow-hover: rgba(138, 233, 242, 0.65);
+  --halo: #8ae9f2;
+  --accent-ink: #8ae9f2;
 }
 
 /* The sand photograph goes, exactly as it does for `prefers-contrast: more`
@@ -2798,7 +2893,7 @@ html[data-a11y-emphasize-links="true"]
 @media (max-width: 767px) {
   section.process-boundary-surface.bg-background {
     background-color: var(--canvas);
-    background-image: url("/images/sand-light-portrait.webp");
+    background-image: url("/images/bg-sunset-portrait.webp");
     background-position: center top;
     background-repeat: no-repeat;
     background-size: cover;
@@ -2834,7 +2929,7 @@ html[data-a11y-emphasize-links="true"]
 
 @media (max-width: 767px) and (prefers-color-scheme: dark) {
   section.process-boundary-surface.bg-background {
-    background-image: url("/images/sand-dark-portrait.webp");
+    background-image: url("/images/bg-sunset-dark-portrait.webp");
   }
 }
 
@@ -3395,31 +3490,64 @@ html[data-a11y-emphasize-links="true"]
    Daniel found the old headlines wrong, so the display face is swappable from
    the URL bar while he decides:
 
-     ?font=bonanova   Bona Nova 700 — WHAT THE SITE SHIPS as of 0.12.x (the
-                      parameter is only needed to switch BACK inside a tab)
+     ?font=amatic     Amatic SC 700 — WHAT THE SITE SHIPS. Pnina picked it
+                      herself from Google Fonts on 2026-08-02 (the parameter is
+                      only needed to switch BACK inside a tab)
+     ?font=notosans   Noto Sans Hebrew 700 — the face identified from her Canva
+                      document, which shipped for about a day before she chose
+     ?font=bonanova   Bona Nova 700 — the 0.12.x-0.16.x rendering, the display
+                      serif her own face replaced
      ?font=bellefair  Bellefair 400 — the 0.12.0 rendering, the one-weight
                       display face the bold complaint retired
      ?font=frank      Frank Ruhl Libre 700 — the 0.11.4 rendering
-     ?font=noto       Noto Serif Hebrew
+     ?font=noto       Noto Serif Hebrew  (the SERIF — not to be confused with
+                      `notosans`)
      ?font=david      David Libre
-     ?font=sans       no serif at all: Assistant, the body face, set heavier so a
-                      headline still carries
+     ?font=sans       headlines with no display face at all: Assistant, the
+                      0.8.0-0.16.x body face, set heavier so a headline carries
+     ?font=assistant  the ONE entry that does not touch the headlines: it puts
+                      the BODY back on Assistant, for judging Heebo against the
+                      face it replaced
+
+   `amatic` deliberately has NO rule below. The shipped face lives in `:root` via
+   `--font-display` itself, so selecting it explicitly simply matches nothing and
+   falls through to the default — the same trick `bonanova` and `notosans` each
+   used while THEY were the shipped face.
 
    Every alternate is declared in the locale layout with `preload: false`, so its
    files are only fetched when one of these rules actually applies the family to
    rendered text. A visitor who never types `?font=` downloads exactly the bytes
-   the shipped face needs and nothing else.
+   the shipped faces need and nothing else.
 
    `--font-display` is the single token every headline resolves through (the
    `h1, h2` rule and `.font-display`), so re-pointing it here is the whole swap.
+   `?font=assistant` re-points `--font-sans-hebrew` instead, which is the token
+   the `body` rule and `.free-anchor__free` resolve through. Both rules sit on
+   `:root`, i.e. the same <html> element next/font puts its own class on, and win
+   on specificity ([attr] + :root beats a single class).
 
-   ⚠️ THE WEIGHT HAS TO TRAVEL WITH THE FACE. The `h1, h2` rule now sets a real
-   700, which is right for the shipped face and for the three text serifs below,
-   and WRONG for Bellefair — it has a single 400 master, so leaving it at 700
-   would render a browser-synthesised faux bold and stop being an honest picture
-   of the 0.12.0 site. That is what the `bellefair` weight rule underneath is
-   for. Assistant needs 800 for the opposite reason: a text sans at 700 reads
-   soft at headline size. */
+   ⚠️ THE WEIGHT HAS TO TRAVEL WITH THE FACE. The `h1, h2` rule sets a real 700,
+   which is right for the shipped face, for Bona Nova and for the three text
+   serifs below, and WRONG for Bellefair — it has a single 400 master, so leaving
+   it at 700 would render a browser-synthesised faux bold and stop being an honest
+   picture of the 0.12.0 site. That is what the `bellefair` weight rule underneath
+   is for. Assistant needs 800 for the opposite reason: a text sans at 700 reads
+   soft at headline size.
+
+   ⚠️ AND SO DOES THE FIGURE STYLE. `font-variant-numeric: lining-nums` used to
+   live on the base `h1, h2` rule because Bona Nova was the shipped face and sets
+   OLDSTYLE figures. The shipped face no longer does (Noto Sans Hebrew and Heebo
+   are both lining by default — measured), so that declaration came off the base
+   rule and is restated on `bonanova` below, which is now the only oldstyle face
+   in the building. Without it `?font=bonanova` shows "₪990" and the
+   process-spine "01" bobbing off the baseline, which is not what that release
+   looked like. */
+:root[data-eval-font="notosans"] {
+  --font-display: var(--font-eval-notosans);
+}
+:root[data-eval-font="bonanova"] {
+  --font-display: var(--font-eval-bonanova);
+}
 :root[data-eval-font="bellefair"] {
   --font-display: var(--font-eval-bellefair);
 }
@@ -3432,15 +3560,32 @@ html[data-a11y-emphasize-links="true"]
 :root[data-eval-font="david"] {
   --font-display: var(--font-eval-david);
 }
+/* `sans` names Assistant EXPLICITLY rather than following `--font-sans-hebrew`.
+   It used to follow the body token, which was the same thing while Assistant was
+   the body face; now that the body is Heebo, following it would silently turn
+   this variant into "Heebo 800" and stop being the comparison it has always
+   been. */
 :root[data-eval-font="sans"] {
-  --font-display: var(--font-sans-hebrew);
+  --font-display: var(--font-eval-assistant);
+}
+
+/* The one variant that swaps the BODY rather than the headlines. */
+:root[data-eval-font="assistant"] {
+  --font-sans-hebrew: var(--font-eval-assistant);
+}
+
+/* Bona Nova is the only OLDSTYLE-figure face left, so it carries the
+   `lining-nums` that used to sit on the base rule — see the note above. Its
+   weight and tracking are already what the base rule sets, so nothing else here. */
+:root[data-eval-font="bonanova"] :is(h1, h2, .font-display) {
+  font-variant-numeric: lining-nums;
 }
 
 /* Bellefair has ONE master at 400. The base rule's 700 would be synthesised on
    it — the exact smeared outline 0.12.0's notes warned about — so this variant
    has to hand the weight back, along with the zero tracking that face was tuned
-   with. Its digits are lining figures already, so `lining-nums` is harmless
-   here and is left inherited rather than restated. */
+   with. Its digits are lining figures already (measured), so it needs no
+   `font-variant-numeric` of its own. */
 :root[data-eval-font="bellefair"] :is(h1, h2, .font-display) {
   font-weight: 400;
   letter-spacing: 0;
@@ -4125,23 +4270,22 @@ html[data-a11y-emphasize-links="true"]
    Daniel, 2026-07-30: "the buttons didn't agree on pink."
 
    The FILLS had already moved to the accent in 0.11.4 — every filled CTA on the
-   site renders `--rose-deep` (#8a1f58 since the move to the live site's pink).
+   site renders `--rose-deep` (#1e6876 since the 0.17.0 move to Pnina's sea).
    What had not moved was the 1px rim on this one button, which was still
-   `--gold` at 55%: a bright metal hairline, hue 45°, drawn tight around a pink
-   pill at hue 330°,
-   and the single loudest piece of gold left on any button. On the free-call
-   panel it reads as a gilded edge belonging to the previous scheme, which is
-   exactly the disagreement.
+   `--gold` at 55%: a bright metal hairline, hue 45°, drawn tight around a pill
+   that was then at hue 330°, and the single loudest piece of gold left on any
+   button. On the free-call panel it read as a gilded edge belonging to the
+   previous scheme, which is exactly the disagreement.
 
    So the rim becomes a variable like the stops, and it follows the accent:
-     • light — a PALE pink (`--rose`, #e28fb9) round a deep pink fill. The rim is
-       lighter than what it surrounds, which is what made the gold rim read as a
-       rim in the first place; keeping that relationship inside the pink family
-       keeps the "rose gold" pairing this site is built on without a second hue.
-     • dark  — the fill inverts to a LIT pink (#e28fb9), so a pale rim would
-       vanish into it. `--rose-line` (#d98bb2 after dark) is the pink that is
-       one step darker than the fill, so the relationship inverts with the
-       scheme exactly as the stops do.
+     • light — a PALE turquoise (`--rose`, #6ed1d8) round a deep teal fill. The
+       rim is lighter than what it surrounds, which is what made the gold rim
+       read as a rim in the first place; keeping that relationship inside one
+       family keeps the metal pairing this site is built on without a second hue.
+     • dark  — the fill inverts to a LIT turquoise (#8bdee4), so a pale rim would
+       vanish into it. `--rose-line` (#7dcbd4 after dark) is the one step darker
+       than the fill, so the relationship inverts with the scheme exactly as the
+       stops do.
    Decorative in both: this hairline never carries a glyph, so it has no
    contrast floor to clear — the LABEL's ratios are the six numbers above, and
    they are unchanged by this block.
@@ -4150,19 +4294,20 @@ html[data-a11y-emphasize-links="true"]
    same two variables; that is what makes `?accent=amber` still the honest
    pre-0.11.4 rendering. */
 .cta-hot {
-  /* Rebuilt around the new `--rose-deep` (#8a1f58) on 2026-07-30, keeping the
-     old gradient's lightness spread exactly (−5.6 / 0 / +2.4 / +3.9 points of
-     HSL L around the fill) and taking the family's new hue and saturation.
+  /* Rebuilt around `--rose-deep` again in 0.17.0 (#1e6876, her sea),
+     keeping the gradient's lightness spread exactly as it has been since
+     2026-07-30 — −5.6 / 0 / +2.4 / +3.9 points of HSL L around the fill — and
+     taking the family's new hue and saturation. That spread is why this is a
+     four-line edit each time the accent moves rather than a re-design.
      Every stop measured with --cta-ink #fff8f5 on it:
-       from 10.17  ·  mid 8.27  ·  to 7.57  ·  hover-to 7.16
-     The old family's lightest stop was 4.79:1, which is why the note at the top
-     of this file used to say there was no headroom left at the light end. There
-     is now — but that is headroom to SPEND deliberately, not a licence to
-     lighten this gradient until it is a highlighter. */
-  --cta-hot-from: #731a49;
-  --cta-hot-mid: #8a1f58;
-  --cta-hot-to: #94215e;
-  --cta-hot-hover-to: #9a2362;
+       from 8.09  ·  mid 6.07  ·  to 5.42  ·  hover-to 5.05
+     There is headroom at the light end — but that is headroom to SPEND
+     deliberately, not a licence to lighten this gradient until it is a
+     highlighter. */
+  --cta-hot-from: #18545f;
+  --cta-hot-mid: #1e6876;
+  --cta-hot-to: #207080;
+  --cta-hot-hover-to: #227586;
   --cta-hot-edge: color-mix(in srgb, var(--rose) 70%, transparent);
   --cta-hot-edge-hover: color-mix(in srgb, var(--rose) 92%, transparent);
   background-image: linear-gradient(
@@ -4178,13 +4323,13 @@ html[data-a11y-emphasize-links="true"]
 
 @media (prefers-color-scheme: dark) {
   .cta-hot {
-    /* Hue-shifted 342° → 330° with the rest of the family, same lightness.
-       Every stop with --cta-ink #1d0f15 on it: from 6.48 · mid 7.83 · to 8.78 ·
-       hover-to 11.06. */
-    --cta-hot-from: #d970a4;
-    --cta-hot-mid: #e28fb9;
-    --cta-hot-to: #e79cc2;
-    --cta-hot-hover-to: #f0bcd6;
+    /* Hue-shifted with the rest of the family, same lightness spread.
+       Every stop with --cta-ink #1d0f0b on it: from 9.11 · mid 10.69 · to 11.60
+       · hover-to 13.86. */
+    --cta-hot-from: #74d9e1;
+    --cta-hot-mid: #8bdee4;
+    --cta-hot-to: #97e2e8;
+    --cta-hot-hover-to: #b8edf1;
     --cta-hot-edge: color-mix(in srgb, var(--rose-line) 80%, transparent);
     --cta-hot-edge-hover: color-mix(in srgb, var(--rose-line) 95%, transparent);
   }
@@ -4227,32 +4372,33 @@ html[data-a11y-emphasize-links="true"]
    clear 4.5:1. The photograph's own median is 222/255 and its tail runs to 76/255,
    so it cannot carry small type directly. Full stop.
 
-   ── SO READABILITY MOVED OFF THE SAND AND ONTO PAPER ──
-   The sand is now at full strength everywhere, and the type sits on a translucent
-   paper veil instead: `--background` (see the note beside it at the top of this
-   file) is no longer `transparent` but a cream at 55% over the sand, which every
-   `bg-background` section already paints. That is the "readability panel" answer,
-   applied through a token instead of through 24 components:
+   ── SO READABILITY MOVED OFF THE PICTURE AND ONTO PAPER ──
+   The photograph is at full strength, and the type sits on a translucent paper
+   veil over it: `--paper-veil`, painted ONCE by `body::before` (see the long note
+   on that rule below). That is the "readability panel" answer, applied through one
+   layer instead of through 24 components:
 
      • the hero shows the photograph at 100% — no veil, no blend mode, no opacity —
-       and so does a soft band at every join between two sections, because the veil
-       ramps in and out over `--paper-fade` (below);
-     • under the type the same photograph reads through the paper at 45%. That is
-       the number Daniel's 2026-07-30 note moved: at the 16% this shipped with, the
-       picture was measurable and not visible, and every band below the hero read
-       as "one single colour background" with a hairline of sand at each join;
-     • the darkest background a glyph can land on is `0.55 × canvas + 0.45 × 193`,
-       i.e. 223/255 — and the auroras, the colour field and the cards spend more
-       on top of that, which is why the ink ladder was darkened in the same
-       commit rather than the veil being put back.
+       because the sheet starts one viewport down;
+     • everywhere below it, the same photograph reads through the paper at 60%;
+     • the darkest background a glyph can land on is
+       `0.40 × canvas + 0.60 × FLOOR`, and the auroras, the colour field and the
+       cards all spend more on top of that.
 
-   The 193 in that sum is the plate's floor after the shadow knee in grade-sand.mjs,
-   and it is the ONLY thing that script now does to the light plate. Read the note
-   there before regrading: the knee, the veil and the audit are one system, and
-   moving either number means re-running the audit over the rendered text (method in
-   the CHANGELOG for 0.11.3: blank every glyph, screenshot, sample the real pixels
+   FLOOR is the plate's floor after the shadow knee in `extend-sunset.mjs` — linear
+   L 0.218 on the phone plate, the tighter of the two. Read the note there before
+   regrading: the knee, the veil and the audit are one system, and moving either
+   number means re-running the audit over the rendered text (method in the
+   CHANGELOG for 0.11.3: blank every glyph, screenshot, sample the real pixels
    behind each line — and disable smooth scrolling first, or the screenshot and the
    scroll offset disagree and every reading is fiction).
+
+   ⚠️ The paragraphs above and below this one were written about DANIEL'S SAND
+   (`sand-*.webp`, `grade-sand.mjs`, a plate floored at 195/255) and are kept
+   because the reasoning is what stops the multiply-blend idea coming back. The
+   plate itself is Pnina's sunset photograph as of 0.17.0 and the numbers moved
+   with it; where an old figure (0.55, 45%, 193/255) contradicts one above, the
+   one above is current.
 
    ── AND THEN THE GRADE ITSELF HAD TO GO (2026-07-30) ──
    0.12.1 shipped the photograph, but a graded one: a ×1.09 multiply lifted the
@@ -4316,38 +4462,70 @@ html[data-a11y-emphasize-links="true"]
   isolation: isolate;
 }
 
-/* ── THE PAPER'S EDGE ──
-   A flat `background-color` veil meets the bare hero along a dead-straight line
-   right under the fold, and it reads as a rendering fault rather than as a
-   surface. So the veil is painted as a GRADIENT instead: it comes up out of
-   nothing over `--paper-fade`, holds, and goes back to nothing at the other end.
+/* ── ONE VEIL FOR THE WHOLE PAGE, NOT ONE PER SECTION (0.17.0) ──
+   ⛔ DO NOT PUT THE VEIL BACK ON `bg-background`. Read this first.
 
-   The point is not only the missing seam. Sections are stacked edge to edge, so
-   two of these fades meet at every join, and the sand runs back up to FULL
-   strength in a soft band there — which is a second place, all the way down the
-   page, where the photograph is the photograph and not a texture under paper.
+   Until 0.17.0 the paper veil was painted by every full-bleed band on the site
+   (24 of them) as a vertical GRADIENT: transparent → `--background` over
+   `--paper-fade`, hold, → transparent again. The fade existed so the veil never
+   met the bare hero along a dead-straight line.
 
-   `--paper-fade` is 2rem because that is comfortably inside the smallest vertical
-   padding any of these sections has (`py-12`, 3rem): no line of type ever starts
-   inside the ramp. Widening it past that would start putting body copy on sand
-   the audit has not measured.
+   That works only while the veil is nearly invisible. The moment it came back at
+   40% to carry Pnina's much darker photograph, the design's own arithmetic
+   turned against it: sections are stacked edge to edge, so TWO of those fades
+   meet at every join, and the photograph ran back to FULL strength in a band
+   there. Daniel, looking at it: *"what is this weird line I'm seeing around
+   where the first header ends… it's in the background like every couple of
+   scrolls."* Those lines were not a bug in one section — they were one per join,
+   all the way down the page, and between them the photograph was hidden.
 
-   UNLAYERED ON PURPOSE. It has to beat the `bg-background` utility, which sets
-   `background-color`, and Tailwind's utilities live in a cascade layer — unlayered
-   author rules win over every layer. Scoped to `section`/`footer` because that is
-   what `bg-background` is on, everywhere (24 uses, all of them full-bleed page
-   bands); a small element with this class would get a fade it never asked for. */
-section.bg-background,
-footer.bg-background {
-  --paper-fade: 2rem;
-  background-color: transparent;
-  background-image: linear-gradient(
+   So the veil stops being a property of sections and becomes ONE layer. It is a
+   single absolutely-positioned sheet that starts one viewport down (so the hero
+   keeps the photograph at full strength, which is the one thing Daniel said was
+   already right) and runs to the end of the document, with a 6rem ramp at its
+   top edge so the hero hands over without an edge.
+
+   Consequences worth knowing:
+     • `--background` is `transparent` again, so `bg-background` paints nothing
+       and there are no joins to band. Every section shows the same picture at
+       the same strength.
+     • There is exactly ONE fade on the page instead of 24, and it is at the one
+       place a fade was ever wanted.
+     • `--paper-fade` is gone. Nothing reads it.
+   `<body>` is the containing block (it is `position: relative` for this), and the
+   sheet sits at `z-index: -9` — above the photograph (-11) and the colour field
+   (-10), below every scrap of content. */
+body {
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 100vh;
+  bottom: 0;
+  z-index: -9;
+  pointer-events: none;
+  background: linear-gradient(
     to bottom,
     transparent 0,
-    var(--background) var(--paper-fade),
-    var(--background) calc(100% - var(--paper-fade)),
-    transparent 100%
+    var(--paper-veil) 6rem,
+    var(--paper-veil) 100%
   );
+}
+
+/* The reader who asked the OS for more contrast has no photograph under her type
+   (§10 hides the plate), so there is nothing for this to protect her from — and
+   a cream sheet over a bare canvas would only mute the ink. */
+@media (prefers-contrast: more) {
+  body::before {
+    display: none;
+  }
+}
+
+html[data-a11y-enhanced-contrast="true"] body::before {
+  display: none;
 }
 
 /* ⚠️ THE FOOTER DOES NOT GET ITS OWN VEIL, AND THE REASON IS A MEASUREMENT BUG.
@@ -4368,23 +4546,41 @@ footer.bg-background {
 /* The static plate — the photograph itself. It is the whole layer for anyone
    without WebGL, for anyone under reduced motion, and for everybody during the
    first paint; the ripple canvas then replaces it with the same file at the same
-   `cover` framing, so the hand-off is invisible. */
+   `cover` framing, so the hand-off is invisible.
+
+   ── THE PHOTOGRAPH CHANGED IN 0.17.0, THE MECHANISM DID NOT ──
+   It was Daniel's cream rippled sand (`sand-*.webp`, graded by
+   scripts/media/grade-sand.mjs). It is now PNINA'S OWN image: a peach-gold
+   sunset over the sea with her open shell and pearl on the sand — the picture
+   she built her Canva document on and asked for full-bleed. Her palette brief
+   (2026-08-02) is לבן · שמנת · בז' · אפרסק עדין · זהב עדין · חום טבעי ·
+   תכלת־כסף, and this plate is where the אפרסק and the אור in it actually live.
+
+   The class names are deliberately unchanged. `.sand-floor` still describes
+   what is on screen — her frame is sand, sea and shell — and renaming it would
+   churn the WebGL layer, the boundary-surface rules on phones, the process
+   suite and `SandFloor` itself for a swapped file.
+
+   ⚠️ THESE FOUR FILES ARE INTERIM. They are built from her 362×514 original by
+   scripts/media/extend-sunset.mjs, which continues the picture sideways by
+   stretching its own edge bands. That is honest at full-bleed and soft if you
+   go looking. Replace all four the moment a real wide/tall render arrives; the
+   paths do not change. */
 .sand-floor__plate {
   position: absolute;
   inset: 0;
-  background-image: url("/images/sand-light.webp");
+  background-image: url("/images/bg-sunset.webp");
   background-size: cover;
   background-position: center;
 }
 
-/* A phone in portrait gets its OWN photograph — a real 9:16 frame, 960×1720 and
-   175KB, whose ripples run down the screen — rather than a 16:9 plate cropped to a
-   slot. `cover` at 390×844 renders it at 471 CSS px wide, so 960 source pixels is
-   exactly a 2×-DPR phone. `sand-floor.tsx` mirrors this query in JS so the canvas
-   loads the same file and not a second one. */
+/* A phone in portrait gets its OWN framing — a real 9:16 plate rather than a
+   16:9 one cropped to a slot, so the shell and the horizon both survive instead
+   of the crop eating one of them. `sand-floor.tsx` mirrors this query in JS so
+   the canvas loads the same file and not a second one. */
 @media (max-width: 640px) and (orientation: portrait) {
   .sand-floor__plate {
-    background-image: url("/images/sand-light-portrait.webp");
+    background-image: url("/images/bg-sunset-portrait.webp");
   }
 }
 
@@ -4408,11 +4604,11 @@ footer.bg-background {
      the dark canvas the way the light one is graded to sit on cream, and the veil
      over it inverts with the scheme. */
   .sand-floor__plate {
-    background-image: url("/images/sand-dark.webp");
+    background-image: url("/images/bg-sunset-dark.webp");
   }
   @media (max-width: 640px) and (orientation: portrait) {
     .sand-floor__plate {
-      background-image: url("/images/sand-dark-portrait.webp");
+      background-image: url("/images/bg-sunset-dark-portrait.webp");
     }
   }
 }
@@ -4427,7 +4623,7 @@ footer.bg-background {
   }
 }
 
-/* ── 11. EVALUATION SWITCHER: `?accent=pink|amber|gold` ────────────
+/* ── 11. EVALUATION SWITCHER: `?accent=sea|peach|pink|amber|gold` ────────────
    ⚠️ TEMPORARY, and it goes the way §7 and §8 go — delete this block,
    `requestedAccent()` in src/lib/eval-flags.ts and the accent half of
    `eval-motion-script.tsx` / `eval-overrides.tsx` once the accent is settled with
@@ -4438,19 +4634,22 @@ footer.bg-background {
    gold — because the bright metal only ever landed in hairlines while every
    primary CTA stayed brown. Three accents were built so he could judge them by
    scrolling the real site in each. On 2026-07-30 he picked the pink ("pink again
-   looks better as contrast"), so:
+   looks better as contrast"). On 2026-08-02 Pnina said the colours were not what
+   she asked for, and her own list has no pink in it, so the DEFAULT moved to her
+   peach and the pink moved in here beside the others.
 
-     ?accent=pink    THE DEFAULT and the shipped site. It has NO rules in this
-                     section, deliberately: the pink lives in `:root` at the
+     ?accent=sea     THE DEFAULT and the shipped site. It has NO rules in this
+                     section, deliberately: her turquoise lives in `:root` at the
                      top of this file with every other token, because it is the
-                     design now and not an override of it. (It is the live
-                     site's orchid-magenta family — hue ~330° — not the 342°
-                     rose 0.13.0 shipped, and not the hue-350 mauve before that.)
+                     design now and not an override of it. (Teal at hue 190° for
+                     the fills, turquoise at 184-186° for the light.)
+     ?accent=pink    the 0.12.x-0.16.x rendering, token for token — the live
+                     site's orchid-magenta at hue ~330°. This is what to show her
+                     if she wants to see the version Daniel chose before she did.
      ?accent=amber   the pre-0.11.4 rendering — brown CTA, bronze headline, gold
-                     light. This is what to show Pnina if she does not bless the
-                     pink.
+                     light.
      ?accent=gold    the bright metal takes the CTA.
-     ?accent=reset   forget the stored choice (back to the pink).
+     ?accent=reset   forget the stored choice (back to her sea).
 
    ── WHAT AN ACCENT IS ALLOWED TO CHANGE ──
    ACCENT ROLES ONLY: the filled CTA (`--cta-*`), the colour of warm light on a
@@ -4463,6 +4662,114 @@ footer.bg-background {
    actually lands on, exactly like the tokens at the top of this file. Anything
    that carries a glyph clears 4.5:1 in both schemes; anything decorative is
    marked as such and never carries one. */
+
+/* ══════ peach — the FIRST cut of Pnina's 0.17.0 brief ══════
+   Her first colour list was warm (אפרסק עדין · זהב עדין) and this is the family
+   that answered it literally: soft peach light over a terracotta fill. It is
+   kept because it is a real answer to a real brief and she may prefer it once
+   she sees both — and because the reason it lost is instructive, and is written
+   out beside the accent family in `:root`. Token for token as it stood. */
+:root[data-accent="peach"] {
+  --rose: #f1a883;
+  --rose-line: #e88f68;
+  --rose-ink: #8e3e29;
+  --rose-soft: #fbe7da;
+  --rose-deep: #a04731;
+  --rose-cta-hover: #833625;
+
+  --cta-ink: #fff8f5; /* 5.81:1 on --rose-deep */
+  --cta-edge: rgba(131, 54, 37, 0.42);
+  --cta-glow: rgba(160, 71, 49, 0.5);
+  --cta-edge-hover: rgba(241, 168, 131, 0.7);
+  --cta-glow-hover: rgba(160, 71, 49, 0.72);
+}
+
+:root[data-accent="peach"] .cta-hot {
+  --cta-hot-from: #8a3e2a;
+  --cta-hot-mid: #a04731;
+  --cta-hot-to: #a94b34;
+  --cta-hot-hover-to: #af4e36;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="peach"] {
+    --rose: #f2c0aa;
+    --rose-line: #e09f85;
+    --rose-ink: #f3b191;
+    --rose-soft: #3e1d19;
+    --rose-deep: #efb89f;
+    --rose-cta-hover: #f6ccb6;
+
+    --cta-ink: #1d0f0b; /* 10.69:1 on --rose-deep */
+    --cta-edge: rgba(29, 15, 11, 0.5);
+    --cta-glow: rgba(239, 184, 159, 0.32);
+    --cta-edge-hover: rgba(29, 15, 11, 0.6);
+    --cta-glow-hover: rgba(239, 184, 159, 0.48);
+  }
+  :root[data-accent="peach"] .cta-hot {
+    --cta-hot-from: #eba584;
+    --cta-hot-mid: #efb89f;
+    --cta-hot-to: #f1c2ac;
+    --cta-hot-hover-to: #f6d8ca;
+  }
+}
+
+/* ══════ pink — the site as it stood from 0.12.x to 0.16.x ══════
+   The live site's orchid-magenta family at hue 327-333°, restored token for
+   token: these ARE the values that shipped, not an approximation, so this is a
+   fair comparison rather than a reconstruction of one. It was the DEFAULT until
+   Pnina's colour brief on 2026-08-02 — see the long note beside the accent
+   family in `:root` for why it moved and who moved it.
+
+   Unlike `amber` and `gold` this mode re-points the whole `--rose-*` ladder and
+   not just the accent roles, because in this scheme the ladder IS the accent:
+   the washes, the hairline and the panel light were all pink together, and
+   leaving them peach under a magenta button would show Daniel something that
+   never existed. Nothing here touches the ink ladder or a surface. */
+:root[data-accent="pink"] {
+  --rose: #e28fb9;
+  --rose-line: #dd7fae;
+  --rose-ink: #a32d6b;
+  --rose-soft: #f7d6e6;
+  --rose-deep: #8a1f58;
+  --rose-cta-hover: #74184a;
+
+  --cta-ink: #fff8f5; /* 8.27:1 on --rose-deep */
+  --cta-edge: rgba(116, 24, 74, 0.42);
+  --cta-glow: rgba(138, 31, 88, 0.5);
+  --cta-edge-hover: rgba(226, 143, 185, 0.7);
+  --cta-glow-hover: rgba(138, 31, 88, 0.72);
+}
+
+:root[data-accent="pink"] .cta-hot {
+  --cta-hot-from: #731a49;
+  --cta-hot-mid: #8a1f58;
+  --cta-hot-to: #94215e;
+  --cta-hot-hover-to: #9a2362;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-accent="pink"] {
+    --rose: #e9a3c6;
+    --rose-line: #d98bb2;
+    --rose-ink: #f0a6c9;
+    --rose-soft: #4a1c31;
+    --rose-deep: #e28fb9;
+    --rose-cta-hover: #e79cc2;
+
+    --cta-ink: #1d0f15; /* 7.83:1 on --rose-deep */
+    --cta-edge: rgba(29, 15, 21, 0.5);
+    --cta-glow: rgba(226, 143, 185, 0.32);
+    --cta-edge-hover: rgba(29, 15, 21, 0.6);
+    --cta-glow-hover: rgba(226, 143, 185, 0.48);
+  }
+  :root[data-accent="pink"] .cta-hot {
+    --cta-hot-from: #d970a4;
+    --cta-hot-mid: #e28fb9;
+    --cta-hot-to: #e79cc2;
+    --cta-hot-hover-to: #f0bcd6;
+  }
+}
 
 /* ══════ amber — the site as it stood before 0.11.4 ══════
    The brown CTA and the gold halo, restored token for token from `--brand` /

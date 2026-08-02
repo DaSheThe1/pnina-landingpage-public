@@ -272,9 +272,19 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   `rgba(1,2,3,0.4)`. The template shipped several of these silently broken.
 - `src/middleware.ts` must NOT be renamed to `proxy.ts` despite Next 16's
   deprecation warning — see the comment in that file. It causes a redirect loop.
-- Design tokens (v0.8.0 — cream · gold · brown, her palette, NOT the template's
-  plum · teal). `--brand` (#6b4f3a natural brown) is the filled-CTA background
-  AND every soft wash; `--brand-accent` (#855128 bronze) is the brand colour for
+- Design tokens (v0.8.0 — cream · gold · brown, NOT the template's plum · teal).
+  **The whole colour system answers to one brief, and the brief is Pnina's own.**
+  She reviewed the live site on 2026-08-02 and sent her palette through Daniel:
+  the page should carry
+  לבן · שמנת · בז' · אפרסק עדין · זהב עדין · חום טבעי · תכלת־כסף,
+  and it should read as
+  רוגע · תקווה · חוזק · אלגנטיות · נשיות · אור.
+  Those six words are what a new colour has to be checked against, and that list
+  is the reason the accent moved (next bullet). Almost all of it was already on
+  the page — her palette and this site's surfaces were never far apart — which is
+  why answering her was a hue move and not a redesign.
+  `--brand` (#6b4f3a natural brown) is the filled-CTA background
+  AND every soft wash; `--brand-accent` (#7d4b25 bronze) is the brand colour for
   TYPE; `--brand-deep` is the small badge that carries white ink in both schemes.
   `--gold` and `--teal` (a silver-blue, name kept from the old scheme) are
   **decorative only** and fail AA as text — their `-deep` siblings are the
@@ -283,28 +293,159 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   on every surface the form appears on. Every ratio is measured and written down
   in the header of `src/app/globals.css` and at the top of its dark block —
   change a value, re-measure, update the comment in the same commit.
-- **The accent is PINK, and it has to LOOK pink.** The `--rose-*` family is the
-  filled CTA, the panel light and the highlighted headline line. It shipped at
-  hue 348-352° / 30-43% saturation, which read as a brownish mauve, and Daniel
-  said three times that he could not see any pink; a warmer rose (hue 339-344°)
-  followed, and then Daniel chose the LIVE SITE's orchid-magenta over it
-  (2026-07-30: "the pink color is nicer on the version that is currently
-  live"). The family now sits at **hue 327-333°**: light CTA fill `--rose-deep`
-  #8a1f58 carrying `--cta-ink` #fff8f5 at a measured 8.27:1, pink type
-  `--rose-ink` #a32d6b, hover #74184a — the live palette's own graded values.
-  Dark mode deliberately does NOT copy the live site's dark values (its
-  hover-to-near-white would erase the label); it keeps this site's inversion,
-  hue-shifted (lit fill #e28fb9 family, near-black ink).
-  Do not desaturate it back toward brown "for warmth".
+- **The accent is HER SEA — טורקיז. IT WAS PINK UNTIL 2026-08-02.** The
+  `--rose-*` family is the filled CTA, the panel light and the highlighted
+  headline line. Every colour on Pnina's list (previous bullet) was already a
+  token on this site except one: **there is no pink on her list**, and the
+  orchid-magenta accent was the only colour on the page answering to nothing in
+  it. When she said the colours were not what she asked for, this family is what
+  she was describing. Asked directly on 2026-08-02 whether to keep the pink or
+  follow her list, Daniel chose her list.
+  **⚠️ That REVERSES a rule Daniel himself set, and he is the one who reversed
+  it.** The bullet that stood here said "do not desaturate it back toward brown",
+  and it said so because he asked for a visible pink three separate times across
+  0.11.4-0.13.0 — first correcting a mauve at hue 348-352°, then a rose at 342°,
+  and finally choosing the live site's orchid-magenta at hue 327-333° with
+  peninaphaff.com open beside the redesign ("the pink color is nicer on the
+  version that is currently live"). None of that was wrong. It was decided
+  before the client had seen it, and the client's own palette is the tiebreak.
+  So do not read this as "the pink was a mistake", and do not treat it as
+  licence to go re-litigate her list either. The pink is preserved **token for
+  token** behind `?accent=pink` (globals.css §11) — one query parameter away if
+  she turns out to like it after all.
+  **The family is a ramp, not one peach.** אפרסק עדין is a LIGHT colour, and a
+  light colour cannot be the filled CTA on a cream page: the button would have no
+  affordance and its label no contrast. So it runs soft peach at the light end
+  where it is a wash, deepening through coral to a terracotta-rose at the end
+  that has to carry near-white ink. That is the same shape the pink had; only the
+  hue moved. **Her brief came in two passes on 2026-08-02 and the SECOND governs**:
+  the first list was warm (אפרסק עדין · זהב עדין), the second, looking at the
+  result, was *"less dark, more colours of sea, sea water, beach"* —
+  שנהב · פנינה · תכלת · טורקיז · silver. Shipped values, each measured in
+  globals.css: fill `--rose-deep` #1e6876 with `--cta-ink` #fff8f5 on it at
+  6.07:1; type `--rose-ink` #1d677c at 5.99:1 on the canvas; halo `--rose`
+  #6ed1d8 (1.67:1 — DECORATIVE ONLY, never a glyph); wash `--rose-soft` #e2f6f8;
+  hover `--rose-cta-hover` #155160. Dark inverts to a lit turquoise
+  `--rose-deep` #8bdee4 carrying near-black #06171a.
+  **⚠️ DO NOT WARM THE ACCENT BACK TOWARD THE SAND.** Two cuts have been lost
+  that way. `--brand-accent` (bronze) is hue 26° and `--gold-deep` 37°, so any
+  warm accent lands within ~10° of colours the site already uses for ink and
+  metal, and the CTA stops reading as a CTA. The turquoise is on her list, it is
+  the sea in her own photograph, and it is roughly complementary to the peach
+  behind it — the button separates by HUE instead of by being darker than
+  everything else, which is what "less dark" asked for. The full argument is
+  beside the family in globals.css.
+  **The deep end is held at hue 190° and the light end at 184-186°**, which also
+  keeps the whole family clear of `--teal` (#7ea9c0, hue 200°) — the existing
+  silver-blue reassurance chip tint, which must stay a different job from the CTA.
+  ⚠️ **Two cuts of this family have already been rejected, and both failures are
+  worth remembering.** The first put the deep end at hsl(5 60% 32%) — the most
+  contrast the ink ladder allowed — and read as a BRICK: it answered the audit
+  and not the brief. The second lightened it to a terracotta, which read
+  correctly as terracotta and still lost, because it sat ten degrees from the
+  bronze and the page had no accent left. Contrast is a floor here, not the goal.
+  **The token names stay `--rose-*`, deliberately.** They describe nothing now,
+  which is exactly the situation the `plum` / `teal` step-tint keys are already
+  in: read the value, not the key. Renaming 88 call sites for a hue change is
+  churn with a merge conflict attached.
   The highlighted half of a two-part heading is `--headline-accent`, which is
-  `--rose-deep` itself: the headline and the button are the same pink BY
-  CONSTRUCTION and must not drift apart again. Use `text-headline-accent` (or
-  `.text-gradient`) there, never `text-brand-accent`. For pink TYPE at body size
-  use `--rose-ink` instead.
-- Fonts: display **Bona Nova at a real weight 700**, body **Assistant**, both
-  loaded in `src/app/[locale]/layout.tsx`. The h1/h2 + `.font-display` rule in
-  `globals.css` sets `font-weight: 700`, `letter-spacing: -0.008em`,
-  `line-height: 1.15` and — non-negotiably — `font-variant-numeric: lining-nums`.
+  `--rose-deep` itself: the headline and the button are the same colour BY
+  CONSTRUCTION and must not drift apart again. **That construction is what let
+  the entire family change hue without a single call site changing — keep it.**
+  Use `text-headline-accent` (or `.text-gradient`) there, never
+  `text-brand-accent`. For accent TYPE at body size use `--rose-ink` instead.
+  The evaluation switcher is now `?accent=sea|peach|pink|amber|gold`, with **sea
+  as the shipped default** — and like every default on this site it has NO rules
+  in globals.css §11, because it lives in `:root` with every other token. It is
+  the design now, not an override of it. (`?accent=reset` forgets a stored
+  choice.) §11 goes the way §7 and §8 go once the accent is settled with her.
+- **The full-bleed background is PNINA'S OWN PHOTOGRAPH** (globals.css §10,
+  `src/components/motion/sand-floor.tsx`): a peach-gold sunset over the sea with
+  her open shell and pearl on the sand — the picture she built her Canva document
+  on and asked to have full-bleed. It is where the אפרסק and the אור in her brief
+  actually live. It replaced Daniel's cream rippled sand in 0.17.0, so the four
+  `public/images/sand-*.webp` plates and `scripts/media/grade-sand.mjs` that made
+  them are **superseded**: nothing references them, and nothing should start.
+  What ships is `public/images/bg-sunset{,-portrait,-dark,-dark-portrait}.webp`,
+  built by `scripts/media/extend-sunset.mjs` from
+  `private-media/originals/pnina-sunset-original.png` and committed (the site is
+  a static export; there is no request-time image pipeline).
+  **The class names are unchanged on purpose.** `.sand-floor` / `SandFloor`
+  still describe what is on screen — her frame is sand, sea and shell — and
+  renaming them would churn the WebGL layer, the phone boundary-surface rules,
+  the process suite and the component itself for a swapped file.
+  **⚠️ These four plates are INTERIM.** Her original is 362×514 and there is no
+  larger one, so the script fits it on its tight axis and then continues the
+  picture sideways by stretching its own smoothed edge column. That works because
+  once you leave the shell the image is nothing but horizontal bands — sky, sun,
+  sea, foam, sand — so each one continues at its correct height and colour; a
+  mirrored-and-blurred frame was tried first and read as a photograph between two
+  grey bars. It is honest at full-bleed and soft if you go looking. Daniel is
+  generating proper wide/tall renders; replace all four the moment they land. The
+  paths do not change, so nothing else has to.
+- **`--background` — the paper veil — went from `transparent` back to 40%, and
+  that reverses a launch-night decision of Daniel's.** He turned it off on
+  2026-07-30: *"Just put the color that we have and if something is not really
+  seen, well I will tell you myself. Stop remeasuring… Just use our photo."* For
+  HIS plate that was right, and the reason is not aesthetic: `grade-sand.mjs`
+  floored the sand at linear L 0.47, so the darkest pixel a glyph could land on
+  was already 7.5:1 against `--foreground` with no veil at all. The veil
+  genuinely bought nothing. Her photograph is not that — it is a real sunset with
+  a sea, a shadow under the shell and a dark crevice between the valves, and its
+  darkest one percent measured **linear L 0.115, i.e. 2.64:1** against
+  `--foreground` and 1.37:1 against `--subtle-foreground`. Off there is not a
+  preference, it is unreadable text on a page written for women in distress.
+  The gap is paid on **both** sides, because paying it entirely on either one
+  ruins something: the plate takes a shadow knee up to linear L 0.24 (`FLOOR` in
+  `extend-sunset.mjs`), which removes the black tail without lifting the picture
+  — flooring it back to the sand's 0.47 would have raised more than half the
+  frame, whose median is 0.418, and thrown the sunset away to preserve an old
+  number — and this veil takes the rest at 40%. 34% was the first candidate and
+  misses `--subtle-foreground` by 0.19 (4.31 against a 4.5 floor), which is the
+  same smallest-type pair that has caught every previous version of this number;
+  40% clears it at 4.67. It is still a long way from the 84% Daniel called a
+  "single colour background": her photograph reaches the screen at 60% under
+  type, and at 100% in the hero and at every section join, which is the point of
+  it. After dark the binding number is the other end — the ink is white and the
+  sun is the problem — so the dark plates are graded into a narrow band just
+  above the dark canvas (`DARK_LO` / `DARK_HI` in `extend-sunset.mjs`) and their
+  brightest pixel measures 6.45:1 against `--subtle-foreground` on its own.
+  **The plate's FLOOR and this number move together.** Read the long comment
+  beside `--background` before touching either, and re-run the audit (method:
+  docs/12 §J6) rather than nudging it by eye.
+- **Fonts: her 2026-08-02 brief, and what it does NOT change.** Pnina sent two
+  font names with her palette. Neither can be taken literally, and the reasons
+  are worth keeping because they will be asked again:
+  - **"Comika" is LATIN-ONLY.** That is the whole answer. Canva was silently
+    substituting a different face for every Hebrew word in her document, so what
+    she was looking at when she named it was never Comika — licensing it would
+    have bought exactly nothing on a Hebrew-only site. What she was pointing at
+    is the FEELING: a rounder, softer, more handwritten display voice than the
+    serif that ships. That is answerable with a Hebrew face; the name is not.
+  - **"Helvetica World"** is a real paid Linotype family and we have no files
+    for it. It is answered with its free Hebrew-grotesque equivalent, which is
+    the same brief (a neutral, wide-coverage grotesque) sourced somewhere we can
+    actually ship from.
+  - **THE HEADLINES ARE STILL SUPPOSED TO BE BOLD, at a real weight 700.** Her
+    document is light because it is a welcome letter, not a landing page, and a
+    letter and a landing page do not have the same job. Daniel asked for bold
+    three separate times (see below) and nothing on 2026-08-02 touched that. Do
+    not read "softer face" as "lighter weight".
+- Fonts: display **Amatic SC**, body **Heebo**, both loaded in
+  `src/app/[locale]/layout.tsx`. **Pnina chose Amatic SC herself** from Google
+  Fonts on 2026-08-02, which retires three releases of guessing (Frank Ruhl →
+  Bellefair → Bona Nova → Noto Sans Hebrew). Three things about it are
+  load-bearing and are argued in full at the head of the locale layout:
+  it is a HEADINGS-ONLY face (condensed hairline strokes, genuinely hard to read
+  at body size, and this page is read by people in distress); every display call
+  site was sized UP ~1.42x because Amatic sets far smaller than the face it
+  replaced; and its 700 is about the weight of a normal face's regular, so the
+  bold rule below is not repealed but is being satisfied by a light face at its
+  own maximum. If the headlines read too faint, the answer is SIZE or a new
+  conversation with her, **never** a synthesised weight or a `-webkit-text-stroke`
+  (this project has tried and rejected each of those once). The h1/h2 + `.font-display` rule in
+  `globals.css` sets `font-weight: 700`, `letter-spacing: -0.008em` and
+  `line-height: 1.15`.
   **THE HEADLINES ARE SUPPOSED TO BE BOLD. Do not walk this back.** Daniel asked
   three separate times ("make the text bold … either choose a bold font or just
   choose a font which has boldness … and when I mean the headers, I mean
@@ -313,31 +454,60 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   at 400 plus a `-webkit-text-stroke: 0.4px currentColor` standing in for the
   bold it does not have, and he rejected that too. Both the stroke rule and its
   two exclusions are **deleted**, and they are not to come back: they were
-  compensation for a missing bold, and this face has one.
-  Bona Nova was picked by rendering the real hero headline in all five loaded
-  candidates at 700, at the real hero size, side by side — it is the only one
-  that is genuinely heavy and still elegant (Frank Ruhl goes blunt, Noto Serif
-  Hebrew wraps the hero to three lines, David Libre reads as the Israeli
-  office default, Assistant 800 is just the body face again). The full argument
-  is at the head of the locale layout.
-  **`lining-nums` is mandatory, not a refinement**: Bona Nova sets OLDSTYLE
-  figures by default, so without it "₪990" and the process-spine "01" ride off
-  the baseline. It also needs the `latin` subset — the digits and curly quotes
-  live there, only ₪ and the letters ride in `hebrew` — and it loads 400 as well
-  as 700, because `.free-anchor__free` and the display numerals sit in the family
-  at text sizes. The ~+12% size compensation each display call site got in 0.12.0
-  is KEPT: Bona Nova's Hebrew sits at nearly the same optical size, and the set
-  was re-judged at 1440 and 390 rather than assumed.
+  compensation for a missing bold, and every face since has one.
+  **Noto Sans Hebrew was IDENTIFIED, not chosen, and shipped for about a day
+  before she picked (0.17.0).** It is kept at `?font=notosans`. It is the face Canva
+  was substituting into Pnina's own document — i.e. the thing she was actually
+  looking at when she said "Comika". The identification is a binary letterform
+  fact rather than a resemblance score: in her document the **פ and ף are drawn
+  with the inner tongue rising ABOVE the top bar**, verified in the raw pixel
+  grid on four separate pe glyphs at two sizes. Sweeping that one feature across
+  all 137 Google-Fonts files carrying a Hebrew subset eliminates Heebo,
+  Assistant, Rubik, Arimo, IBM Plex Sans Hebrew, Miriam Libre, Secular One,
+  M PLUS, Segoe UI, Arial and Tahoma outright — every one of them closes the pe
+  at the bar. Two survivors are light non-rounded text sans faces (Noto Sans
+  Hebrew and Open Sans); a height-free width fingerprint puts Noto first of all
+  137. **Do not "improve" this to a face that merely looks similar** — the pe
+  test is cheap, repeatable and decisive, and it is in the head of the locale
+  layout.
+  The cost of the swap, recorded honestly: display and body are now both
+  neutral sans faces, so the headline/body pairing is carried by weight and size
+  rather than by a change of species. That is a real loss of typographic contrast
+  and it was accepted deliberately, because both halves are the client's. If the
+  headlines start reading as "the body text, bigger", the fix is size and
+  tracking, **not** a serif smuggled back in.
+  **Heebo answers "Helvetica World"** — the paid Linotype family we have no files
+  for. Heebo is the Hebrew grotesque that reads as the Israeli system default,
+  which is precisely what Helvetica is; it is the face Assistant replaced in
+  v0.8.0 for exactly that quality, and the brief has now reversed.
+  ⚠️ `font-variant-numeric: lining-nums` is **no longer on the base rule**, and
+  that is correct rather than an oversight. It was mandatory FOR BONA NOVA, which
+  sets oldstyle figures. Noto Sans Hebrew and Heebo are both lining by default
+  (measured: ten digits sharing a baseline to within 2px at 200px, where Bona
+  Nova spreads 50px), so the declaration now lives only on the `?font=bonanova`
+  rule in globals.css §8, the one place it still does any work.
+  Both faces still need the `latin` subset as well as `hebrew`: the digits and
+  the curly quotes live in latin, only ₪ and the letters ride in hebrew.
+  The display family loads **700 and nothing else** — it is preloaded, so every
+  declared weight is two more files on arrival, and no call site on the site sets
+  it below 700 (`.free-anchor__free` is re-pointed to the BODY face in §9). If
+  you ever do set one lower, add the master in the same commit; do not let a
+  browser synthesise it.
+  Neither face ships a `tnum` feature, and neither needs one: Heebo's ten digit
+  advances are identical (562/1000em), as are Noto Sans Hebrew's, so there is
+  deliberately no `tabular-nums` anywhere on the site. (This claim used to be
+  made about Assistant and was **false** — Assistant's digit advances spread
+  41/1000em. It is true for the first time as of 0.17.0.)
   The header WORDMARK is a separate thing and is plain `font-bold` — it is set in
-  Assistant, which has a real 700.
-  Assistant ships no `tnum` feature but its digits are uniform-width anyway, so
-  there is deliberately no `tabular-nums` anywhere on the site.
-  Five other faces (Bellefair, Frank Ruhl Libre, Noto Serif Hebrew, David Libre,
-  Assistant 800) are declared in that file with `preload: false` — they exist
-  ONLY for the temporary `?font=` evaluation switcher (globals.css §8) and are
-  never fetched unless the parameter selects them. `?font=bellefair` is the
-  0.12.0 rendering and is pinned back to 400 there, because 700 on it would be a
-  synthesised fake. They go when Daniel confirms the headline face.
+  the body face, which has a real 700.
+  The losing candidates (Noto Sans Hebrew, Bona Nova, Bellefair, Frank Ruhl
+  Libre, Noto Serif Hebrew, David Libre, Assistant) are declared in that file with
+  `preload: false` — they exist ONLY for the temporary `?font=` evaluation
+  switcher (globals.css §8) and are never fetched unless the parameter selects
+  them. `?font=bellefair` is pinned to 400 there, because 700 on it would be a
+  synthesised fake. ⚠️ Do not confuse `?font=notosans` (the SANS)
+  with `?font=noto` (Noto **Serif** Hebrew, a rejected candidate). They go when
+  Pnina confirms the headline face.
 - Type scale: the bottom **seven** rungs of Tailwind's scale (`xs` … `3xl`) are
   **re-pointed in globals.css**, once, right after the `@theme` block —
   15.5 / 18 / 20 / 22 / 24 / 27 / 32px on a phone and
@@ -353,9 +523,12 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   Two things go with it. **`leading-<number>` is a fixed rem length, not a
   ratio, so it does NOT move with the rungs** — use `leading-normal` /
   `leading-relaxed` / `leading-snug`, never `leading-6`. And the display
-  headings are a separate ladder of `text-[Nrem]` call sites (carrying Bona
-  Nova's +12% compensation); they were raised by ≥4px a tier in the same pass
-  and the whole ladder is tabulated in the h1/h2 note in globals.css.
+  headings are a separate ladder of `text-[Nrem]` call sites (the ~+12% size
+  compensation there was tuned for Bellefair and kept through Bona Nova; Noto
+  Sans Hebrew sets WIDER than either, which is why the hero's own rung came back
+  DOWN in 0.17.0 — see the fold note in `HeroSection`). They were raised by ≥4px
+  a tier in the 2026-07-30 pass and the whole ladder is tabulated in the h1/h2
+  note in globals.css.
   **The ONE exclusion is the process scrub's overlay copy** ("Not on the
   animation" — Daniel). `.scrub-beat` / `.scrub-pill` carry a scoped variable
   override that pins the old rungs, so raising the table cannot move them.

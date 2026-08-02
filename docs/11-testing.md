@@ -22,6 +22,7 @@ pnpm test:e2e
 | --- | --- |
 | `accessibility.spec.ts` | axe route scans, preference persistence/migration, focus behavior, reduced motion and fixed-control geometry |
 | `contact-api.spec.ts` | bad input, strict-schema rejection, honeypot, unavailable-webhook fallback and health/version |
+| `hero-fold.spec.ts` | the hero's headline, objection lines, video and whole lead form fitting above the fold at 390×844 and 393×852, the accepted 375×667 limit, the `hero` lead source and no horizontal scroll |
 | `cookie-consent.spec.ts` | Hebrew consent UI, no Google request before opt-in, Consent Mode and withdrawal |
 | `lead-form.spec.ts` | validation, the optional question's privacy boundary, successful and failed submission paths |
 | `navigation.spec.ts` | header anchors and page links, logo, legal links and mobile menu |
@@ -30,6 +31,14 @@ pnpm test:e2e
 
 The privacy assertions in `lead-form.spec.ts` and `contact-api.spec.ts` and the
 real-contact assertion in `smoke.spec.ts` are load-bearing. Do not trim them.
+
+So is `hero-fold.spec.ts`, for a different reason: it is not testing a layout
+preference, it is testing the thing Pnina asked for in as many words on
+2026-08-02 — that a woman opening the site on her phone sees the headline, the
+video and the form without scrolling. That requirement decays silently (every
+new line of copy and every bump to the type scale spends the same budget), and
+nothing else in the suite would notice. If it starts failing, something has to
+come OUT of the hero; do not raise the numbers in the spec to match.
 
 ### Motion suite
 

@@ -14,14 +14,19 @@
  *     /?motion=reset     forget it again (see "STICKY", below). Still worth
  *                        typing once on a machine that stored `force` during the
  *                        review round.
- *     /?font=bonanova|bellefair|frank|noto|david|sans
- *                        swap the display (headline) face. `bonanova` (at a real
- *                        700) is what the site ships as of 0.12.x; `bellefair`
- *                        is the one-weight 0.12.0 rendering it replaced.
- *     /?accent=pink|amber|gold
+ *     /?font=amatic|notosans|bonanova|bellefair|frank|noto|david|sans|assistant
+ *                        swap the display (headline) face. `notosans` (Noto Sans
+ *                        Hebrew at a real 700) is what the site ships — the face
+ *                        Pnina's Canva document turned out to be set in;
+ *                        `bonanova` is the display serif it replaced. The one
+ *                        exception is `assistant`, which swaps the BODY face
+ *                        back to Assistant instead.
+ *     /?accent=sea|peach|pink|amber|gold
  *                        swap the ACCENT family — the filled CTA and the colour
- *                        of warm light on a panel. `pink` (a dusty rose) is the
- *                        shipped site and changes nothing.
+ *                        of light on a panel. `sea` (Pnina's טורקיז) is the
+ *                        shipped site and changes nothing; `peach` is the warm
+ *                        first cut of the same brief; `pink` is the
+ *                        orchid-magenta that shipped from 0.12.x to 0.16.x.
  *     /?accent=reset     forget the stored accent
  *
  * ── WHY `motion=force` EXISTED, AND WHY IT IS NOW REDUNDANT ──
@@ -63,26 +68,41 @@
  * script.tsx`; `EvalOverrides` then asserts the same answer after hydration.
  */
 
-/** The headline faces in §8 of globals.css. `bonanova` is the shipped one — it
- *  lives in `:root` via the `--font-display` variable, not in §8 — so selecting
- *  it explicitly is how you get back to today's headlines inside a tab that has
- *  already been switched. `bellefair` is the 0.12.0 rendering and `frank` the
- *  pre-0.12.0 one. */
+/** The faces in §8 of globals.css. `notosans` is the shipped headline — Noto Sans
+ *  Hebrew 700, the face identified from Pnina's own Canva document — and it lives
+ *  in `:root` via the `--font-display` variable, not in §8, so selecting it
+ *  explicitly is how you get back to today's headlines inside a tab that has
+ *  already been switched. `bonanova` is the 0.12.x-0.16.x rendering, `bellefair`
+ *  the 0.12.0 one and `frank` the pre-0.12.0 one.
+ *
+ *  ⚠️ `noto` is Noto SERIF Hebrew and predates all of this — it is NOT the
+ *  shipped face. The shipped one is `notosans`. Do not merge them.
+ *
+ *  ⚠️ `assistant` is the odd one out: every other key swaps the HEADLINE face,
+ *  that one puts the BODY back on Assistant, which Heebo replaced when Pnina
+ *  asked for "Helvetica World". It rides on this parameter rather than getting a
+ *  second one because it is the same question — which of the client's two
+ *  requested faces is on screen — and because this whole switcher is deleted in
+ *  one piece at the end of the review round. */
 export const FONT_VARIANTS = [
+  "amatic",
+  "notosans",
   "bonanova",
   "bellefair",
   "frank",
   "noto",
   "david",
   "sans",
+  "assistant",
 ] as const;
 export type FontVariant = (typeof FONT_VARIANTS)[number];
 
-/** The accent families in §11 of globals.css. `pink` is the shipped site — the
- *  dusty rose lives in `:root`, not in §11 — so selecting it explicitly is how you
- *  get back to today's look without clearing the key. `amber` is the pre-0.11.4
- *  rendering, which is what Pnina should be shown if she does not bless the rose. */
-export const ACCENT_VARIANTS = ["pink", "amber", "gold"] as const;
+/** The accent families in §11 of globals.css. `sea` is the shipped site —
+ *  Pnina's turquoise lives in `:root`, not in §11 — so selecting it explicitly
+ *  is how you get back to today's look without clearing the key. `peach` is the
+ *  first cut of her 2026-08-02 brief (warm, before she asked for sea colours);
+ *  `pink` is the 0.12.x-0.16.x rendering; `amber` is the pre-0.11.4 one. */
+export const ACCENT_VARIANTS = ["sea", "peach", "pink", "amber", "gold"] as const;
 export type AccentVariant = (typeof ACCENT_VARIANTS)[number];
 
 /** The two localStorage keys this site ever writes. Prefixed and spelled "eval"
@@ -195,10 +215,10 @@ export function prefersReducedMotion(): boolean {
   return document.documentElement.dataset.a11yReduceMotion === "true";
 }
 
-/** The requested headline face, or null for the shipped one (Bona Nova 700).
- *  Deliberately NOT sticky: a font is judged by looking at it, so it is fine to
- *  ask for it every time, and a remembered one would silently mis-report which
- *  face the site actually ships. */
+/** The requested face, or null for the shipped pair (Noto Sans Hebrew 700 for the
+ *  headlines, Heebo for the body). Deliberately NOT sticky: a font is judged by
+ *  looking at it, so it is fine to ask for it every time, and a remembered one
+ *  would silently mis-report which face the site actually ships. */
 export function requestedFont(): FontVariant | null {
   const value = param("font");
   return (FONT_VARIANTS as readonly string[]).includes(value ?? "")

@@ -765,14 +765,14 @@ test("neighboring sections remain painted at both process boundaries", async ({
     "rgb(251, 247, 241)"
   );
   expect(boundaryPaint.before?.backgroundImage).toContain(
-    "sand-light-portrait.webp"
+    "bg-sunset-portrait.webp"
   );
   expect(boundaryPaint.before?.backgroundAttachment).toBe("scroll");
   expect(boundaryPaint.after?.backgroundColor).toBe(
     "rgb(251, 247, 241)"
   );
   expect(boundaryPaint.after?.backgroundImage).toContain(
-    "sand-light-portrait.webp"
+    "bg-sunset-portrait.webp"
   );
   expect(boundaryPaint.after?.backgroundAttachment).toBe("scroll");
   expect(boundaryPaint.audienceBackdrop).toBe("none");

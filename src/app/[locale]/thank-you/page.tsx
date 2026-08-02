@@ -89,7 +89,7 @@ export default async function ThankYouPage({
               <Eyebrow>{t("eyebrow")}</Eyebrow>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-6 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
+              <h1 className="mt-6 text-[4.05rem] leading-[1.06] text-balance sm:text-[5.32rem]">
                 <span className="text-foreground">{t("titleLead")}</span>
                 <span className="text-shimmer">{t("titleHighlight")}</span>
               </h1>
@@ -101,8 +101,43 @@ export default async function ThankYouPage({
             </Reveal>
           </div>
 
+          {/* ── HER WELCOME LETTER, VERBATIM ──
+              Pnina wrote these three lines as the opening of her Canva
+              document, i.e. as the first thing a stranger would read on the
+              landing page. They are the best writing she sent and they were in
+              the wrong place: "ברוכה הבאה לתהליך הליווי האישי שלך" greets
+              someone who has ALREADY said yes, and on a landing page it greets
+              a woman who has not decided anything yet. This page is exactly the
+              person it was written for — she has just left her name and her
+              phone number.
+
+              So it moves here WORD FOR WORD. Do not tighten it, do not merge it
+              into the h1 above, and do not re-phrase it into a promise about
+              what the call will cover. The only liberty taken is a full stop at
+              the end of the middle line, which her document leaves open because
+              it sat there as a masthead line rather than as a paragraph.
+
+              Start-aligned, not centred like the thank-you block above it: this
+              is a letter, its last sentence is long, and centred RTL prose that
+              runs three lines is measurably harder to read. The change of
+              alignment is also what makes it read as HER voice rather than as
+              another line of site copy. */}
+          <Reveal delay={200} className="mt-10">
+            <div className="mx-auto max-w-2xl rounded-3xl border border-foreground/[0.08] bg-surface-1 p-7 sm:p-9">
+              <h2 className="text-[2.7rem] text-foreground sm:text-[3.19rem]">
+                {t("welcomeTitle")}
+              </h2>
+              <p className="mt-3 text-lg text-foreground-soft">
+                {t("welcomeLead")}
+              </p>
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                {t("welcomeBody")}
+              </p>
+            </div>
+          </Reveal>
+
           {/* The video is the point of this page — give it the most room. */}
-          <Reveal delay={200} className="mt-10 lg:mt-12">
+          <Reveal delay={240} className="mt-10 lg:mt-12">
             <ThankYouVideo />
           </Reveal>
 
@@ -209,7 +244,7 @@ export default async function ThankYouPage({
                 className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-brand/15 blur-[100px]"
               />
               <div className="relative">
-                <h2 className="text-[2rem] text-foreground sm:text-[2.4rem]">
+                <h2 className="text-[2.84rem] text-foreground sm:text-[3.41rem]">
                   {t("whileYouWaitTitle")}
                 </h2>
                 <p className="mt-2 max-w-xl text-base text-muted-foreground">

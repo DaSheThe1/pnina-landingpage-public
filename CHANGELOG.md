@@ -12,6 +12,73 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.17.0] - 2026-08-02
+
+### The top of the page now asks for the phone call
+
+- Rebuilt the opening of the home page around what Pnina asked for: a big
+  headline, a short answer underneath it, the video, and the form itself. On a
+  phone all four are on screen the moment the page opens, with no scrolling.
+- The headline names the thing a woman is actually living with, and the three
+  lines under it answer the three reasons not to call: she does not have to tell
+  anyone around her, she does not have to describe what happened, and she is not
+  committing to anything.
+- The first "לשיחת היכרות" button no longer opens a popup. The name, phone and
+  Pnina's question are on the page, where they can be filled in straight away.
+  It is the same form as the one at the foot of the page and it goes to the same
+  place; leads from the top are simply labelled so we can see if this works.
+- Removed the "ליווי אישי ודיסקרטי" line above the headline and the three small
+  reassurance pills below it. The new lines say the same things in her voice.
+- The video frame is horizontal now, as asked. Her current clip was filmed
+  upright, so until the horizontal one arrives it plays in the middle of the
+  frame with a softened copy of itself filling the sides rather than being
+  cropped, which would have cut off her face and the subtitles.
+
+### Her own colours, and her own background
+
+- The pink that was on the buttons and the headlines is gone. It was the one
+  colour on the site that was not on Pnina's list.
+- The buttons and highlighted headlines are now the colour of the sea, which is
+  what she asked for on seeing the first attempt: "less dark, more colours of
+  sea, sea water, beach" — ivory, pearl, azure, turquoise, silver. The warm sand
+  colours are still everywhere else on the page; the sea is what makes the
+  button stand out from them instead of blending in.
+- The background is her photograph, the sunset with the shell and the pearl, on
+  every page, in full resolution on both a computer and a phone.
+- A line used to appear in the background every few scrolls. That was the page
+  laying the same sheet of "paper" down separately in each section, so the
+  photograph flashed back to full strength at every seam. It is one continuous
+  sheet now, so the background reads the same the whole way down.
+- Her welcome letter ("ברוכה הבאה לתהליך הליווי האישי שלך") is now on the
+  thank-you page, which is where it is true: it greets a woman who has just left
+  her details.
+- Her tagline, "ליווי אישי לצמיחה, ריפוי ובניית חיים חדשים", sits under her name
+  in the header on wide screens.
+
+### The fonts are hers now
+
+- Headings are set in **Amatic SC**, which Pnina picked herself from Google
+  Fonts. Body text is Heebo, a clean Hebrew sans that reads easily at small
+  sizes. The font she originally named, "Comika", could not be used: it has no
+  Hebrew letters at all, so nothing on this site would ever have rendered in it.
+- Amatic is a light, narrow, hand-drawn face, so every heading on the site was
+  made about 40% larger to compensate. It is used for headings only. Body text,
+  buttons, form labels and the menu stay in the clear sans, because Amatic is
+  genuinely hard to read at small sizes and this page is read by people in
+  distress, sometimes on a phone.
+
+### Under the hood
+
+- The lead form gained a tighter layout used only in the hero, and a new "hero"
+  source so leads from the top of the page can be told from leads from the foot.
+  Same form, same fields, same validation; her optional question is untouched.
+- Text over the photograph is measured again from scratch, in both light and
+  dark. Her picture is much darker than the sand it replaced, so the paper the
+  text sits on came back at 40% and the picture itself has its deepest shadows
+  lifted. Every size of text clears the accessibility standard on both.
+- A new test fails the build if the headline, the video or the send button ever
+  stop fitting on a phone screen.
+
 ## [0.16.3] - 2026-08-01
 
 ### Returning above the completed process no longer pulls the page back

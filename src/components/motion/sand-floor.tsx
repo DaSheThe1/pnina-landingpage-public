@@ -106,12 +106,12 @@ import { prefersReducedMotion } from "@/lib/eval-flags";
  *  downloads a 1920px plate in order to show a 960px one. */
 const PLATES = {
   light: {
-    wide: "/images/sand-light.webp",
-    portrait: "/images/sand-light-portrait.webp",
+    wide: "/images/bg-sunset.webp",
+    portrait: "/images/bg-sunset-portrait.webp",
   },
   dark: {
-    wide: "/images/sand-dark.webp",
-    portrait: "/images/sand-dark-portrait.webp",
+    wide: "/images/bg-sunset-dark.webp",
+    portrait: "/images/bg-sunset-dark-portrait.webp",
   },
 } as const;
 

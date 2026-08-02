@@ -101,7 +101,7 @@ export function SectionHeading({
       ) : null}
       <h2
         className={cn(
-          "text-[2.4rem] text-balance sm:text-[2.85rem]",
+          "text-[3.41rem] text-balance sm:text-[4.05rem]",
           gradient ? "text-gradient" : "text-foreground"
         )}
       >
@@ -118,9 +118,61 @@ export function SectionHeading({
 
 /* ──────────────────────────  Hero  ────────────────────────── */
 
+/**
+ * ── THE HERO, REBUILT AS A DIRECT-RESPONSE BLOCK (0.17.0) ──
+ *
+ * Pnina's brief, through Daniel, 2026-08-02: a main header, then a secondary
+ * header, then the video, then the form — and *"this needs to be in a way where
+ * the user can see all those things without even scrolling on the phone"*.
+ *
+ * So this section is now four things in one column and nothing else:
+ *
+ *     h1        the problem, named plainly and set large
+ *     objections  three "בלי…" lines that remove the reasons not to call
+ *     video     16:9, letterboxed (see hero-video.tsx)
+ *     form      the real lead form, embedded — not a button that opens one
+ *
+ * ── WHAT CAME OUT, AND WHY ──
+ *  • The eyebrow ("ליווי אישי ודיסקרטי"). She reads it as AI-written, and she is
+ *    not wrong: it is a category label, not a sentence anyone would say.
+ *  • The three reassurance pills ("דיסקרטיות מלאה" / "בקצב שלך" / "בלי
+ *    התחייבות"). The objection lines now say all three, in her voice, as
+ *    sentences. Keeping both would have been the same promise twice in 200px of
+ *    the most valuable space on the site.
+ *  • The `LeadButton` that opened the popup. The popup still exists and every
+ *    other CTA on the site still uses it — this is the one place where the form
+ *    itself is cheaper than a button that promises one.
+ *  • `hero.subtitle`, her "שנים חייתי בהישרדות…" paragraph. Deleted outright
+ *    rather than moved: it was a compressed retelling of `founder.body`, which
+ *    sits one section below and tells the same story in her own fuller words,
+ *    and its second half (40-60 דקות, בטלפון או בזום, ללא עלות) is stated in
+ *    seven other places in `messages/he.json` — the offer panel, the process
+ *    step, two FAQ answers. Nothing it said is now unsaid.
+ *
+ * ── THE HEADLINE IS ABOUT THE AFTERMATH, AND IT CARRIES NO NUMBER ──
+ * Daniel's brief described the classic direct-response shape ("lose 10 kg in 90
+ * days" over "without giving up eating out"). The second half of that ports and
+ * is what the objection lines are. The FIRST half does not: a timeframe on
+ * recovery from sexual assault would be an invented number about a real person's
+ * healing, which AGENTS.md rule 3 forbids, and it would be a promise nobody can
+ * keep. So the h1 names the problem instead of pricing the solution, and there
+ * is no counter, no deadline and no "within X weeks" anywhere in this section.
+ *
+ * ── THE FOLD IS A REQUIREMENT, NOT A NICETY ──
+ * At 390×844 there are ~680px under the 64px header, and the four blocks above
+ * are budgeted against it: headline ~91, objections ~90, video 208, form ~248.
+ * That is why the video lost its `max-w-[19rem]` cap, why the form runs in
+ * `compact` mode (name and phone on one row — see the long note on that prop in
+ * contact-form.tsx), and why `pt-4` rather than the old `pt-6`. It fits at
+ * 390×844 and 393×852. It does NOT fit on a 375×667 iPhone SE, where the submit
+ * button lands just below the fold; that is a knowingly accepted limit on a
+ * screen size this audience largely does not carry, and it is measured by
+ * `e2e/hero-fold.spec.ts` rather than assumed.
+ * If you add anything to this section, something else has to come out.
+ */
 export function HeroSection() {
   const t = useTranslations("hero");
-  const badges = t.raw("badges") as string[];
+  const objections = t.raw("objections") as string[];
 
   return (
     // ── `overflow-clip`, and NEVER `overflow-hidden` ──
@@ -160,107 +212,123 @@ export function HeroSection() {
         aria-hidden
         className="pointer-events-none absolute left-[-12%] top-56 h-[26rem] w-[26rem] wash-cool animate-float rounded-full blur-[100px]"
       />
-      {/* There used to be a `from-transparent to-background` fade band here. It
-          painted nothing: `--background` IS transparent on this site (every
-          section is a window onto the SiteBackground field — see globals.css),
-          so the gradient ran transparent → transparent. Removed rather than
-          repointed at `--canvas`, which would have laid an opaque cream band
-          over the drifting field the hero is supposed to sit in. */}
 
-      {/* Her clip is vertical, so on lg+ it sits BESIDE the copy rather than
-          under it — a 9:16 frame stacked below a centred headline pushes the
-          first CTA a full screen down. On mobile the single column restores the
-          original order: headline, then the video as the immediate focal point,
-          then the rest. The lg grid places all three blocks explicitly, which
-          overrides the mobile `order-*` values. */}
-      {/* The video column is a fixed track, not `auto`: an auto track sized
-          around a `w-full` child collapses to nothing. */}
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-10 pt-6 sm:pb-16 lg:grid lg:grid-cols-[minmax(0,1fr)_21rem] lg:items-center lg:gap-x-14 lg:pt-10">
-        {/* self-end / self-start on the two copy rows: the video spans both
-            rows and is taller than they are, so without this the leftover
-            height is split between them and a gap opens under the headline. */}
-        <div className="order-1 max-w-3xl text-center lg:col-start-1 lg:row-start-1 lg:self-end lg:text-start">
-          <Reveal className="flex justify-center lg:justify-start">
-            <Eyebrow>{t("eyebrow")}</Eyebrow>
-          </Reveal>
-          <Reveal delay={80}>
+      {/* ── THE SCRIM, AND WHY THE HERO NEEDS ITS OWN ──
+          Every other band on the site paints `--background`, the 40% paper veil
+          that makes type readable over the photograph (globals.css, the note
+          beside that token). This section deliberately does not: the hero is
+          where her picture is supposed to be at full strength.
+          But 0.17.0 also put the h1, three lines of copy AND a form into that
+          bare stretch, over a photograph with a sea and a shadow in it. So the
+          copy column gets a soft radial cream of its own — strongest behind the
+          type, gone before the edges of the section, so the sunset still reads
+          as a sunset around it. It is `-z-10` under the content and above the
+          washes. Dark mode inverts it through `--canvas`. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-8 bottom-0 -z-10 bg-[radial-gradient(60%_55%_at_50%_38%,var(--canvas)_0%,color-mix(in_srgb,var(--canvas)_72%,transparent)_45%,transparent_78%)]"
+      />
+
+      {/* One column on a phone — headline, objections, video, form, in that
+          order and in that order only, because that order IS the brief.
+          From `lg` the copy and the form share the left column and the video
+          takes the right, so a desktop visitor sees the whole thing at once
+          without the video pushing the form a screen down. */}
+      {/* `lg:items-center` and a 24rem form column: the copy + form stack on the
+          start side is shorter than a 16:9 video is wide, so top-aligning the
+          two columns left a screen of empty sand under the video. Centred, the
+          block reads as one composition. */}
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-10 pt-3 sm:pb-16 lg:grid lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-center lg:gap-x-10 lg:pb-20 lg:pt-12">
+        <div className="order-1 w-full max-w-3xl text-center lg:col-start-1 lg:row-start-1 lg:text-start">
+          <Reveal>
             {/* Two BLOCKS, not two inline runs.
-                The headline is two sentences ("אפשר לאהוב את החיים שלך שוב." /
-                "דווקא בזכות מה שעברת"), and while they were inline the browser
-                chose the break itself. In RTL it kept choosing badly: the line
-                filled up just before the full stop, so the sentence broke after
-                "שוב" and line two opened with a lonely "." — the punctuation of
-                one sentence sitting at the head of the next. Making each
-                sentence its own block means the break is ours, it is the same
-                on a phone and on a desktop, and no neutral character can drift
-                across it. Nothing else is allowed back on this line. */}
-            <h1 className="mt-5 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
+                The headline is two sentences, and while they were inline the
+                browser chose the break itself. In RTL it kept choosing badly:
+                the line filled up just before the full stop, so the sentence
+                broke early and line two opened with a lonely "." — the
+                punctuation of one sentence sitting at the head of the next.
+                Making each sentence its own block means the break is ours, it
+                is the same on a phone and on a desktop, and no neutral
+                character can drift across it. Nothing else goes on this line. */}
+            <h1 className="text-[3.12rem] leading-[1.04] text-balance sm:text-[4.4rem] lg:text-[5.25rem]">
               <span className="block">{t("titleLead")}</span>
-              {/* PINK, not bronze, and it is the same pink as the filled CTA:
-                  `--headline-accent` resolves through `--rose-deep` (globals.css
-                  `:root`). Daniel, 2026-07-30 — the accent he asked for has to
-                  be visible in the buttons AND on this line. Do not put
-                  `text-brand-accent` back here. */}
+              {/* The accent, and it is the same colour as the filled CTA below
+                  by construction: `--headline-accent` resolves through
+                  `--rose-deep` (globals.css `:root`). Since 0.17.0 that is
+                  Pnina's terracotta rather than the orchid-magenta, and this
+                  line moved with the button without being touched, which is
+                  the entire point of the token. Do not put `text-brand-accent`
+                  back here. */}
               <em className="mt-1 block font-display not-italic text-headline-accent">
                 {t("titleHighlight")}
               </em>
             </h1>
           </Reveal>
+
+          {/* The secondary header. Three sentences that each remove one reason
+              not to pick up the phone: being found out, having to describe the
+              assault, and being committed to something. They are a LIST because
+              they are three separate promises and a paragraph would bury the
+              second and third; they are not bulleted, because a tick-list of
+              reassurances is the pattern the removed pills already were. */}
+          <Reveal delay={80}>
+            <ul className="mt-3 space-y-0.5 text-[1.05rem] leading-snug text-foreground-soft sm:mt-6 sm:text-xl">
+              {objections.map((line) => (
+                <li key={line}>{line}</li>
+              ))}
+            </ul>
+          </Reveal>
         </div>
 
         <Reveal
-          delay={200}
-          className="order-2 mt-9 w-full lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0"
+          delay={160}
+          className="order-2 mt-3 w-full lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0"
         >
           <HeroVideo />
         </Reveal>
 
-        <div className="order-3 w-full max-w-3xl lg:col-start-1 lg:row-start-2 lg:self-start">
-          <Reveal delay={160}>
-            <p className="mt-8 text-center text-lg leading-relaxed text-foreground lg:mt-6 lg:text-start">
-              {t("subtitle")}
-            </p>
-          </Reveal>
+        <div className="order-3 w-full max-w-3xl lg:col-start-1 lg:row-start-2">
+          {/* ── THE FORM, EMBEDDED (Pnina, 2026-08-02) ──
+              This used to be a `LeadButton` that opened the app-wide popup.
+              Her instruction was to put the form itself here "like we have at
+              the end of the page", and she is right about the mechanics: a
+              popup costs a tap, a modal and a decision before anyone has typed
+              anything, and this is the moment a visitor is most likely to act.
 
-          <Reveal delay={120}>
-            <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-              <LeadButton
-                variant="brand"
-                className="h-11 rounded-lg px-5"
-              >
-                {t("ctaPrimary")}
-                <ArrowRight data-icon="inline-end" />
-              </LeadButton>
-              {/* Labelled "איך הליווי עובד", so it goes to the process
-                  section. It pointed at #testimonials for the whole of the
-                  first release — a woman who clicked "how does this work"
-                  landed on other women's messages instead of the four steps. */}
-              <Link
-                href={`/#${sectionIds.process}`}
-                className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "h-11 rounded-lg px-5"
-                )}
-              >
-                {t("ctaSecondary")}
-              </Link>
+              It is the SAME `ContactForm` the final CTA and the popup render —
+              not a copy — so there is one lead flow, one validation, one
+              `/api/contact`, one `/thank-you`. Two live instances on one page
+              is safe: every field id comes from `useId()`.
+
+              `showIntro={false}` matters twice over. The h1 and the objection
+              lines above ARE this form's introduction, and the intro block
+              carries its own <h2>, which would put a second-level heading above
+              the page's real sections and break the document outline that
+              `e2e/smoke.spec.ts` guards.
+
+              `source="hero"` is the only new thing reaching n8n: same audience
+              and same treatment as "landing" (see the note in
+              worker/src/contact.js), split purely so we can see whether this
+              hero is doing its job. */}
+          <Reveal delay={200}>
+            <div className="mx-auto mt-3 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2 p-4 shadow-card sm:p-6 lg:mx-0 lg:mt-8">
+              <ContactForm source="hero" showIntro={false} compact />
             </div>
           </Reveal>
 
-          {/* Teal, not plum: these three pills are the page's first reassurance
-              signal, and teal is the reassurance colour in this system (see
-              globals.css). It also breaks up the pink hero. */}
-          <Reveal delay={220}>
-            <div className="mt-7 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
-              {badges.map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex items-center gap-2 rounded-full border border-teal/25 bg-teal-soft/50 px-3.5 py-1.5 text-sm font-medium text-foreground-soft shadow-card backdrop-blur-sm"
-                >
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-teal-deep" />
-                  {item}
-                </span>
-              ))}
+          {/* Below the fold on purpose, and the only thing that is. A woman who
+              wants to know how the accompaniment works before leaving a number
+              has to scroll a little; a woman who is ready to leave a number
+              does not. */}
+          <Reveal delay={240}>
+            <div className="mt-5 flex justify-center lg:justify-start">
+              <Link
+                href={`/#${sectionIds.process}`}
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-accent underline-offset-4 hover:underline"
+              >
+                {t("ctaSecondary")}
+                <ArrowRight data-icon="inline-end" className="h-4 w-4" />
+              </Link>
             </div>
           </Reveal>
         </div>
@@ -441,7 +509,7 @@ export function ProcessSection() {
                           <span
                             dir="ltr"
                             className={cn(
-                              "font-display select-none text-[5rem] leading-none",
+                              "font-display select-none text-[7.1rem] leading-none",
                               tint.numeral
                             )}
                           >
@@ -898,7 +966,7 @@ export function OffersSection() {
 
             <div className="relative">
               <NodeLabel node={<ShellNode />}>{intro.label}</NodeLabel>
-              <h3 className="font-display mt-2 text-[2rem] leading-tight text-foreground sm:text-[2.45rem]">
+              <h3 className="font-display mt-2 text-[2.84rem] leading-tight text-foreground sm:text-[3.48rem]">
                 {intro.title}
               </h3>
               <p className="mt-3 max-w-lg text-base leading-relaxed text-foreground-soft">
@@ -1013,7 +1081,7 @@ export function OffersSection() {
                       `flex-wrap` because "מסלול הפנינה" + "₪2,880" does not fit
                       one line on a phone. */}
                   <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h3 className="font-display text-[2rem] leading-tight text-foreground sm:text-[2.2rem]">
+                    <h3 className="font-display text-[2.84rem] leading-tight text-foreground sm:text-[3.12rem]">
                       {track.title}
                     </h3>
                     <p className="text-base text-muted-foreground">
@@ -1329,7 +1397,7 @@ export function FounderTeaser() {
             {/* Story */}
             <div className="relative">
               <Eyebrow>{t("eyebrow")}</Eyebrow>
-              <h2 className="mt-4 text-[2.4rem] text-balance sm:text-[2.85rem]">
+              <h2 className="mt-4 text-[3.41rem] text-balance sm:text-[4.05rem]">
                 {t("title")}
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-foreground-soft">
@@ -1419,7 +1487,7 @@ export function FinalCta() {
           <div className="relative px-6 py-14 sm:px-10 sm:py-16">
             <div className="relative">
               <div className="text-center">
-                <h2 className="mx-auto max-w-2xl text-[2.4rem] text-balance sm:text-[2.85rem]">
+                <h2 className="mx-auto max-w-2xl text-[3.41rem] text-balance sm:text-[4.05rem]">
                   {t("titleLead")}
                   <span className="text-gradient">{t("titleHighlight")}</span>
                 </h2>

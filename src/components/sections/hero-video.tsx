@@ -305,12 +305,29 @@ export function HeroVideo() {
   }
 
   return (
-    // The clip is a vertical 9:16 phone recording, so the frame is a phone.
-    // A portrait video inside the 16:9 frame this used to be either pillarboxed
-    // into two grey bars or cropped her head off — neither is acceptable when
-    // the video IS the introduction. Capped narrow so it doesn't tower over the
-    // hero copy on a desktop screen.
-    <div className="relative mx-auto w-full max-w-[19rem] sm:max-w-[21rem]">
+    // ── THE FRAME IS 16:9 AGAIN (0.17.0), AND THE CLIP STILL IS NOT ──
+    // Pnina asked for the hero video to be horizontal. Her current clip is a
+    // genuine 608×1080 phone recording, and she will send a real horizontal one
+    // later, so until then the frame and the footage disagree and something has
+    // to give.
+    //
+    // Cropping does not: `object-cover` on a 9:16 source in a 16:9 box throws
+    // away 68% of the frame vertically, which here means the top of her head and
+    // the burnt-in Hebrew captions along the bottom. The captions are the only
+    // thing a visitor can read while the clip is still silent.
+    //
+    // So the clip is letterboxed at `object-contain` and the empty sides are
+    // filled by a SECOND copy of the same element, blurred and darkened behind
+    // it. That is the standard treatment for exactly this mismatch and it reads
+    // as deliberate rather than as two grey bars.
+    //
+    // WHEN THE REAL HORIZONTAL CLIP ARRIVES: delete the backdrop <video> and
+    // change `object-contain` to `object-cover`. Nothing else here changes.
+    //
+    // The old `max-w-[19rem]` cap is gone with the portrait frame — a 16:9 box
+    // does not tower over the hero copy the way a 9:16 one did, and this frame
+    // now has to hold its own beside a headline that is meant to dominate.
+    <div className="relative mx-auto w-full max-w-[21.5rem] sm:max-w-[34rem] lg:max-w-none">
       {/* Soft warm halo behind the frame. On a light canvas this is a wash, not
           a glow: it should be barely perceptible. */}
       <div
@@ -327,12 +344,44 @@ export function HeroVideo() {
             button fade out whenever this frame was on screen. That is gone — see
             the header of floating-whatsapp.tsx. The collision it was avoiding is
             now solved by where the pause button sits (just below). */}
-        <div className="relative aspect-[9/16] overflow-hidden rounded-[1.6rem] bg-foreground">
+        <div className="relative aspect-video overflow-hidden rounded-[1.6rem] bg-foreground">
           {/* The branded poster panel sits underneath and shows whenever no
               video can play: no video supplied yet, a slow connection, or a
               blocked autoplay. It is designed to look deliberate rather than
               broken, so the page is presentable at every stage. */}
           {!ready ? <HeroPoster /> : null}
+
+          {/* The letterbox fill. Same source, same autoplay attributes, so the
+              browser serves it from one buffer rather than fetching the clip
+              twice; `aria-hidden` + no controls + `pointer-events-none` keep it
+              out of the accessibility tree and out of every gesture, so the real
+              element below is still the only thing anyone can tap.
+              It is deliberately NOT driven by any of the state above: it has no
+              ref, it is never paused and it never gains sound. If it drifts a
+              frame or two out of step with the clip in front of it nobody can
+              tell — it is 28px of blur — and wiring it to the same controls
+              would mean two elements racing for the same play promise. */}
+          {VIDEO_SRC ? (
+            <video
+              aria-hidden
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              tabIndex={-1}
+              // `brightness-[0.9]`, not the 0.62 this started at. Her clip is a
+              // dark indoor recording, and dimming a dark source by another
+              // third produced two near-black panels — i.e. exactly the "grey
+              // bars" look the blurred fill exists to avoid. Held just under 1
+              // so the sharp clip in front still reads as the brighter thing,
+              // and saturated a little so the fill carries the frame's warmth
+              // out to the edges instead of going grey.
+              className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-[26px] brightness-[0.9] saturate-[1.3]"
+            >
+              <source src={VIDEO_SRC} type="video/mp4" />
+            </video>
+          ) : null}
 
           {VIDEO_SRC ? (
             <video
@@ -382,7 +431,12 @@ export function HeroVideo() {
               // actual poster frame takes over (~1.2s measured), then playback.
               // The blocked/no-video cases still fall back to HeroPoster because
               // `ready` never flips there.
-              className="absolute inset-0 h-full w-full cursor-pointer object-cover"
+              // `object-contain`, not `object-cover` — see the frame note at the
+              // top of the return. Cover on this portrait source would cut her
+              // head off and take the burnt-in captions with it. Swap it back to
+              // `cover` (and delete the blurred backdrop above) the day her real
+              // horizontal clip lands.
+              className="absolute inset-0 h-full w-full cursor-pointer object-contain"
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>
@@ -491,19 +545,27 @@ export function HeroVideo() {
 function HeroPoster() {
   const t = useTranslations("heroVideo");
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1 px-6 text-center">
+    // Laid out ACROSS rather than down since 0.17.0. The frame it fills went
+    // from 9:16 to 16:9, and at 390px wide that box is only ~192px tall — the
+    // old stacked column (64px badge + 2rem name + a line of copy + two gaps)
+    // did not fit in it and the note was clipped. Same three elements, same
+    // order, turned on their side; the monogram shrinks and the note is allowed
+    // to disappear under `sm` where there is genuinely no room for it.
+    <div className="absolute inset-0 flex items-center justify-center gap-4 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1 px-5 text-center sm:gap-5">
       <span
         aria-hidden
-        className="flex h-16 w-16 items-center justify-center rounded-full border border-brand/30 bg-surface-1/70 font-display text-[1.7rem] text-brand-accent shadow-card"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-surface-1/70 font-display text-[1.92rem] text-brand-accent shadow-card sm:h-14 sm:w-14 sm:text-[2.2rem]"
       >
         {siteConfig.monogram}
       </span>
-      <p className="font-display text-[1.75rem] text-foreground sm:text-[2rem]">
-        {siteConfig.name}
-      </p>
-      <p className="max-w-sm text-sm leading-normal text-muted-foreground">
-        {t("posterNote")}
-      </p>
+      <div className="min-w-0 text-start">
+        <p className="font-display text-[2.13rem] leading-tight text-foreground sm:text-[2.56rem]">
+          {siteConfig.name}
+        </p>
+        <p className="mt-1 hidden text-sm leading-normal text-muted-foreground sm:block">
+          {t("posterNote")}
+        </p>
+      </div>
     </div>
   );
 }

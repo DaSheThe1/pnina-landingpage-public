@@ -1,10 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import {
+  Amatic_SC,
   Assistant,
   Bellefair,
   Bona_Nova,
   David_Libre,
   Frank_Ruhl_Libre,
+  Heebo,
+  Noto_Sans_Hebrew,
   Noto_Serif_Hebrew,
 } from "next/font/google";
 import { notFound } from "next/navigation";
@@ -38,79 +41,124 @@ import { pickClientMessages } from "@/i18n/client-messages";
 
 import "../globals.css";
 
-// Body/UI face. Assistant is a Hebrew-FIRST humanist sans (the Hebrew was drawn
-// first and the Latin fitted to it, which is the opposite of most "supports
-// Hebrew" fonts) with an open, unhurried lowercase and a calm Hebrew colour on
-// the page. Its digits are all the same advance width by design, so prices and
-// phone numbers line up in a column without asking for a `tnum` feature the
-// font does not actually ship — see the note in globals.css.
-//
-// It replaced Heebo in v0.8.0: Heebo is a fine face but reads as the Israeli
-// system default, which is precisely what this site should not look like.
-const assistant = Assistant({
+/* Body/UI face — HEEBO, and this is a deliberate reversal of v0.8.0.
+
+   Pnina asked for "Helvetica World" for the body copy (her Canva document, July
+   2026). That is a real family — Linotype's Helvetica World, which does ship
+   Hebrew — but it is a paid Linotype licence and we do not have the files, so
+   the question is what the free equivalent of "Helvetica, in Hebrew" is. It is
+   Heebo: Oded Ezer's Hebrew drawn onto Christian Robertson's Roboto skeleton, a
+   neo-grotesque with the flat terminals, closed apertures and even colour that
+   make a Helvetica a Helvetica. Nothing else on Google Fonts is as close to the
+   brief.
+
+   ⚠️ THIS IS THE FACE 0.8.0 THREW OUT, AND THAT IS THE POINT. The note that
+   stood here said Assistant "replaced Heebo in v0.8.0: Heebo is a fine face but
+   reads as the Israeli system default, which is precisely what this site should
+   not look like." That judgement was ours, and the client has now asked for the
+   opposite thing: a plain, unremarkable, transparent body face. Reading as the
+   Israeli default IS what "Helvetica World" asks for. So the reasoning is not
+   overturned, it is outranked — do not "restore" Assistant on the strength of
+   the old note.
+
+   Assistant is not gone: it is declared below with `preload: false` and is one
+   keystroke away at `?font=assistant`, which re-points the BODY face back to it
+   (globals.css §8). If Daniel prefers the old colour on the page, that is the
+   comparison to look at.
+
+   DIGITS: Heebo's figures are LINING and genuinely UNIFORM-WIDTH by default,
+   both measured. Lining — the ten digits share a baseline to within 2px at
+   200px, where Bona Nova, the face that made `lining-nums` mandatory, spreads
+   50px at the same size. Uniform — all ten advances are identical to the unit,
+   562/1000em. So prices and phone numbers line up in a column with nothing
+   asked for, and the site still carries no `tabular-nums` anywhere.
+   ⚠️ That last conclusion is unchanged but its REASON has changed, and the old
+   reason was wrong: the note that stood here (and the matching line in
+   CLAUDE.md) said Assistant's digits were "uniform-width by design". They are
+   not — Assistant's ten advances spread 41/1000em, so the columns it was
+   credited with never actually lined up. Heebo's do. Do not re-copy the old
+   claim about Assistant anywhere.
+
+   SUBSETS: `hebrew` AND `latin`. The letters and ₪ ride in hebrew; the DIGITS
+   and the curly quotes live in latin. Dropping latin would hand every price and
+   phone number to a fallback. */
+const heebo = Heebo({
   variable: "--font-sans-hebrew",
   subsets: ["hebrew", "latin"],
   weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
-/* Display face for headlines only (h1/h2 + `.font-display`) — BONA NOVA,
-   SET AT A REAL 700.
+/* Display face for headlines only (h1/h2 + `.font-display`) — AMATIC SC.
 
-   ── WHY THE FACE CHANGED AGAIN IN 0.12.x ──
-   Daniel, 2026-07-30: "make the text bold. Either choose a bold font or just
-   choose a font which has boldness, because it does not look like I wanted it
-   to… and when I mean the headers, I mean everywhere the header is used."
+   ── PNINA CHOSE THIS ONE HERSELF (2026-08-02) ──
+   She was sent the Hebrew-supporting families on Google Fonts and picked Amatic
+   SC. That settles a question three previous releases guessed at, so the guess
+   work below is kept only as history: 0.11.4 shipped Frank Ruhl Libre (Daniel:
+   "ugly"), 0.12.0 Bellefair, 0.12.x-0.16.x Bona Nova, and 0.17.0 briefly Noto
+   Sans Hebrew — the last of those identified by matching the fallback face
+   Canva was substituting into her own document, because the face she originally
+   named ("Comika") is Latin-only and has no Hebrew glyphs at all. All of those
+   were us inferring what she would like. This is her actually saying it.
 
-   That is the third time he has asked for weight in the headlines, and the
-   previous two answers both dodged it, because 0.12.0 had picked a face with no
-   bold master (Bellefair, one weight, 400) and then tried to fake the weight
-   with a 0.4px `-webkit-text-stroke`. A hairline stroke is a real technique and
-   the argument for it was honest, but it grows a 400 by a hair — it cannot make
-   a headline read BOLD, and Daniel could see that. The right fix is a display
-   face that actually ships a bold.
+   Amatic SC is a Hebrew-first design (Ben Nathan): condensed, hand-drawn,
+   informal, and very light on the em. Three consequences are load-bearing.
 
-   The five candidates already loaded for the `?font=` switcher were rendered at
-   700, in the real hero, at the real hero size (53.6px at 1440px wide), and
-   compared side by side:
+   ⚠️ 1. IT IS A HEADLINE FACE AND NOTHING ELSE. It is condensed to about half
+   the width of a normal sans and its strokes are hairlines; at body size it is
+   genuinely hard to read, and this site is read by people in distress, some on
+   a phone, some with low vision. It drives `h1`, `h2` and `.font-display` only.
+   The body stays HEEBO. Do not extend this face to paragraphs, labels, buttons,
+   form fields or the nav, however much more "designed" it would look.
 
-     Bona Nova 700     ← THE WINNER. A 2019 Polish revival (Bona Sforza) whose
-                          Hebrew is drawn with real stroke modulation and a
-                          calligraphic finish. At 700 it is unambiguously bold
-                          and still elegant: the thick/thin contrast survives
-                          the weight instead of flattening into a slab, and the
-                          Hebrew counters stay open at display size.
-     Frank Ruhl 700       the ORIGINAL complaint ("ugly"), and the comparison
-                          agreed — a book text serif thickened into a blunt,
-                          slightly cramped headline.
-     Noto Serif Hebrew    much wider on the em: the hero headline wrapped to
-                          three lines at 1440px. Also the most default-looking
-                          of the set.
-     David Libre 700      reads as the Israeli office/tax-form default, which
-                          is exactly what this site must not look like.
-     Assistant 800        the body face, heavier. Legible, but then the site has
-                          one voice at two weights and no display face at all.
+   ⚠️ 2. IT NEEDS MORE SIZE THAN THE FACE IT REPLACED. Amatic's cap height and
+   its set width are both far smaller than Noto Sans Hebrew's, so at an identical
+   `rem` the headline reads a good deal smaller and lighter. Every display call
+   site was re-judged at 1440 and 390 and sized UP rather than left alone; the
+   ladder is tabulated in the h1/h2 note in globals.css. If you add a heading,
+   size it against the ones already there, not against the body scale.
 
-   The full write-up, with the measured numbers, is docs/12-redesign-plan.md §K2.
+   ⚠️ 3. IT IS SET AT 700, AND 700 HERE IS STILL NOT "BOLD". Amatic ships 400
+   and 700 and the 700 is a real master, so nothing is synthesised — but its 700
+   is roughly the weight of a normal face's regular. That is a genuine tension
+   with Daniel's standing "the headlines are supposed to be BOLD" rule, which he
+   asked for three separate times. The rule is not repealed: 700 is still the
+   floor here and nothing may set this family lower. It is simply the case that
+   the client picked a light face, and a light face at its own maximum is what
+   she picked. If the headlines read as too faint on the real site, the answer is
+   SIZE, or going back to a different face with her — not a synthesised weight
+   and not a `-webkit-text-stroke`, both of which this project has already tried
+   and rejected once each.
 
-   WEIGHTS: 700 for the headlines, and 400 as well because `.free-anchor__free`
-   and the process-spine numerals sit in this family at text-ish sizes and a
-   browser that only has the 700 would synthesise a fake 400 for them.
+   SUBSETS: `hebrew` AND `latin`. The Hebrew subset carries the letters and ₪;
+   the DIGITS and the curly quotes live in latin, so dropping it would leave
+   "₪990" and the process-spine numerals to a fallback.
 
-   ⚠️ NUMERALS: Bona Nova sets OLDSTYLE figures by default, so "₪990" and the
-   process-spine "01" bob up and down off the baseline unless told otherwise.
-   `font-variant-numeric: lining-nums` on the h1/h2/.font-display rule in
-   globals.css is MANDATORY for this face, not a refinement. Do not remove it.
-
-   SUBSETS: `hebrew` AND `latin`, and the latin one is not optional. The Hebrew
-   subset carries the letters and ₪; the DIGITS and the curly quotes live in
-   latin, so dropping it would leave "₪990" and the process-spine numerals to a
-   fallback serif. */
-const bonaNova = Bona_Nova({
+   NUMERALS: Amatic SC is lining by default, like Heebo and Noto Sans Hebrew, so
+   `font-variant-numeric: lining-nums` stays OFF the base rule. It lives on the
+   `?font=bonanova` rule in globals.css §8, which is the one face in the building
+   that sets oldstyle figures. */
+const amaticSC = Amatic_SC({
   variable: "--font-display",
   subsets: ["hebrew", "latin"],
-  weight: ["400", "700"],
+  weight: ["700"],
   display: "swap",
+});
+
+/* ⚠️ HISTORY, kept because it stops the same three faces being re-proposed.
+   Noto Sans Hebrew was the 0.17.0 display face for about a day, identified from
+   Pnina's Canva document by a binary letterform test rather than by resemblance:
+   in her document the פ and ף are drawn with the inner tongue RISING ABOVE the
+   top bar, and sweeping that one feature across all 137 Google-Fonts files with
+   a Hebrew subset eliminates Heebo, Assistant, Rubik, Arimo, IBM Plex Sans
+   Hebrew, Miriam Libre, Secular One, M PLUS, Segoe UI, Arial and Tahoma
+   outright. It is kept below at `preload: false` for `?font=notosans`. */
+const notoSansHebrew = Noto_Sans_Hebrew({
+  variable: "--font-eval-notosans",
+  subsets: ["hebrew", "latin"],
+  weight: ["700"],
+  display: "swap",
+  preload: false,
 });
 
 /* ⚠️ TEMPORARY — the headline candidates behind `?font=` (globals.css §8 and
@@ -126,11 +174,31 @@ const bonaNova = Bona_Nova({
 
    Frank Ruhl Libre is IN THIS LIST now rather than in the default load. Moving
    its two weights off the critical path is ~100KB the shipped site no longer
-   fetches; typing `?font=frank` still renders the 0.11.4 site exactly. */
+   fetches; typing `?font=frank` still renders the 0.11.4 site exactly.
+
+   The list holds ONE non-headline entry, Assistant — see the note on it below.
+   `?font=` otherwise swaps the display face and nothing else. */
 const frankRuhl = Frank_Ruhl_Libre({
   variable: "--font-eval-frank",
   subsets: ["hebrew", "latin"],
   weight: ["500", "700"],
+  display: "swap",
+  preload: false,
+});
+
+/* Bona Nova moved here when the client's own face arrived — it was the shipped
+   headline from 0.12.x to 0.16.x and it lost nothing on quality; it lost because
+   the brief changed from "pick a good display serif" to "use the face Pnina
+   picked" (see the note above). `?font=bonanova` renders the 0.12.x-0.16.x site
+   exactly, which is why it keeps BOTH its weights.
+   ⚠️ It is the only OLDSTYLE-figure face in the building, so the `lining-nums`
+   that used to sit on the base h1/h2 rule now sits on its own rule in
+   globals.css §8. Move one and you must move the other, or `?font=bonanova`
+   starts showing "₪990" bobbing off the baseline again. */
+const bonaNova = Bona_Nova({
+  variable: "--font-eval-bonanova",
+  subsets: ["hebrew", "latin"],
+  weight: ["400", "700"],
   display: "swap",
   preload: false,
 });
@@ -163,14 +231,28 @@ const davidLibre = David_Libre({
   preload: false,
 });
 
-/* The `?font=sans` candidate: no serif at all, Assistant set at 800. It is a
-   SECOND Assistant instance rather than an extra weight on the body one,
-   because adding "800" to the body font would preload a weight every real
-   visitor pays for and no shipped headline uses. */
-const assistantDisplay = Assistant({
-  variable: "--font-eval-sans",
+/* ASSISTANT — the site's body face from 0.8.0 until Heebo replaced it, and the
+   one entry here that is not purely a headline candidate. It now does two jobs,
+   from ONE declaration (globals.css §8):
+
+     ?font=sans       headlines in Assistant 800 — unchanged behaviour, the
+                      "no display face at all" comparison that has always been on
+                      this switcher. It used to point at a variable called
+                      `--font-eval-sans`; that name became a lie the moment the
+                      shipped display face was itself a sans, so it is now
+                      `--font-eval-assistant` and §8 names the face instead of
+                      the category.
+     ?font=assistant  the BODY back on Assistant, i.e. the 0.8.0-0.16.x reading
+                      experience, for judging Heebo against the face it replaced.
+
+   Hence the full weight range rather than the bare 800 this instance used to
+   carry: 400-700 are what the body copy needs, 800 is what a headline needs.
+   `preload: false` means none of it is fetched unless a parameter selects it, so
+   the extra weights cost a real visitor nothing. */
+const assistant = Assistant({
+  variable: "--font-eval-assistant",
   subsets: ["hebrew", "latin"],
-  weight: ["800"],
+  weight: ["400", "500", "600", "700", "800"],
   display: "swap",
   preload: false,
 });
@@ -281,7 +363,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={dir}
       data-scroll-behavior="smooth"
-      className={`${assistant.variable} ${bonaNova.variable} ${bellefair.variable} ${frankRuhl.variable} ${notoSerifHebrew.variable} ${davidLibre.variable} ${assistantDisplay.variable} h-full antialiased`}
+      className={`${heebo.variable} ${amaticSC.variable} ${notoSansHebrew.variable} ${bonaNova.variable} ${bellefair.variable} ${frankRuhl.variable} ${notoSerifHebrew.variable} ${davidLibre.variable} ${assistant.variable} h-full antialiased`}
       // Inline boot scripts below stamp attributes on this element before React
       // hydrates: Save-Data, accessibility choices (`data-a11y-*`) and the eval
       // motion knob (`data-motion` / `data-accent`). Server HTML therefore

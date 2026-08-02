@@ -49,10 +49,10 @@ try {
   var ak = "pnina:eval-accent";
   var a = q.get("accent");
   if (a === "reset") localStorage.removeItem(ak);
-  else if (a === "amber" || a === "gold" || a === "pink")
+  else if (a === "amber" || a === "gold" || a === "pink" || a === "peach" || a === "sea")
     localStorage.setItem(ak, a);
   var av = localStorage.getItem(ak);
-  if (av === "amber" || av === "gold" || av === "pink")
+  if (av === "amber" || av === "gold" || av === "pink" || av === "peach" || av === "sea")
     d.setAttribute("data-accent", av);
 } catch (e) {}
 `;

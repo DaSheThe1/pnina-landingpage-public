@@ -25,8 +25,22 @@ import { z } from "zod";
  * `.strict()` stays, so anything else the client invents is rejected outright.
  */
 
-/** Where the lead came from, so the two audiences can be told apart. */
-export const leadSources = ["landing", "lectures", "contact"] as const;
+/**
+ * Where the lead came from, so the two audiences can be told apart.
+ *
+ * `hero` was added in 0.17.0, when the home page's first CTA stopped opening the
+ * lead popup and became an embedded copy of this same form above the fold. Both
+ * that form and the one at the foot of the page are the SAME audience and the
+ * same component — this only records which one she reached first, which is the
+ * one number that says whether the new hero is doing its job.
+ *
+ * ⚠️ Adding a value here means adding it to `LEAD_SOURCES` in
+ * `worker/src/contact.js` IN THE SAME COMMIT — that file is a hand-kept copy of
+ * this validation and it is what production actually runs. An unknown source is
+ * not rejected by either side (both fall back to "landing"), so a missed sync
+ * fails silently as mislabelled leads rather than as an error.
+ */
+export const leadSources = ["landing", "hero", "lectures", "contact"] as const;
 export type LeadSource = (typeof leadSources)[number];
 
 /*

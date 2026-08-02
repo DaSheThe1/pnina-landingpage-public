@@ -58,6 +58,7 @@ export function ContactForm({
   source = "landing",
   showQuestion = true,
   showIntro = true,
+  compact = false,
 }: {
   source?: LeadSource;
   /** Renders Pnina's optional question. `false` only for lecture bookings. */
@@ -65,6 +66,29 @@ export function ContactForm({
   /** Renders the heading + lead sentence above the fields. `false` inside the
    *  lead popup, which carries its own dialog title and description. */
   showIntro?: boolean;
+  /**
+   * Tightens the layout so the whole form fits above the fold in the hero.
+   *
+   * ── WHY THIS EXISTS, AND WHAT IT IS NOT ALLOWED TO DO ──
+   * Pnina asked (2026-08-02, via Daniel) for the headline, a sub-headline, the
+   * video AND this form to be visible on a phone WITHOUT SCROLLING. At 390×844
+   * that is about 680px of content under the 64px header, and the form at its
+   * normal spacing does not fit inside what is left.
+   *
+   * So `compact` does exactly three things, all of them spacing:
+   *   • name and phone share one row instead of stacking (saves ~58px);
+   *   • the gaps between fields close up;
+   *   • her question box starts at two rows instead of three (~14px).
+   *
+   * It does NOT remove a field, shorten a label, turn a label into a
+   * placeholder, or touch validation. AGENTS.md rule 1 governs this form: her
+   * question stays present, optional and in her wording, and both real labels
+   * stay visible — this audience includes screen-reader users, and
+   * placeholder-only labelling would be a real accessibility regression traded
+   * for 44px. If the fold ever needs more room than this, take it from the
+   * headline or the video, not from here.
+   */
+  compact?: boolean;
 }) {
   const locale = useLocale();
   const router = useRouter();
@@ -177,7 +201,7 @@ export function ContactForm({
     >
       {showIntro ? (
         <div className="mb-6">
-          <h2 className="text-[1.55rem] text-foreground">
+          <h2 className="text-[2.2rem] text-foreground">
             {t("simpleTitle")}
           </h2>
           {/* The default lead sentence advertises the open field ("יש גם שדה
@@ -193,47 +217,59 @@ export function ContactForm({
         </div>
       ) : null}
 
-      <div className="space-y-5">
-        <Field
-          id={nameId}
-          errorId={nameErrorId}
-          label={tFields("name.label")}
-          error={errors.name}
+      <div className={compact ? "space-y-3" : "space-y-5"}>
+        {/* Compact puts the two required fields side by side. `min-w-0` on the
+            grid children is load-bearing: a grid item's default `min-width:auto`
+            is its content's intrinsic width, and the phone placeholder
+            ("050-0000000") is wide enough to push the row past 390px and give
+            the whole page a horizontal scrollbar. */}
+        <div
+          className={cn(
+            compact && "grid grid-cols-2 gap-3 [&>*]:min-w-0",
+            !compact && "space-y-5"
+          )}
         >
-          <input
-            ref={nameRef}
+          <Field
             id={nameId}
-            required
-            aria-invalid={errors.name ? true : undefined}
-            aria-describedby={errors.name ? nameErrorId : undefined}
-            className={cn(fieldBase, borderFor(errors.name))}
-            placeholder={tFields("name.placeholder")}
-            autoComplete="name"
-            value={values.name}
-            onChange={(e) => set("name", e.target.value)}
-          />
-        </Field>
-        <Field
-          id={phoneId}
-          errorId={phoneErrorId}
-          label={tFields("phone.label")}
-          error={errors.phone}
-        >
-          <input
-            ref={phoneRef}
+            errorId={nameErrorId}
+            label={tFields("name.label")}
+            error={errors.name}
+          >
+            <input
+              ref={nameRef}
+              id={nameId}
+              required
+              aria-invalid={errors.name ? true : undefined}
+              aria-describedby={errors.name ? nameErrorId : undefined}
+              className={cn(fieldBase, borderFor(errors.name))}
+              placeholder={tFields("name.placeholder")}
+              autoComplete="name"
+              value={values.name}
+              onChange={(e) => set("name", e.target.value)}
+            />
+          </Field>
+          <Field
             id={phoneId}
-            type="tel"
-            inputMode="tel"
-            required
-            aria-invalid={errors.phone ? true : undefined}
-            aria-describedby={errors.phone ? phoneErrorId : undefined}
-            className={cn(fieldBase, borderFor(errors.phone))}
-            placeholder={tFields("phone.placeholder")}
-            autoComplete="tel"
-            value={values.phone}
-            onChange={(e) => set("phone", e.target.value)}
-          />
-        </Field>
+            errorId={phoneErrorId}
+            label={tFields("phone.label")}
+            error={errors.phone}
+          >
+            <input
+              ref={phoneRef}
+              id={phoneId}
+              type="tel"
+              inputMode="tel"
+              required
+              aria-invalid={errors.phone ? true : undefined}
+              aria-describedby={errors.phone ? phoneErrorId : undefined}
+              className={cn(fieldBase, borderFor(errors.phone))}
+              placeholder={tFields("phone.placeholder")}
+              autoComplete="tel"
+              value={values.phone}
+              onChange={(e) => set("phone", e.target.value)}
+            />
+          </Field>
+        </div>
         {/* Her question, and the only free-text box on the site. It carries no
             placeholder on purpose: an example answer in grey would read as an
             instruction about how much to write. Empty is a perfectly good
@@ -250,12 +286,13 @@ export function ContactForm({
           >
             <textarea
               id={questionId}
-              rows={3}
+              rows={compact ? 2 : 3}
               maxLength={300}
               className={cn(
                 fieldBase,
                 borderFor(),
-                "h-auto min-h-24 resize-y py-2.5 leading-normal"
+                "h-auto resize-y py-2.5 leading-normal",
+                compact ? "min-h-14" : "min-h-24"
               )}
               value={values.question}
               onChange={(e) => set("question", e.target.value)}
@@ -278,7 +315,8 @@ export function ContactForm({
         disabled={isSubmitting}
         className={cn(
           buttonVariants({ variant: "brand" }),
-          "mt-7 h-12 w-full rounded-lg text-base"
+          "h-12 w-full rounded-lg text-base",
+          compact ? "mt-3.5" : "mt-7"
         )}
       >
         {isSubmitting ? (
@@ -297,7 +335,16 @@ export function ContactForm({
         )}
       </button>
 
-      <p className="mt-3 text-center text-xs text-subtle-foreground">
+      {/* The one thing allowed below the fold in the compact hero: it is
+          reassurance about what happens to her details AFTER she sends them, so
+          it does not have to be read before the button is pressed. Still
+          rendered, still in the DOM, still announced in order. */}
+      <p
+        className={cn(
+          "text-center text-xs text-subtle-foreground",
+          compact ? "mt-2.5" : "mt-3"
+        )}
+      >
         {t("simpleNote")}
       </p>
     </form>

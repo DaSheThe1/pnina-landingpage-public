@@ -89,51 +89,122 @@ export function SiteHeader() {
             they moved here, next to the wordmark, and the whole inline-end
             corner now belongs to the CTA. Below `sm` they are not in the bar at
             all — see the note on the CTA below. */}
-        <div className="flex items-center gap-2 sm:gap-2.5">
-          <Link
-            href="/"
-            data-a11y-no-underline
-            // `font-bold`, not `font-semibold`: Daniel, 2026-07-30, found the type
-            // at the top of the page thin. This one is safe to simply bolden
-            // because the wordmark is set in the BODY face (Assistant), which
-            // loads a REAL 700 in the locale layout — nothing here is synthesised.
-            // It is a plain `font-bold` for that reason and needs none of the
-            // weight machinery the display headings carry.
-            //
-            // `min-h-11`: it is a link in a bar full of 44px targets and it is
-            // the one every visitor hits by accident on the way to the CTA.
-            className="group flex min-h-11 items-center gap-2.5 text-base font-bold tracking-tight text-foreground"
-          >
-            <BrandMark
-              size={32}
-              className="transition-transform group-hover:scale-105"
-            />
-            <span className="a11y-compact-header-item">{siteConfig.name}</span>
-          </Link>
-
-          {/* 44px while a thumb is the pointer, 36px from `lg` where the nav
-              appears and the pointer is a mouse. */}
-          <div className="hidden items-center gap-2 sm:flex">
-            {siteConfig.profiles.instagram ? (
-              <a
-                href={siteConfig.profiles.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t("instagram")}
-                data-a11y-no-underline
-                className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-foreground/12 bg-foreground/[0.03] text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent lg:h-9 lg:w-9"
-              >
-                <InstagramIcon className="h-4.5 w-4.5" />
-              </a>
-            ) : null}
-            <WhatsAppLink
-              label={t("whatsapp")}
-              noUnderline
-              className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 text-whatsapp-ink transition-colors hover:border-[#25d366]/50 hover:bg-[#25d366]/15 lg:h-9 lg:w-9"
+        {/* `flex-col`, and it costs the phone NOTHING: below the tagline's
+            breakpoint this column has exactly one visible child and lays out
+            byte-for-byte as the plain row it replaced. See the tagline's own
+            note underneath for why the second line is a sibling of this row
+            rather than a second line inside the wordmark link. */}
+        <div className="flex flex-col justify-center">
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            <Link
+              href="/"
+              data-a11y-no-underline
+              // `font-bold`, not `font-semibold`: Daniel, 2026-07-30, found the type
+              // at the top of the page thin. This one is safe to simply bolden
+              // because the wordmark is set in the BODY face (Assistant), which
+              // loads a REAL 700 in the locale layout — nothing here is synthesised.
+              // It is a plain `font-bold` for that reason and needs none of the
+              // weight machinery the display headings carry.
+              //
+              // `min-h-11`: it is a link in a bar full of 44px targets and it is
+              // the one every visitor hits by accident on the way to the CTA.
+              //
+              // …and it is released at exactly the width the tagline appears,
+              // for the same reason the two icon buttons drop from 44px to 36px
+              // at `lg`: past that width the pointer is a mouse, and 44px of
+              // link plus a 20px tagline is 66px inside a 64px bar — measured,
+              // and it hung the tagline 1px under the header's own hairline.
+              // Released, the row is its natural 36px and the lockup is 58px.
+              className="group flex min-h-11 items-center gap-2.5 text-base font-bold tracking-tight text-foreground min-[1440px]:min-h-0"
             >
-              <WhatsAppIcon className="h-4.5 w-4.5" />
-            </WhatsAppLink>
+              <BrandMark
+                size={32}
+                className="transition-transform group-hover:scale-105"
+              />
+              {/* `whitespace-nowrap` — 0.17.0, and it is not cosmetic. The
+                  wordmark is set in the BODY face, and that face changed from
+                  Assistant to Heebo, which is wider on the em. At 390px the two
+                  words no longer fitted between the mark and the CTA, so
+                  "פנינה פאף" broke across two lines and pushed the whole 64px
+                  bar out of shape on the one screen size that matters most here.
+                  Her name is a name; it does not wrap. */}
+              <span className="a11y-compact-header-item whitespace-nowrap">
+                {siteConfig.name}
+              </span>
+            </Link>
+
+            {/* 44px while a thumb is the pointer, 36px from `lg` where the nav
+                appears and the pointer is a mouse. */}
+            <div className="hidden items-center gap-2 sm:flex">
+              {siteConfig.profiles.instagram ? (
+                <a
+                  href={siteConfig.profiles.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t("instagram")}
+                  data-a11y-no-underline
+                  className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-foreground/12 bg-foreground/[0.03] text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent lg:h-9 lg:w-9"
+                >
+                  <InstagramIcon className="h-4.5 w-4.5" />
+                </a>
+              ) : null}
+              <WhatsAppLink
+                label={t("whatsapp")}
+                noUnderline
+                className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 text-whatsapp-ink transition-colors hover:border-[#25d366]/50 hover:bg-[#25d366]/15 lg:h-9 lg:w-9"
+              >
+                <WhatsAppIcon className="h-4.5 w-4.5" />
+              </WhatsAppLink>
+            </div>
           </div>
+
+          {/* ── HER TAGLINE, THE SECOND LINE OF HER OWN MASTHEAD ──
+              Her Canva document heads every page with her name plus "ליווי אישי
+              לצמיחה, ריפוי ובניית חיים חדשים". The name is already the wordmark
+              above; this is the rest of that lockup.
+
+              ── WHY IT IS NOT `lg:` LIKE EVERYTHING ELSE HERE ──
+              Because it does not fit at `lg`, and that is measured rather than
+              guessed (Assistant, the real strings, 2026-08-02):
+
+                tagline @16px  254px      nav (5 items + padding + gaps)  500px
+                wordmark @23px  90px      CTA "לשיחת היכרות"              160px
+                mark + icons   32 + 80px
+
+              The nav is `absolute left-1/2` inside a container that CAPS at
+              `max-w-6xl` (1152px), so the middle 500px is spoken for at every
+              width above 1200 and widening the viewport buys nothing. Put the
+              tagline on the SAME line as the wordmark and the start cluster
+              needs 548px against a 262px gap: it lands under the nav at every
+              width, including 2560. Put it on the same line with the nav laid
+              out in flow instead and the row totals 1232px against 1152px of
+              container. There is no viewport where the header row holds both.
+
+              A second line under the whole cluster is the one geometry that
+              works, and it is FREE: the row is `h-16` (64px) and holds a 36px
+              icon line plus a 20px tagline with room to spare, so the header
+              does not gain a pixel at any width — least of all on a phone,
+              where this is `display: none` and the DOM is unchanged.
+
+              It is aligned to the lockup's outer edge (under the mark) rather
+              than indented under the name. That is worth 42px of clearance from
+              the nav, and it is the normal way a masthead stacks.
+
+              ── AND WHY 1440 ──
+              At the 1152px container the tagline ends 48px before the nav
+              starts, which is comfortable. The number that sets the breakpoint
+              is the accessibility panel's 130% text scale: it grows the root
+              font, so BOTH the tagline and the nav grow, and `max-w-6xl` is in
+              rem so the container grows with them. At 1280×130% they collide by
+              46px. 1440 is the first common width that clears at 130% (34px)
+              as well as at 100%, and it is the desktop width this site is
+              judged at. Below it the header is exactly what it was.
+
+              `text-muted-foreground`, 11.58:1 on `--canvas` — the ladder in
+              globals.css §Ink. Not `subtle`: this is brand copy, not meta. */}
+          <p className="mt-0.5 hidden text-xs leading-tight text-muted-foreground min-[1440px]:block">
+            {t("tagline")}
+          </p>
         </div>
 
         <nav

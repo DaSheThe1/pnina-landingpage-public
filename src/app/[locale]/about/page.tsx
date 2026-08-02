@@ -146,7 +146,7 @@ export default async function AboutPage({
                 </div>
               </div>
               <Eyebrow>{t("storyEyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[2.4rem] text-balance">
+              <h2 className="mt-5 text-[3.41rem] text-balance">
                 {t("storyTitle")}
               </h2>
               {story.map((paragraph, i) => (
@@ -211,7 +211,7 @@ export default async function AboutPage({
             <Reveal>
               <div className="text-center">
                 <Eyebrow>{tVideo("eyebrow")}</Eyebrow>
-                <h2 className="mb-8 mt-5 text-[2rem] text-balance sm:text-[2.4rem]">
+                <h2 className="mb-8 mt-5 text-[2.84rem] text-balance sm:text-[3.41rem]">
                   {tVideo("title")}
                 </h2>
                 <MessageVideo

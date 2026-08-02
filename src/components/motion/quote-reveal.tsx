@@ -43,7 +43,7 @@ export function QuoteReveal({
 
   return (
     <figure className={cn("quote-reveal", className)}>
-      <blockquote className="font-display text-[2rem] leading-snug text-balance text-foreground sm:text-[2.4rem]">
+      <blockquote className="font-display text-[2.84rem] leading-snug text-balance text-foreground sm:text-[3.41rem]">
         {words.map((word, i) => {
           const start = 14 + i * perWord;
           return (
