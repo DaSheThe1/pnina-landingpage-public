@@ -101,7 +101,7 @@ export function SectionHeading({
       ) : null}
       <h2
         className={cn(
-          "text-[3.41rem] text-balance sm:text-[4.05rem]",
+          "text-[2.4rem] text-balance sm:text-[2.85rem]",
           gradient ? "text-gradient" : "text-foreground"
         )}
       >
@@ -264,7 +264,33 @@ export function HeroSection() {
                 her sea, and the same token the filled CTA resolves through, so
                 the headline and the button cannot drift apart. When she sends a
                 colour this is one token, not two call sites. */}
-            <h1 className="text-headline-accent text-[2.8rem] leading-[1.03] text-balance sm:text-[4.5rem] lg:text-[5.4rem]">
+            {/* SIZE: 2.2rem on a phone, and it was MEASURED against the fold
+                rather than taken off the x0.704 ladder like every other display
+                call site (which would have given 1.97rem here).
+
+                Daniel asked twice for this headline to be bigger, so the rung is
+                set to the largest value that still passes `e2e/hero-fold.spec.ts`
+                with a margin worth trusting. Measured at 390x844, submit-button
+                bottom against an 844 fold:
+
+                    1.97rem → 823   (the ladder value, 21px spare)
+                    2.2rem  → 834   ← shipped, 10px spare
+                    2.3rem  → 839   fits, but 5px is inside font-load jitter
+                    2.4rem  → 844   fails
+                    2.5rem  → 890   the second sentence wraps too, 4 lines
+
+                ⚠️ IT SETS ON THREE LINES NOW, and that is not a regression to
+                fix by shrinking. Under Amatic this was two lines at 2.8rem, but
+                Amatic is condensed to 58% of Rubik's set width — the old rung
+                bought line count, not presence. At 2.2rem Rubik Bold this
+                headline is optically far larger and heavier than 2.8rem Amatic
+                was, which is what Daniel was asking for. The break falls between
+                the two sentences and inside the first, which `text-balance`
+                keeps even.
+
+                If a future edit needs room here, take it from the video, not
+                from this rung, and never by raising the numbers in the spec. */}
+            <h1 className="text-headline-accent text-[2.2rem] leading-[1.03] text-balance sm:text-[3.17rem] lg:text-[3.8rem]">
               <span className="block">{t("titleLead")}</span>
               {/* The accent, and it is the same colour as the filled CTA below
                   by construction: `--headline-accent` resolves through
@@ -539,11 +565,22 @@ export function ProcessSection() {
                           )}
                         >
                           {/* Forced LTR so "01" never reorders to "10" inside
-                              the surrounding RTL document. */}
+                              the surrounding RTL document.
+
+                              `tabular-nums` is the ONE on this site, and it
+                              arrived with Rubik in 0.18.0. Rubik's figures are
+                              lining but PROPORTIONAL — the ten advances spread
+                              186/1000em — so at this size "01".."04" measured
+                              133.7 / 151.1 / 152.3 / 154.8px and the first card's
+                              numeral sat 14% narrower than the last one in a row
+                              of four. Rubik ships a real `tnum`, so this costs
+                              nothing. Do not generalise it: Heebo's ten advances
+                              are identical (562/1000em), which is why no body
+                              figure anywhere else asks for it. */}
                           <span
                             dir="ltr"
                             className={cn(
-                              "font-display select-none text-[7.1rem] leading-none",
+                              "font-display select-none text-[5rem] leading-none tabular-nums",
                               tint.numeral
                             )}
                           >
@@ -1000,7 +1037,7 @@ export function OffersSection() {
 
             <div className="relative">
               <NodeLabel node={<ShellNode />}>{intro.label}</NodeLabel>
-              <h3 className="font-display mt-2 text-[2.84rem] leading-tight text-foreground sm:text-[3.48rem]">
+              <h3 className="font-display mt-2 text-[2.0rem] leading-tight text-foreground sm:text-[2.45rem]">
                 {intro.title}
               </h3>
               <p className="mt-3 max-w-lg text-base leading-relaxed text-foreground-soft">
@@ -1115,7 +1152,7 @@ export function OffersSection() {
                       `flex-wrap` because "מסלול הפנינה" + "₪2,880" does not fit
                       one line on a phone. */}
                   <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h3 className="font-display text-[2.84rem] leading-tight text-foreground sm:text-[3.12rem]">
+                    <h3 className="font-display text-[2.0rem] leading-tight text-foreground sm:text-[2.2rem]">
                       {track.title}
                     </h3>
                     <p className="text-base text-muted-foreground">
@@ -1431,7 +1468,7 @@ export function FounderTeaser() {
             {/* Story */}
             <div className="relative">
               <Eyebrow>{t("eyebrow")}</Eyebrow>
-              <h2 className="mt-4 text-[3.41rem] text-balance sm:text-[4.05rem]">
+              <h2 className="mt-4 text-[2.4rem] text-balance sm:text-[2.85rem]">
                 {t("title")}
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-foreground-soft">
@@ -1521,7 +1558,7 @@ export function FinalCta() {
           <div className="relative px-6 py-14 sm:px-10 sm:py-16">
             <div className="relative">
               <div className="text-center">
-                <h2 className="mx-auto max-w-2xl text-[3.41rem] text-balance sm:text-[4.05rem]">
+                <h2 className="mx-auto max-w-2xl text-[2.4rem] text-balance sm:text-[2.85rem]">
                   {t("titleLead")}
                   <span className="text-gradient">{t("titleHighlight")}</span>
                 </h2>

@@ -84,6 +84,21 @@ check for root scrolling, sticky behavior and toolbar changes. It still uses the
 Mac's CPU, GPU, memory and network, so final decode-speed and memory-pressure
 confidence needs a physical iPhone or cloud real-device pass.
 
+### Motion-suite debt
+
+As of 0.18.0 the motion suite runs **15 passed, 1 failed**:
+
+- `one hard phone-sized native gesture cannot cross the whole process` fails on
+  the `data-process-scroll-locked` assertion.
+
+**This is not a 0.18.0 regression.** It was verified by stashing the release and
+re-running the single test against the `before-brandbook-0.17.3` tag, where it
+fails identically — so the palette, font and copy work did not cause it, and the
+list below is not where it belongs either. It predates both. Do not describe this
+suite as green while it stands, and do not "fix" it by relaxing the bound: the
+assertion is about a phone-sized flick being unable to skip the whole `400lvh`
+process, which is a real behaviour this section exists to guarantee.
+
 ### Current broad-suite debt
 
 The 2026-07-31 Chromium run completed with 59 passed, 4 failed, 1 flaky and the

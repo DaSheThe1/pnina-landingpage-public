@@ -201,7 +201,7 @@ export default async function LecturesPage({
           <Reveal>
             <div>
               <Eyebrow>{t("audiences.eyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[3.41rem] text-balance">
+              <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("audiences.title")}
               </h2>
               <ul className="mt-6 space-y-3">
@@ -221,7 +221,7 @@ export default async function LecturesPage({
           <Reveal delay={80}>
             <div className="rounded-2xl border border-foreground/[0.08] bg-surface-1 p-7 shadow-card">
               <Eyebrow>{t("format.eyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[2.84rem]">
+              <h2 className="mt-5 text-[2.0rem]">
                 {t("format.title")}
               </h2>
               <dl className="mt-6 space-y-5">
@@ -286,7 +286,7 @@ export default async function LecturesPage({
       <section className="bg-background px-6 pb-24">
         <Reveal>
           <div className="mx-auto max-w-4xl rounded-2xl border border-brand/20 bg-brand-wash px-8 py-12 text-center shadow-card">
-            <h2 className="text-[3.41rem] text-balance">
+            <h2 className="text-[2.4rem] text-balance">
               {t("closing.title")}
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">

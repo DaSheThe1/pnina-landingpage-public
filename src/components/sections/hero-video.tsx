@@ -564,12 +564,12 @@ function HeroPoster() {
     <div className="absolute inset-0 flex items-center justify-center gap-4 bg-gradient-to-b from-surface-2 via-brand-wash to-surface-1 px-5 text-center sm:gap-5">
       <span
         aria-hidden
-        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-surface-1/70 font-display text-[1.92rem] text-brand-accent shadow-card sm:h-14 sm:w-14 sm:text-[2.2rem]"
+        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-brand/30 bg-surface-1/70 font-display text-[1.35rem] text-brand-accent shadow-card sm:h-14 sm:w-14 sm:text-[1.55rem]"
       >
         {siteConfig.monogram}
       </span>
       <div className="min-w-0 text-start">
-        <p className="font-display text-[2.13rem] leading-tight text-foreground sm:text-[2.56rem]">
+        <p className="font-display text-[1.5rem] leading-tight text-foreground sm:text-[1.8rem]">
           {siteConfig.name}
         </p>
         <p className="mt-1 hidden text-sm leading-normal text-muted-foreground sm:block">

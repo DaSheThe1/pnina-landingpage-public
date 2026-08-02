@@ -201,7 +201,7 @@ export function ContactForm({
     >
       {showIntro ? (
         <div className="mb-6">
-          <h2 className="text-[2.2rem] text-foreground">
+          <h2 className="text-[1.55rem] text-foreground">
             {t("simpleTitle")}
           </h2>
           {/* The default lead sentence advertises the open field ("יש גם שדה

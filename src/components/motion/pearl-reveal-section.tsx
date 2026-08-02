@@ -42,7 +42,7 @@ export function PearlRevealSection() {
       frameCount={source.frameCount}
       ariaLabel={t("ariaLabel")}
     >
-      <p className="scroll-seq__beat glass font-display max-w-xl rounded-2xl px-6 py-4 text-center text-[2.48rem] leading-snug text-balance text-foreground shadow-card sm:text-[2.84rem]">
+      <p className="scroll-seq__beat glass font-display max-w-xl rounded-2xl px-6 py-4 text-center text-[1.75rem] leading-snug text-balance text-foreground shadow-card sm:text-[2.0rem]">
         {t("caption")}
       </p>
     </ScrollSequence>

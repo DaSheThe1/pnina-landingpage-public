@@ -9,6 +9,7 @@ import {
   Heebo,
   Noto_Sans_Hebrew,
   Noto_Serif_Hebrew,
+  Rubik,
 } from "next/font/google";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -89,60 +90,120 @@ const heebo = Heebo({
   display: "swap",
 });
 
-/* Display face for headlines only (h1/h2 + `.font-display`) — AMATIC SC.
+/* Display face for headlines only (h1/h2 + `.font-display`) — RUBIK 700.
 
-   ── PNINA CHOSE THIS ONE HERSELF (2026-08-02) ──
-   She was sent the Hebrew-supporting families on Google Fonts and picked Amatic
-   SC. That settles a question three previous releases guessed at, so the guess
-   work below is kept only as history: 0.11.4 shipped Frank Ruhl Libre (Daniel:
-   "ugly"), 0.12.0 Bellefair, 0.12.x-0.16.x Bona Nova, and 0.17.0 briefly Noto
-   Sans Hebrew — the last of those identified by matching the fallback face
-   Canva was substituting into her own document, because the face she originally
-   named ("Comika") is Latin-only and has no Hebrew glyphs at all. All of those
-   were us inferring what she would like. This is her actually saying it.
+   ── IT IS STANDING IN FOR PLONI BOLD, WHICH WE ARE NOT LICENSING ──
+   Pnina's brand book (2026-08-02) specifies **Ploni Bold** for Hebrew headings.
+   Ploni is a real and very good family — AlefAlefAlef, drawn by Avraham
+   Cornfeld — and it is COMMERCIAL: about $250 per style, $1,595-2,500 for the
+   family, webfont licence sold separately. We do not have a licence, and the
+   only way to have the file without one is a piracy site. That is not something
+   to put on a live site carrying a real person's name and her clients' phone
+   numbers, so it was declined (Daniel was told, 2026-08-03). If a licence is
+   ever bought, the `.woff2` drops in through `next/font/local` and this constant
+   is the only thing that changes.
 
-   Amatic SC is a Hebrew-first design (Ben Nathan): condensed, hand-drawn,
-   informal, and very light on the em. Three consequences are load-bearing.
+   ── WHY RUBIK IS THE SUBSTITUTE, MEASURED ──
+   Not a resemblance score. AlefAlefAlef publishes a 55-page Ploni specimen; it
+   was rasterised at 300dpi and page 44 (the foundry's own BOLD showing) was
+   measured as pixels, then compared against the current gstatic bytes for 15 of
+   the 62 Google families carrying a `hebrew` subset. Mean per-glyph IoU over 16
+   letters, normalised to a common letter-height:
 
-   ⚠️ 1. IT IS A HEADLINE FACE AND NOTHING ELSE. It is condensed to about half
-   the width of a normal sans and its strokes are hairlines; at body size it is
-   genuinely hard to read, and this site is read by people in distress, some on
-   a phone, some with low vision. It drives `h1`, `h2` and `.font-display` only.
-   The body stays HEEBO. Do not extend this face to paragraphs, labels, buttons,
-   form fields or the nav, however much more "designed" it would look.
+       Rubik 700        0.794   ← best of 15
+       Fredoka 700      0.760   (disqualified: semicircular stroke ENDS)
+       Lunasima 700     0.753   (runner-up, see below)
+       Noto Sans 700    0.699
+       Assistant 700    0.690
+       Heebo 700        0.638   (the BODY face)
+       Amatic SC 700    0.160   ← what this replaces
 
-   ⚠️ 2. IT NEEDS MORE SIZE THAN THE FACE IT REPLACED. Amatic's cap height and
-   its set width are both far smaller than Noto Sans Hebrew's, so at an identical
-   `rem` the headline reads a good deal smaller and lighter. Every display call
-   site was re-judged at 1440 and 390 and sized UP rather than left alone; the
-   ladder is tabulated in the h1/h2 note in globals.css. If you add a heading,
-   size it against the ones already there, not against the body scale.
+   Three things decided it beyond the top score:
 
-   ⚠️ 3. IT IS SET AT 700, AND 700 HERE IS STILL NOT "BOLD". Amatic ships 400
-   and 700 and the 700 is a real master, so nothing is synthesised — but its 700
-   is roughly the weight of a normal face's regular. That is a genuine tension
-   with Daniel's standing "the headlines are supposed to be BOLD" rule, which he
-   asked for three separate times. The rule is not repealed: 700 is still the
-   floor here and nothing may set this family lower. It is simply the case that
-   the client picked a light face, and a light face at its own maximum is what
-   she picked. If the headlines read as too faint on the real site, the answer is
-   SIZE, or going back to a different face with her — not a synthesised weight
-   and not a `-webkit-text-stroke`, both of which this project has already tried
-   and rejected once each.
+   1. STROKE WEIGHT IS NEARLY EXACT. Ploni Bold's stem/letter-height is 0.283;
+      Rubik 700 is 0.294, 3.9% off. Heebo 700 is 0.380 — 34% too heavy. Worth
+      knowing: Ploni Bold is the 6th of 8 weights and is genuinely LIGHTER than
+      a typical Google 700.
+   2. IT IS MORE PLONI-LIKE THAN HEEBO-LIKE (0.794 vs 0.730). That margin is the
+      one that matters, because Heebo is the body face and the headline has to
+      separate from it by something other than size. ⚠️ This is exactly why
+      ASSISTANT LOST despite already being declared here and therefore free:
+      Assistant is closer to Heebo (0.794) than to Ploni (0.690), the worst
+      margin of any candidate. Do not "simplify" this back to Assistant.
+   3. IT IS ROUND AT THE SHOULDER AND SQUARE AT THE BASE, like Ploni. The
+      foundry calls Ploni the rounded counterpart to its own rectangular Almoni,
+      and measurement says where that roundness lives: ב top-right shoulder
+      inset 1.707 stems (a generous arc) but ד outer corner 0.000 and ב
+      bottom-left 0.098 (square). Rubik's ב bottom-left is 0.109, closest of all
+      15 tested.
 
-   SUBSETS: `hebrew` AND `latin`. The Hebrew subset carries the letters and ₪;
-   the DIGITS and the curly quotes live in latin, so dropping it would leave
-   "₪990" and the process-spine numerals to a fallback.
+   THE ONE HONEST COST: Ploni's stem-end is a flat cut (terminal score 1.000),
+   Rubik's is 0.782 — its signature rounded corners, about 11% of stem per side.
+   It errs toward Ploni's own "עגול" brief rather than against it. Runner-up
+   Lunasima wins that test outright but is a Monotype metric-compatibility
+   fallback for Lucida Grande built on Noto Sans, needs 2.4x the tracking
+   correction, and ships only 400/700.
 
-   NUMERALS: Amatic SC is lining by default, like Heebo and Noto Sans Hebrew, so
-   `font-variant-numeric: lining-nums` stays OFF the base rule. It lives on the
-   `?font=bonanova` rule in globals.css §8, which is the one face in the building
-   that sets oldstyle figures. */
-const amaticSC = Amatic_SC({
+   ⚠️ SIZES CAME BACK DOWN x0.70 WITH THIS SWAP, and the arithmetic is exact
+   rather than judged: every display call site was 1.42x the pre-Amatic ladder
+   (5.32 = 3.75x1.42, 4.05 = 2.85x1.42, 3.41 = 2.4x1.42, 2.84 = 2.0x1.42 …), so
+   x0.704 lands back on the 0.17.0 ladder, and Rubik is within 4% of the face
+   that ladder was tuned for on both axes. There is ~4% headroom to x0.73 if it
+   reads small.
+   ⚠️ And a correction to what the note here used to claim: Amatic's cap height
+   is NOT "far smaller" — its letters are 18% TALLER per em than Rubik's. What is
+   far smaller is its SET WIDTH, 58% of Rubik's. The old 1.42x was compensating
+   narrowness and hairline weight, never a small cap height.
+
+   ⚠️ IT IS A HEADLINE FACE HERE BY CHOICE, NOT BY NECESSITY. Rubik is perfectly
+   readable at body size, unlike Amatic — but the body stays HEEBO, which is what
+   Pnina's own brand book specifies for body copy and what this site already
+   shipped. Do not extend Rubik to paragraphs, labels, buttons or the nav.
+
+   ⚠️ 700 HERE IS A REAL BOLD AT LAST. Rubik ships a genuine 700 master with 800
+   and 900 in reserve, so Daniel's standing "the headlines are supposed to be
+   BOLD" rule (asked for three separate times) is satisfied by the file rather
+   than argued around, as it had to be under Amatic. Nothing is synthesised and
+   nothing needs a `-webkit-text-stroke` — this project has tried and rejected
+   both once each.
+
+   SUBSETS: `hebrew` AND `latin`. Coverage verified: 27/27 Hebrew letters and ₪
+   ride in `hebrew`; the DIGITS and the curly quotes live in `latin`, so dropping
+   it would leave "₪990" and the process-spine numerals to a fallback.
+
+   NUMERALS: Rubik's figures are LINING (so `lining-nums` correctly stays off the
+   base rule — it lives only on the `?font=bonanova` rule in globals.css §8) but
+   PROPORTIONAL: the ten advances spread 186/1000em. That matters in exactly one
+   place, the process spine's "01".."04" at `text-[5rem]`, which is why that one
+   call site carries `tabular-nums`. Rubik ships a real `tnum`, so it costs
+   nothing. This does NOT change the Heebo claim below: Heebo's ten advances are
+   still identical at 562/1000em and the site still needs no other `tnum`. */
+const rubik = Rubik({
   variable: "--font-display",
   subsets: ["hebrew", "latin"],
   weight: ["700"],
   display: "swap",
+});
+
+/* ⚠️ HISTORY — AMATIC SC, the 0.17.0-0.17.3 display face, kept at `?font=amatic`.
+
+   Pnina picked it herself on 2026-08-02 from Google Fonts, and it shipped for a
+   day before her brand book arrived that evening naming Ploni Bold instead. It
+   is demoted rather than deleted precisely because she chose it once: if she
+   looks at the Rubik build and misses the hand-drawn voice, `?font=amatic` puts
+   it straight back for the comparison.
+
+   Keeping the reason it was hard to live with, so it is not re-proposed blind:
+   Amatic is condensed to about half the width of a normal sans, its strokes are
+   hairlines, and its 700 is roughly the weight of a normal face's regular — a
+   standing tension with the "headlines must be BOLD" rule that could only ever
+   be answered with size. Rubik answers it with the file. */
+const amaticSC = Amatic_SC({
+  variable: "--font-eval-amatic",
+  subsets: ["hebrew", "latin"],
+  weight: ["700"],
+  display: "swap",
+  preload: false,
 });
 
 /* ⚠️ HISTORY, kept because it stops the same three faces being re-proposed.
@@ -363,7 +424,7 @@ export default async function LocaleLayout({
       lang={locale}
       dir={dir}
       data-scroll-behavior="smooth"
-      className={`${heebo.variable} ${amaticSC.variable} ${notoSansHebrew.variable} ${bonaNova.variable} ${bellefair.variable} ${frankRuhl.variable} ${notoSerifHebrew.variable} ${davidLibre.variable} ${assistant.variable} h-full antialiased`}
+      className={`${heebo.variable} ${rubik.variable} ${amaticSC.variable} ${notoSansHebrew.variable} ${bonaNova.variable} ${bellefair.variable} ${frankRuhl.variable} ${notoSerifHebrew.variable} ${davidLibre.variable} ${assistant.variable} h-full antialiased`}
       // Inline boot scripts below stamp attributes on this element before React
       // hydrates: Save-Data, accessibility choices (`data-a11y-*`) and the eval
       // motion knob (`data-motion` / `data-accent`). Server HTML therefore

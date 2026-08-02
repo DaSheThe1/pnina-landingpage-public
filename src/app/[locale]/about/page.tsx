@@ -99,6 +99,18 @@ export default async function AboutPage({
             <span className="text-gradient">{t("heroTitleHighlight")}</span>
           </>
         }
+        // ── HER BRAND STATEMENT IS THE HERO DESCRIPTION (2026-08-03) ──
+        // `heroDescription` said "אני פנינה, ואני מלווה נשים שחוו פגיעה מינית
+        // לחזור לאהוב את עצמן ואת החיים שלהן" — ours, and a shorter version of
+        // a sentence she has since written herself. Her brand book states what
+        // she does in one line, and that line contains everything the old one
+        // said plus the two things it did not (לגלות מחדש את עצמן, and a future
+        // "שאינו מוגדר על ידי מה שעברו"). So it REPLACES the sentence rather
+        // than joining it: a page called "מי אני" should not answer the same
+        // question twice, once in her words and once in ours.
+        // Only "אני פנינה." in front of it is ours, and it is there because the
+        // h1 above says "נעים להכיר" without naming her. Her sentence itself is
+        // verbatim, including "שעברו" where the rest of the site says "שחוו".
         description={t("heroDescription")}
       >
         <div className="mt-7 flex flex-wrap gap-2.5">
@@ -146,7 +158,7 @@ export default async function AboutPage({
                 </div>
               </div>
               <Eyebrow>{t("storyEyebrow")}</Eyebrow>
-              <h2 className="mt-5 text-[3.41rem] text-balance">
+              <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("storyTitle")}
               </h2>
               {story.map((paragraph, i) => (
@@ -211,7 +223,7 @@ export default async function AboutPage({
             <Reveal>
               <div className="text-center">
                 <Eyebrow>{tVideo("eyebrow")}</Eyebrow>
-                <h2 className="mb-8 mt-5 text-[2.84rem] text-balance sm:text-[3.41rem]">
+                <h2 className="mb-8 mt-5 text-[2.0rem] text-balance sm:text-[2.4rem]">
                   {tVideo("title")}
                 </h2>
                 <MessageVideo

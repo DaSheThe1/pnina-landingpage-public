@@ -12,6 +12,65 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.18.0] - 2026-08-03
+
+### Pnina's brand book, on the site
+
+She sent a brand book with named colours, fonts and lines. Almost all of it is
+now on the page. What is here is hers; where it could not be used exactly, the
+reason is written down.
+
+- **Her five colours.** "Deep Ocean" (#264653) is now the button colour and the
+  colour of the highlighted headline, which are deliberately the same colour and
+  always will be. "Soft Gold" (#C7A86D) replaces the brighter, brassier gold the
+  site was using in its decoration, and "Mist Grey" (#A8ADB2) replaces a blue-ish
+  silver. Her "Pearl White" and "Oyster Beige" turned out to be what the page was
+  already wearing, so nothing moved there.
+  Everything got easier to read rather than harder: white on the button went from
+  6.07 to 9.60 against the required 4.5, and the headline colour from 5.97 to
+  9.44.
+  Two of her colours are light, and a light colour cannot carry small dark text.
+  So her exact value is used where it is a wash or a highlight, and a deeper
+  version of the same colour is used where words have to sit on it. Both are
+  written down beside the values.
+- **The footer is her Deep Ocean.** Her brand book puts the footer and her logo
+  card on that navy, so the footer is now a solid navy panel instead of the
+  photograph showing through. Her sign-off, "שלך, פנינה.", is on it.
+- **Her tagline is in the header:** "לבחור בעצמך. שכבה אחר שכבה."
+- **Her own sentence about what she does** is now on the מי אני page, in her
+  words rather than our shorter version of them.
+- **Headline font.** Her book asks for Ploni Bold. Ploni is a paid font
+  (about $250 for one weight) and we do not have a licence for it, so the site
+  uses Rubik, which is free. This was not a guess: the two faces were compared
+  letter by letter against the publisher's own printed sample, and Rubik came out
+  closest of the fifteen free Hebrew fonts tested. If the licence is ever bought,
+  swapping the real font in is a two-line change.
+  The practical gain is that the headlines are properly bold for the first time.
+  The previous font was a light, hand-drawn one whose boldest weight is about as
+  heavy as a normal font's ordinary text.
+- **The headings are re-sized to suit it.** The old font was very narrow, so
+  every heading had been enlarged to compensate; the new one is normal width, so
+  that compensation came back off. The main headline on a phone is now the
+  largest size that still leaves the whole form on the first screen, measured
+  rather than judged. It sets on three lines instead of two, and still reads
+  considerably bigger and stronger than before.
+- The numbers in the four process cards are back in line with each other. The new
+  font gives digits different widths, so "01" was noticeably narrower than "04".
+- Fixed: the focus outline was invisible against the new navy footer, including
+  for visitors who have turned on the site's own "ניגודיות מוגברת" setting.
+
+**Not done, and why.** Her footer also lists "קורס דיגיטלי", "קבוצות" and
+"קהילה". None of those exist on the site, so no links were added to them rather
+than pointing at pages that are not there. If they are planned, they get built
+and then linked. Her website address is also spelled differently in the book
+(pninapaf.com) from the one the site actually runs on (peninaphaff.com); nothing
+was changed, and it is worth checking which is right.
+
+**If she prefers the previous version**, all of this is one revert away: the tag
+`before-brandbook-0.17.3` marks the site exactly as it was. The previous accent
+colour is also still viewable at `?accent=sea`, and the previous headline font at
+`?font=amatic`.
+
 ## [0.17.3] - 2026-08-02
 
 ### The headline reads better, and the form is a line shorter

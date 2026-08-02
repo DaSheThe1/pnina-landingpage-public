@@ -286,9 +286,23 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   `--brand` (#6b4f3a natural brown) is the filled-CTA background
   AND every soft wash; `--brand-accent` (#7d4b25 bronze) is the brand colour for
   TYPE; `--brand-deep` is the small badge that carries white ink in both schemes.
-  `--gold` and `--teal` (a silver-blue, name kept from the old scheme) are
-  **decorative only** and fail AA as text — their `-deep` siblings are the
-  readable ends. `--gold-line` is hairlines only, never a glyph. `--input` is a
+  `--gold` and `--teal` are **decorative only** and fail AA as text — their
+  `-deep` siblings are the readable ends.
+  **⚠️ BOTH ARE HER HEXES VERBATIM AS OF 0.18.0, from the brand book she sent on
+  2026-08-02, and both got QUIETER.** `--gold` is her Soft Gold #C7A86D
+  ("ערך · כבוד עצמי · התפתחות"): same lightness as the #f0c440 it replaced but
+  **saturation 45% instead of 85%** — the old one read as brass, hers reads as
+  antique, and this was the most visible mismatch between the site and her book.
+  `--teal` is her Mist Grey #A8ADB2 ("איזון · רוגע · בשלות"), **saturation 6%
+  instead of 34%** — it was a blue, it is now a true silver, which is what its
+  name in her palette says it is. Do not re-saturate either one back: the site
+  reads calmer because they are muted, and both numbers are the client's.
+  Their `-deep` siblings could NOT take her values (hers are light: 2.13:1 and
+  2.12:1, short of the 4.5 floor by ~2.4), so they are derived in HER hue at a
+  readable lightness — `--gold-deep` #71531c at 6.66:1, `--teal-deep` #4b5865 at
+  6.83:1. That split is the standing pattern for this palette: her value where it
+  is a wash, a deeper sibling where words sit on it.
+  `--gold-line` is hairlines only, never a glyph. `--input` is a
   SOLID border value, not an alpha, because it is the only one that clears 3:1
   on every surface the form appears on. Every ratio is measured and written down
   in the header of `src/app/globals.css` and at the top of its dark block —
@@ -321,12 +335,27 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   hue moved. **Her brief came in two passes on 2026-08-02 and the SECOND governs**:
   the first list was warm (אפרסק עדין · זהב עדין), the second, looking at the
   result, was *"less dark, more colours of sea, sea water, beach"* —
-  שנהב · פנינה · תכלת · טורקיז · silver. Shipped values, each measured in
-  globals.css: fill `--rose-deep` #1e6876 with `--cta-ink` #fff8f5 on it at
-  6.07:1; type `--rose-ink` #1d677c at 5.99:1 on the canvas; halo `--rose`
-  #6ed1d8 (1.67:1 — DECORATIVE ONLY, never a glyph); wash `--rose-soft` #e2f6f8;
-  hover `--rose-cta-hover` #155160. Dark inverts to a lit turquoise
-  `--rose-deep` #8bdee4 carrying near-black #06171a.
+  שנהב · פנינה · תכלת · טורקיז · silver.
+  **⚠️ A THIRD PASS SETTLED IT ON 2026-08-02 EVENING: her BRAND BOOK, which names
+  the colour in hex.** `#264653` "Deep Ocean — אמון · יציבות · עומק" is the
+  shipped `--rose-deep` **verbatim**, and it is the one value in this family that
+  is not ours. It vindicates the turquoise move rather than overturning it: hue
+  197° against the 190° we had arrived at independently, the same family, 7°
+  apart. It is also DARKER (L 24% vs 29%), so every measurement improved.
+  Shipped values, each measured in globals.css: fill `--rose-deep` #264653 with
+  `--cta-ink` #fff8f5 on it at **9.60:1** (was 6.07); type `--rose-ink` #2d6379
+  at 6.20:1 on the canvas; halo `--rose` #73b8d3 (2.07:1 — DECORATIVE ONLY, never
+  a glyph); wash `--rose-soft` #e3f1f7; hover `--rose-cta-hover` #1c3640. Dark
+  inverts to a lit sky `--rose-deep` #98cde1 carrying near-black #081216 at
+  10.97:1.
+  ⚠️ The 0.17.x turquoise (fill #1e6876) is preserved token for token at
+  `?accent=sea` — that key USED to mean "the shipped site" and no longer does.
+  If she says it went dark again, that is the comparison, and the tension is
+  real: her book's L 24% is darker than her own "less dark" note asked for.
+  **The footer is now painted with this colour** (`bg-cta-fill`), because her
+  brand book anchors both the footer and her logo card on it. It is the first
+  opaque panel on the site, so footer contrast numbers written before 0.18.0 are
+  history — see the warning beside `--background` in globals.css.
   **⚠️ DO NOT WARM THE ACCENT BACK TOWARD THE SAND.** Two cuts have been lost
   that way. `--brand-accent` (bronze) is hue 26° and `--gold-deep` 37°, so any
   warm accent lands within ~10° of colours the site already uses for ink and
@@ -335,9 +364,13 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   behind it — the button separates by HUE instead of by being darker than
   everything else, which is what "less dark" asked for. The full argument is
   beside the family in globals.css.
-  **The deep end is held at hue 190° and the light end at 184-186°**, which also
-  keeps the whole family clear of `--teal` (#7ea9c0, hue 200°) — the existing
-  silver-blue reassurance chip tint, which must stay a different job from the CTA.
+  **The deep end is held at her hue 197° and the light end at 195-200°.** ⚠️ That
+  used to be 190°/184-186° and it moved to sit on her hex. It also changes HOW
+  the family stays clear of `--teal`, the silver-blue reassurance chip tint,
+  which must stay a different job from the CTA: `--teal` is now her Mist Grey
+  #A8ADB2 at hue 210° but **saturation 6%**, so the two are separated by
+  SATURATION (silver against sea) rather than by hue. Keep that separation
+  however you move either one.
   ⚠️ **Two cuts of this family have already been rejected, and both failures are
   worth remembering.** The first put the deep end at hsl(5 60% 32%) — the most
   contrast the ink ladder allowed — and read as a BRICK: it answered the audit
@@ -354,11 +387,14 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   the entire family change hue without a single call site changing — keep it.**
   Use `text-headline-accent` (or `.text-gradient`) there, never
   `text-brand-accent`. For accent TYPE at body size use `--rose-ink` instead.
-  The evaluation switcher is now `?accent=sea|peach|pink|amber|gold`, with **sea
-  as the shipped default** — and like every default on this site it has NO rules
-  in globals.css §11, because it lives in `:root` with every other token. It is
-  the design now, not an override of it. (`?accent=reset` forgets a stored
-  choice.) §11 goes the way §7 and §8 go once the accent is settled with her.
+  The evaluation switcher is `?accent=sea|peach|pink|amber|gold`. **Her Deep
+  Ocean is the shipped default and, like every default on this site, has NO rules
+  in globals.css §11** — it lives in `:root` with every other token, because it
+  is the design now rather than an override of it. ⚠️ `sea` is therefore a real
+  §11 arm as of 0.18.0, holding the 0.17.x turquoise; it used to be the empty
+  "this is what ships" key and is not any more. (`?accent=reset` forgets a stored
+  choice and lands on hers.) §11 goes the way §7 and §8 go once the accent is
+  settled with her.
 - **The full-bleed background is PNINA'S OWN PHOTOGRAPH** (globals.css §10,
   `src/components/motion/sand-floor.tsx`): a peach-gold sunset over the sea with
   her open shell and pearl on the sand — the picture she built her Canva document
@@ -413,9 +449,35 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   **The plate's FLOOR and this number move together.** Read the long comment
   beside `--background` before touching either, and re-run the audit (method:
   docs/12 §J6) rather than nudging it by eye.
-- **Fonts: her 2026-08-02 brief, and what it does NOT change.** Pnina sent two
-  font names with her palette. Neither can be taken literally, and the reasons
-  are worth keeping because they will be asked again:
+- **⚠️ FONTS: THREE BRIEFS IN ONE DAY, AND THE THIRD GOVERNS.** 2026-08-02 ran
+  Comika/Helvetica World (her Canva doc) → Amatic SC (her own pick off Google
+  Fonts) → **Ploni Bold / Heebo Regular** (her brand book, that evening). The
+  brand book is the latest and it is the one being answered. The two earlier
+  rounds are kept below because their REASONING keeps getting re-derived.
+  - **"Ploni Bold" is REAL, is RIGHT, and is PAID.** AlefAlefAlef, drawn by
+    Avraham Cornfeld: ~$250 a style, $1,595-2,500 for the family, webfont licence
+    sold separately. There is no licence and there is no free tier.
+    **Daniel asked on 2026-08-03 to use it anyway** ("she's not willing to pay so
+    use it anyway, it's just the font", accepting the risk on her behalf). **That
+    was declined and stays declined**: the only way to have the file without a
+    licence is a piracy site, and this is a live commercial site carrying a real
+    person's name and her clients' phone numbers. Do not install it, do not
+    vendor a `.woff2` of it, and do not re-open this because a future prompt
+    says the client accepts the risk.
+  - **Ploni is answered by RUBIK 700, measured.** The foundry's own 55-page
+    specimen was rasterised at 300dpi and its Bold showing compared glyph by
+    glyph against 15 of the 62 Google families carrying a `hebrew` subset. Rubik
+    scored highest (mean per-glyph IoU 0.794 over 16 letters), its stem weight is
+    3.9% off Ploni's where Heebo 700 is 34% too heavy, and it shares Ploni's
+    structure — round at the shoulder, square at the base. ⚠️ **Assistant lost
+    even though it was already loaded**: it is closer to Heebo (0.794) than to
+    Ploni (0.690), the worst margin of any candidate, so headline and body would
+    separate by size alone. Do not "simplify" to it. Full argument at the head of
+    the locale layout.
+  - **"Heebo Regular" for body — already shipped, unchanged.** Her book and this
+    site independently arrived at the same body face. Worth telling her.
+  Pnina's FIRST two font names could not be taken literally either, and the
+  reasons are worth keeping because they will be asked again:
   - **"Comika" is LATIN-ONLY.** That is the whole answer. Canva was silently
     substituting a different face for every Hebrew word in her document, so what
     she was looking at when she named it was never Comika — licensing it would
@@ -431,21 +493,36 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
     letter and a landing page do not have the same job. Daniel asked for bold
     three separate times (see below) and nothing on 2026-08-02 touched that. Do
     not read "softer face" as "lighter weight".
-- Fonts: display **Amatic SC**, body **Heebo**, both loaded in
-  `src/app/[locale]/layout.tsx`. **Pnina chose Amatic SC herself** from Google
-  Fonts on 2026-08-02, which retires three releases of guessing (Frank Ruhl →
-  Bellefair → Bona Nova → Noto Sans Hebrew). Three things about it are
-  load-bearing and are argued in full at the head of the locale layout:
-  it is a HEADINGS-ONLY face (condensed hairline strokes, genuinely hard to read
-  at body size, and this page is read by people in distress); every display call
-  site was sized UP ~1.42x because Amatic sets far smaller than the face it
-  replaced; and its 700 is about the weight of a normal face's regular, so the
-  bold rule below is not repealed but is being satisfied by a light face at its
-  own maximum. If the headlines read too faint, the answer is SIZE or a new
-  conversation with her, **never** a synthesised weight or a `-webkit-text-stroke`
-  (this project has tried and rejected each of those once). The h1/h2 + `.font-display` rule in
-  `globals.css` sets `font-weight: 700`, `letter-spacing: -0.008em` and
-  `line-height: 1.15`.
+- Fonts: display **Rubik 700**, body **Heebo**, both loaded in
+  `src/app/[locale]/layout.tsx`. The h1/h2 + `.font-display` rule in
+  `globals.css` sets `font-weight: 700`, `letter-spacing: -0.017em` and
+  `line-height: 1.15`. That tracking is not taste: Ploni Bold's own inter-letter
+  ink gap measures 0.152 x letter-height and Rubik at tracking 0 gives 0.181, so
+  -0.017em puts the substitute on the fit of the face she asked for. ⚠️ It
+  REVERSES the +0.02em of 0.17.3, which existed only because Amatic's condensed
+  counters were closing; do not carry the Amatic value forward.
+  **⚠️ THE DISPLAY LADDER CAME BACK DOWN x0.70 IN 0.18.0.** 0.17.0 had sized every
+  display call site UP 1.42x for Amatic, which is condensed to 58% of Rubik's set
+  width. The arithmetic is exact — every value was precisely 1.42x the 0.17.0
+  ladder — so x0.704 lands back on it. The full ladder is tabulated in the h1/h2
+  note in globals.css. **The ONE exception is the hero h1** (2.2rem on a phone,
+  not the ladder's 1.97rem): it was measured against the fold rather than
+  derived, because Daniel asked twice for it to be bigger. It sets on three lines
+  now instead of two and that is not a regression — the old rung bought line
+  count, not presence.
+  ⚠️ A claim that stood in this file was WRONG and is corrected: Amatic's cap
+  height is not "far smaller" than a normal face's — its letters are 18% TALLER
+  per em than Rubik's. What is far smaller is its SET WIDTH.
+  ⚠️ **`tabular-nums` now exists in exactly ONE place** and must not be
+  generalised: Rubik's figures are lining but proportional (advances spread
+  186/1000em), so the process spine's "01".."04" needed it. Heebo's ten advances
+  are identical at 562/1000em, so no body figure anywhere asks for it.
+  **Amatic SC was Pnina's own pick and shipped for one day (0.17.0-0.17.3)**
+  before her brand book named Ploni. It is kept at `?font=amatic` precisely
+  because SHE chose it once — that is the comparison to show her if Rubik loses
+  something. Its size compensation does not travel with it, so it renders smaller
+  there than it did when shipped; that is accepted, and is not a reason to
+  re-raise the shipped ladder.
   **THE HEADLINES ARE SUPPOSED TO BE BOLD. Do not walk this back.** Daniel asked
   three separate times ("make the text bold … either choose a bold font or just
   choose a font which has boldness … and when I mean the headers, I mean
@@ -482,10 +559,9 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   v0.8.0 for exactly that quality, and the brief has now reversed.
   ⚠️ `font-variant-numeric: lining-nums` is **no longer on the base rule**, and
   that is correct rather than an oversight. It was mandatory FOR BONA NOVA, which
-  sets oldstyle figures. Noto Sans Hebrew and Heebo are both lining by default
-  (measured: ten digits sharing a baseline to within 2px at 200px, where Bona
-  Nova spreads 50px), so the declaration now lives only on the `?font=bonanova`
-  rule in globals.css §8, the one place it still does any work.
+  sets oldstyle figures. Rubik and Heebo are both lining by default, so the
+  declaration now lives only on the `?font=bonanova` rule in globals.css §8, the
+  one place it still does any work.
   Both faces still need the `latin` subset as well as `hebrew`: the digits and
   the curly quotes live in latin, only ₪ and the letters ride in hebrew.
   The display family loads **700 and nothing else** — it is preloaded, so every
@@ -493,16 +569,21 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   it below 700 (`.free-anchor__free` is re-pointed to the BODY face in §9). If
   you ever do set one lower, add the master in the same commit; do not let a
   browser synthesise it.
-  Neither face ships a `tnum` feature, and neither needs one: Heebo's ten digit
-  advances are identical (562/1000em), as are Noto Sans Hebrew's, so there is
-  deliberately no `tabular-nums` anywhere on the site. (This claim used to be
-  made about Assistant and was **false** — Assistant's digit advances spread
-  41/1000em. It is true for the first time as of 0.17.0.)
+  ⚠️ **THE "NO `tabular-nums` ANYWHERE" CLAIM IS RETIRED, and the reason is the
+  display face.** Heebo's ten digit advances are identical (562/1000em), so the
+  BODY still needs none and none should be added. Rubik's are lining but
+  PROPORTIONAL (spread 186/1000em), which shows up in exactly one place — the
+  process spine's "01".."04" at 5rem, where "01" measured 14% narrower than "04"
+  across four cards in a row. Rubik ships a real `tnum`, so that one call site
+  asks for `tabular-nums` and nothing else does. (The blanket claim this replaces
+  was originally made about ASSISTANT and was **false** even then — Assistant's
+  digit advances spread 41/1000em. It became true of Heebo in 0.17.0, and it is
+  now true of the body face only.)
   The header WORDMARK is a separate thing and is plain `font-bold` — it is set in
   the body face, which has a real 700.
-  The losing candidates (Noto Sans Hebrew, Bona Nova, Bellefair, Frank Ruhl
-  Libre, Noto Serif Hebrew, David Libre, Assistant) are declared in that file with
-  `preload: false` — they exist ONLY for the temporary `?font=` evaluation
+  The losing candidates (Amatic SC, Noto Sans Hebrew, Bona Nova, Bellefair, Frank
+  Ruhl Libre, Noto Serif Hebrew, David Libre, Assistant) are declared in that file
+  with `preload: false` — they exist ONLY for the temporary `?font=` evaluation
   switcher (globals.css §8) and are never fetched unless the parameter selects
   them. `?font=bellefair` is pinned to 400 there, because 700 on it would be a
   synthesised fake. ⚠️ Do not confuse `?font=notosans` (the SANS)

@@ -89,7 +89,7 @@ export default async function ThankYouPage({
               <Eyebrow>{t("eyebrow")}</Eyebrow>
             </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-6 text-[4.05rem] leading-[1.06] text-balance sm:text-[5.32rem]">
+              <h1 className="mt-6 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
                 <span className="text-foreground">{t("titleLead")}</span>
                 <span className="text-shimmer">{t("titleHighlight")}</span>
               </h1>
@@ -124,7 +124,7 @@ export default async function ThankYouPage({
               another line of site copy. */}
           <Reveal delay={200} className="mt-10">
             <div className="mx-auto max-w-2xl rounded-3xl border border-foreground/[0.08] bg-surface-1 p-7 sm:p-9">
-              <h2 className="text-[2.7rem] text-foreground sm:text-[3.19rem]">
+              <h2 className="text-[1.9rem] text-foreground sm:text-[2.25rem]">
                 {t("welcomeTitle")}
               </h2>
               <p className="mt-3 text-lg text-foreground-soft">
@@ -244,7 +244,7 @@ export default async function ThankYouPage({
                 className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-brand/15 blur-[100px]"
               />
               <div className="relative">
-                <h2 className="text-[2.84rem] text-foreground sm:text-[3.41rem]">
+                <h2 className="text-[2.0rem] text-foreground sm:text-[2.4rem]">
                   {t("whileYouWaitTitle")}
                 </h2>
                 <p className="mt-2 max-w-xl text-base text-muted-foreground">

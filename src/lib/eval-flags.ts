@@ -85,6 +85,7 @@
  *  requested faces is on screen — and because this whole switcher is deleted in
  *  one piece at the end of the review round. */
 export const FONT_VARIANTS = [
+  "rubik",
   "amatic",
   "notosans",
   "bonanova",
@@ -97,11 +98,17 @@ export const FONT_VARIANTS = [
 ] as const;
 export type FontVariant = (typeof FONT_VARIANTS)[number];
 
-/** The accent families in §11 of globals.css. `sea` is the shipped site —
- *  Pnina's turquoise lives in `:root`, not in §11 — so selecting it explicitly
- *  is how you get back to today's look without clearing the key. `peach` is the
- *  first cut of her 2026-08-02 brief (warm, before she asked for sea colours);
- *  `pink` is the 0.12.x-0.16.x rendering; `amber` is the pre-0.11.4 one. */
+/** The accent families in §11 of globals.css.
+ *
+ *  ⚠️ `sea` STOPPED BEING THE SHIPPED SITE IN 0.18.0. The shipped accent is now
+ *  Pnina's own Deep Ocean (#264653), taken verbatim from the brand book she sent
+ *  on 2026-08-02, and like every default it lives in `:root` rather than in §11.
+ *  `sea` is now a real §11 arm holding the 0.17.x turquoise token for token —
+ *  the cut Daniel and I arrived at before her book landed — so the two can be
+ *  put side by side. Selecting nothing, or `?accent=reset`, gives hers.
+ *  `peach` is the first cut of her 2026-08-02 brief (warm, before she asked for
+ *  sea colours); `pink` is the 0.12.x-0.16.x rendering; `amber` is the
+ *  pre-0.11.4 one. */
 export const ACCENT_VARIANTS = ["sea", "peach", "pink", "amber", "gold"] as const;
 export type AccentVariant = (typeof ACCENT_VARIANTS)[number];
 
@@ -171,9 +178,9 @@ export function motionForced(): boolean {
  *
  * Reading it also WRITES the parameter's intent, so a load carrying `?accent=`
  * settles the stored answer even if the pre-paint script never ran. Idempotent.
- * `pink` is stored explicitly (rather than clearing the key) so that switching
- * back to the shipped accent is a choice you can see in devtools; `reset` is what
- * forgets, and lands in the same place.
+ * Every named variant is stored explicitly rather than by clearing the key, so a
+ * deliberate choice of one is visible in devtools; `reset` is what forgets, and
+ * lands on the shipped accent, which as of 0.18.0 is Pnina's Deep Ocean.
  */
 export function requestedAccent(): AccentVariant | null {
   if (typeof window === "undefined") return null;

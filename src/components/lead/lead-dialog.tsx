@@ -127,7 +127,7 @@ function LeadDialog({
             </Dialog.Close>
 
             <div className="mb-6 pe-12">
-              <Dialog.Title className="text-[2.2rem] text-foreground">
+              <Dialog.Title className="text-[1.55rem] text-foreground">
                 {t("title")}
               </Dialog.Title>
               {/* The default sentence advertises Pnina's optional open field,

@@ -36,7 +36,7 @@ export function LegalSection({
 }) {
   return (
     <section>
-      <h2 className="text-[2.48rem] text-foreground">
+      <h2 className="text-[1.75rem] text-foreground">
         {title}
       </h2>
       <div className="mt-3 space-y-4 text-base leading-relaxed text-muted-foreground [&_a]:font-medium [&_a]:text-brand-accent hover:[&_a]:text-brand-hover [&_li]:marker:text-subtle-foreground [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:space-y-2 [&_ul]:ps-5">

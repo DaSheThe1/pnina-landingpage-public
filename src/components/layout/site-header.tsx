@@ -159,9 +159,27 @@ export function SiteHeader() {
           </div>
 
           {/* ── HER TAGLINE, THE SECOND LINE OF HER OWN MASTHEAD ──
-              Her Canva document heads every page with her name plus "ליווי אישי
-              לצמיחה, ריפוי ובניית חיים חדשים". The name is already the wordmark
-              above; this is the rest of that lockup.
+              The name is already the wordmark above; this is the rest of that
+              lockup.
+
+              ── IT IS HER BRAND BOOK'S TAGLINE NOW (2026-08-03) ──
+              It read "ליווי אישי לצמיחה, ריפוי ובניית חיים חדשים", which was
+              lifted off the header of her Canva document. Her brand book names
+              an actual tagline — "לבחור בעצמך. שכבה אחר שכבה." — so the
+              masthead carries that instead: it is the same voice as the pearl
+              line and it is the half of her lockup the footer signs off with.
+
+              ── AND IT IS SAFE FOR THE MEASUREMENTS BELOW, because it is
+              SHORTER ── 27 characters against 42, i.e. about 170px against the
+              254px tabulated below (Heebo, 16px). Every clearance in the note
+              grows by ~85px, so nothing here needed re-tuning and nothing needs
+              `whitespace-nowrap`: the string is now the narrowest thing in this
+              column, and if it ever were forced to break it would break at the
+              full stop between her two sentences rather than mid-phrase.
+              `whitespace-nowrap` was deliberately NOT added for that reason —
+              on this element it would trade a graceful break for an overlap
+              with the absolutely-positioned nav. (The wordmark above is a
+              different case: a name may not wrap at all.)
 
               ── WHY IT IS NOT `lg:` LIKE EVERYTHING ELSE HERE ──
               Because it does not fit at `lg`, and that is measured rather than
