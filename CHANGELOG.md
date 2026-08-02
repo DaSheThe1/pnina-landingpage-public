@@ -12,6 +12,22 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.17.1] - 2026-08-02
+
+### The hero reads down the middle, and the video is the size it should be
+
+- The top of the page is now one centred column on a computer too: the headline
+  in the middle, the answer under it, then the video, then the form. It was
+  side-by-side on wide screens, which pushed the headline off-centre and left
+  the video about a fifth of the screen wide.
+- The video is much bigger. Because her current clip was filmed upright it still
+  plays in the middle of the horizontal frame, with a soft blur of itself either
+  side; that blur is now heavy enough to read as light rather than as a smeared
+  copy. It goes away the moment a horizontal video arrives.
+- Her shell and pearl are now the site's logo, cut out of her own background
+  photograph. The drawn version stays as the browser-tab icon, where a
+  photograph would turn to mush.
+
 ## [0.17.0] - 2026-08-02
 
 ### The top of the page now asks for the phone call

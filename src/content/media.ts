@@ -95,10 +95,10 @@ export const media: Record<
    * where the low-resolution source shows.
    */
   logo: {
-    src: "/images/pnina-portrait.jpg",
-    alt: "פנינה פאף",
-    shape: "circle",
-    note: "כרגע תמונת הפרופיל, בחיתוך עגול. סימן המותג הגאומטרי (צדפה ופנינה) נשאר ב-public/brand/pearl-mark.svg ומזין את אייקון הדפדפן ואת כרטיס השיתוף. כשיגיע חיתוך שקוף של הצדפה מתמונת הרקע שלה, הוא ייכנס ל-public/brand/pearl-shell.png, וכאן ישתנו רק src ו-shape (contain).",
+    src: "/brand/pearl-shell.png",
+    alt: "צדפה פתוחה ובתוכה פנינה, סימן המותג של פנינה פאף",
+    shape: "contain",
+    note: "הצדפה והפנינה מתוך תמונת הרקע שלה, גזורות על רקע שקוף (scripts/media/cut-shell-logo.py). סימן המותג הגאומטרי נשאר ב-public/brand/pearl-mark.svg ומזין את אייקון הדפדפן ואת כרטיס השיתוף, כי בגודל 32 פיקסלים צילום נמרח והסימן המשורטט קריא.",
     width: 320,
     height: 320,
   },

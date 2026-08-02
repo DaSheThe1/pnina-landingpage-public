@@ -324,10 +324,16 @@ export function HeroVideo() {
     // WHEN THE REAL HORIZONTAL CLIP ARRIVES: delete the backdrop <video> and
     // change `object-contain` to `object-cover`. Nothing else here changes.
     //
-    // The old `max-w-[19rem]` cap is gone with the portrait frame — a 16:9 box
-    // does not tower over the hero copy the way a 9:16 one did, and this frame
-    // now has to hold its own beside a headline that is meant to dominate.
-    <div className="relative mx-auto w-full max-w-[21.5rem] sm:max-w-[34rem] lg:max-w-none">
+    // ── AND IT IS THE FULL WIDTH OF THE HERO (Daniel, 2026-08-02) ──
+    // *"On the desktop view the video, now that it is horizontal, it's really
+    // small and tiny. It should be the entire screen like it is on the landing
+    // page website."* While the hero was a two-column grid this frame lived in a
+    // 23rem track, which on a 1500px screen is about a fifth of the viewport —
+    // a thumbnail. The hero is one centred column now (see the note in
+    // HeroSection), so the frame takes the column: 3xl from `sm`, 5xl from `lg`.
+    // The phone cap stays where it was, because there the fold is the
+    // constraint and 16:9 at full width is already 195px tall.
+    <div className="relative mx-auto w-full max-w-[21.5rem] sm:max-w-2xl lg:max-w-4xl">
       {/* Soft warm halo behind the frame. On a light canvas this is a wash, not
           a glow: it should be barely perceptible. */}
       <div
@@ -370,14 +376,18 @@ export function HeroVideo() {
               playsInline
               preload="auto"
               tabIndex={-1}
-              // `brightness-[0.9]`, not the 0.62 this started at. Her clip is a
-              // dark indoor recording, and dimming a dark source by another
-              // third produced two near-black panels — i.e. exactly the "grey
-              // bars" look the blurred fill exists to avoid. Held just under 1
-              // so the sharp clip in front still reads as the brighter thing,
-              // and saturated a little so the fill carries the frame's warmth
-              // out to the edges instead of going grey.
-              className="pointer-events-none absolute inset-0 h-full w-full scale-110 object-cover blur-[26px] brightness-[0.9] saturate-[1.3]"
+              // The blur went 26px → 44px when the frame became the full width
+              // of the hero. The proportion of the frame this fill occupies is
+              // fixed by the two aspect ratios — a 9:16 clip inside a 16:9 box
+              // leaves ~68% of the width to fill, at ANY size — so making the
+              // frame bigger makes the fill bigger with it. At 26px it still
+              // read as a recognisably smeared copy of the video, which at this
+              // width is most of what you see. At 44px it reads as ambient
+              // light off the clip, which is what it is for.
+              // Brightness is held just under 1 so the sharp clip in front is
+              // still the brighter thing, and saturation is up so the fill
+              // carries the frame's warmth out to the edges instead of greying.
+              className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-[44px] brightness-[0.82] saturate-[1.35]"
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>

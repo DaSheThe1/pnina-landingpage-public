@@ -229,17 +229,25 @@ export function HeroSection() {
         className="pointer-events-none absolute inset-x-0 -top-8 bottom-0 -z-10 bg-[radial-gradient(60%_55%_at_50%_38%,var(--canvas)_0%,color-mix(in_srgb,var(--canvas)_72%,transparent)_45%,transparent_78%)]"
       />
 
-      {/* One column on a phone — headline, objections, video, form, in that
-          order and in that order only, because that order IS the brief.
-          From `lg` the copy and the form share the left column and the video
-          takes the right, so a desktop visitor sees the whole thing at once
-          without the video pushing the form a screen down. */}
-      {/* `lg:items-center` and a 24rem form column: the copy + form stack on the
-          start side is shorter than a 16:9 video is wide, so top-aligning the
-          two columns left a screen of empty sand under the video. Centred, the
-          block reads as one composition. */}
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-10 pt-3 sm:pb-16 lg:grid lg:grid-cols-[minmax(0,1fr)_23rem] lg:items-center lg:gap-x-10 lg:pb-20 lg:pt-12">
-        <div className="order-1 w-full max-w-3xl text-center lg:col-start-1 lg:row-start-1 lg:text-start">
+      {/* ── ONE CENTRED COLUMN, AT EVERY WIDTH (Daniel, 2026-08-02) ──
+          *"There is the main header in the middle, followed by the secondary
+          header in the middle, followed by the video, followed by the form. It
+          shouldn't be like the thing on the right and then the video on the
+          left."*
+
+          This was a two-column grid from `lg` up: copy and form on the start
+          side, video on the end side. That kept everything on one screen, but it
+          cost the two things the brief actually cares about — the headline was
+          no longer centred and the video was a third of the width, which on a
+          desktop reads as a thumbnail rather than as the hero of the page.
+
+          So the desktop now says the same thing the phone always did, in the
+          same order: headline, objections, video, form. It is taller than one
+          screen on a desktop and that is fine — the "no scrolling" requirement
+          is about PHONES, where the stack still fits (e2e/hero-fold.spec.ts).
+          Do not reintroduce a side-by-side layout here. */}
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-10 pt-3 sm:pb-16 lg:pb-20 lg:pt-12">
+        <div className="order-1 w-full max-w-4xl text-center">
           <Reveal>
             {/* Two BLOCKS, not two inline runs.
                 The headline is two sentences, and while they were inline the
@@ -272,7 +280,7 @@ export function HeroSection() {
               second and third; they are not bulleted, because a tick-list of
               reassurances is the pattern the removed pills already were. */}
           <Reveal delay={80}>
-            <ul className="mt-3 space-y-0.5 text-[1.05rem] leading-snug text-foreground-soft sm:mt-6 sm:text-xl">
+            <ul className="mx-auto mt-3 max-w-2xl space-y-0.5 text-[1.05rem] leading-snug text-foreground-soft sm:mt-6 sm:text-xl">
               {objections.map((line) => (
                 <li key={line}>{line}</li>
               ))}
@@ -282,12 +290,12 @@ export function HeroSection() {
 
         <Reveal
           delay={160}
-          className="order-2 mt-3 w-full lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:mt-0"
+          className="order-2 mt-4 w-full sm:mt-7 lg:mt-9"
         >
           <HeroVideo />
         </Reveal>
 
-        <div className="order-3 w-full max-w-3xl lg:col-start-1 lg:row-start-2">
+        <div className="order-3 w-full max-w-3xl">
           {/* ── THE FORM, EMBEDDED (Pnina, 2026-08-02) ──
               This used to be a `LeadButton` that opened the app-wide popup.
               Her instruction was to put the form itself here "like we have at
@@ -311,7 +319,7 @@ export function HeroSection() {
               worker/src/contact.js), split purely so we can see whether this
               hero is doing its job. */}
           <Reveal delay={200}>
-            <div className="mx-auto mt-3 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2 p-4 shadow-card sm:p-6 lg:mx-0 lg:mt-8">
+            <div className="mx-auto mt-3 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2 p-4 shadow-card sm:mt-7 sm:p-6">
               <ContactForm source="hero" showIntro={false} compact />
             </div>
           </Reveal>
@@ -321,7 +329,7 @@ export function HeroSection() {
               has to scroll a little; a woman who is ready to leave a number
               does not. */}
           <Reveal delay={240}>
-            <div className="mt-5 flex justify-center lg:justify-start">
+            <div className="mt-5 flex justify-center">
               <Link
                 href={`/#${sectionIds.process}`}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-accent underline-offset-4 hover:underline"
