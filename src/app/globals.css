@@ -966,7 +966,20 @@
        exists to make possible. The body is a window. */
     background: transparent;
     color: var(--foreground);
-    font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
+    font-family:
+      var(--font-sans-hebrew),
+      "Segoe UI",
+      system-ui,
+      sans-serif,
+      /* Emoji fonts LAST, and they are not decoration. Pnina's own hero copy
+         ends in a pointing-hand emoji, and neither Heebo nor any of the fallback
+         UI faces carries an emoji glyph — so without these it rendered as two
+         empty tofu boxes on every platform. Listing them after `sans-serif` is
+         deliberate: they only ever supply codepoints the faces before them do
+         not have, so no Hebrew or Latin letter can be pulled out of them. */
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Noto Color Emoji";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }
@@ -3849,7 +3862,20 @@ html[data-a11y-emphasize-links="true"]
   margin-inline-start: auto;
   position: relative;
   isolation: isolate;
-  font-family: var(--font-sans-hebrew), "Segoe UI", system-ui, sans-serif;
+  font-family:
+      var(--font-sans-hebrew),
+      "Segoe UI",
+      system-ui,
+      sans-serif,
+      /* Emoji fonts LAST, and they are not decoration. Pnina's own hero copy
+         ends in a pointing-hand emoji, and neither Heebo nor any of the fallback
+         UI faces carries an emoji glyph — so without these it rendered as two
+         empty tofu boxes on every platform. Listing them after `sans-serif` is
+         deliberate: they only ever supply codepoints the faces before them do
+         not have, so no Hebrew or Latin letter can be pulled out of them. */
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Noto Color Emoji";
   /* 2.3rem until the 0.14 type raise, which moved the whole display ladder up
      by at least 4px a tier. This word has to stay bigger than everything in the
      section but its h2, so it moves with them or it stops being the punchline. */

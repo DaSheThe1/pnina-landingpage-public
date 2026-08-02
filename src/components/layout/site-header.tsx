@@ -117,12 +117,8 @@ export function SiteHeader() {
               // Released, the row is its natural 36px and the lockup is 58px.
               className="group flex min-h-11 items-center gap-2.5 text-base font-bold tracking-tight text-foreground min-[1440px]:min-h-0"
             >
-              {/* 38, not 32. The mark is a photographic cutout of her shell
-                  and pearl as of 0.17.0, and a photograph needs more pixels
-                  than a drawn glyph before it reads as an object rather than a
-                  peach blob. 38 still sits comfortably inside the 64px bar. */}
               <BrandMark
-                size={38}
+                size={32}
                 className="transition-transform group-hover:scale-105"
               />
               {/* `whitespace-nowrap` — 0.17.0, and it is not cosmetic. The

@@ -172,7 +172,6 @@ export function SectionHeading({
  */
 export function HeroSection() {
   const t = useTranslations("hero");
-  const objections = t.raw("objections") as string[];
 
   return (
     // ── `overflow-clip`, and NEVER `overflow-hidden` ──
@@ -258,7 +257,14 @@ export function HeroSection() {
                 Making each sentence its own block means the break is ours, it
                 is the same on a phone and on a desktop, and no neutral
                 character can drift across it. Nothing else goes on this line. */}
-            <h1 className="text-[3.12rem] leading-[1.04] text-balance sm:text-[4.4rem] lg:text-[5.25rem]">
+            {/* ── NOT BLACK (Pnina, 2026-08-02) ──
+                Line one used to be `--foreground`, a near-black warm brown. She
+                asked for the headline not to be black and said she would send
+                what she prefers, so BOTH lines are `--headline-accent` for now —
+                her sea, and the same token the filled CTA resolves through, so
+                the headline and the button cannot drift apart. When she sends a
+                colour this is one token, not two call sites. */}
+            <h1 className="text-headline-accent text-[2.55rem] leading-[1.02] text-balance sm:text-[4rem] lg:text-[4.8rem]">
               <span className="block">{t("titleLead")}</span>
               {/* The accent, and it is the same colour as the filled CTA below
                   by construction: `--headline-accent` resolves through
@@ -273,24 +279,44 @@ export function HeroSection() {
             </h1>
           </Reveal>
 
-          {/* The secondary header. Three sentences that each remove one reason
-              not to pick up the phone: being found out, having to describe the
-              assault, and being committed to something. They are a LIST because
-              they are three separate promises and a paragraph would bury the
-              second and third; they are not bulleted, because a tick-list of
-              reassurances is the pattern the removed pills already were. */}
+          {/* ── THE SECONDARY HEADER IS HERS NOW (2026-08-02) ──
+              This was three "בלי…" lines I wrote, each removing one reason not
+              to call. Pnina replaced them with one sentence of her own, which
+              does a different job: it names the feeling and then points at the
+              video. Her three objections are therefore currently UNSAID in the
+              hero — they still appear further down (the offer panel, the FAQ),
+              but if the hero should answer them again they need a home that is
+              not this line.
+
+              ⚠️ ONE CHARACTER OF HERS WAS CHANGED. She wrote an en dash before
+              "צפי". AGENTS.md bans en and em dashes in Hebrew copy — they read
+              as machine-set English typography in a Hebrew sentence — so it is a
+              comma. Nothing else in the sentence is touched. */}
           <Reveal delay={80}>
-            <ul className="mx-auto mt-3 max-w-2xl space-y-0.5 text-[1.05rem] leading-snug text-foreground-soft sm:mt-6 sm:text-xl">
-              {objections.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
+            <p
+              data-hero="secondary"
+              className="mx-auto mt-3 max-w-2xl text-[1.02rem] leading-snug text-foreground-soft sm:mt-6 sm:text-[1.45rem]"
+            >
+              {t("secondary")}
+            </p>
+          </Reveal>
+
+          {/* Her own footnote to that line, and it is deliberately quieter: it
+              is for the woman who has already decided, so it must not compete
+              with the sentence that is still persuading everyone else. */}
+          <Reveal delay={120}>
+            <p
+              data-hero="secondary-note"
+              className="mx-auto mt-1.5 max-w-2xl text-sm leading-snug text-subtle-foreground sm:text-base"
+            >
+              {t("secondaryNote")}
+            </p>
           </Reveal>
         </div>
 
         <Reveal
           delay={160}
-          className="order-2 mt-4 w-full sm:mt-7 lg:mt-9"
+          className="order-2 mt-3 w-full sm:mt-7 lg:mt-9"
         >
           <HeroVideo />
         </Reveal>

@@ -12,6 +12,25 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.17.2] - 2026-08-02
+
+### Her words at the top, and her face back in the header
+
+- The main headline is hers: "את לא צריכה להסביר לי כלום. אני כבר מבינה אותך."
+- Under it, her own line pointing at the video, and a quieter note beneath that
+  for the woman who has already decided. The three "בלי..." lines that were
+  there are gone, so the three worries they answered are no longer addressed at
+  the top of the page. They are still answered further down, in the offer panel
+  and the questions section.
+- The headline is no longer near black. It is the sea colour, the same one as
+  the button, until she sends the colour she prefers.
+- **Her photograph is back in the header.** The shell and pearl are now the
+  website's icon, the small picture a browser shows in its tab and a phone shows
+  when someone saves the page to their home screen.
+- Her line ends in an emoji, which needed adding to the site's font list. Every
+  phone and computer carries an emoji font; the build machine here does not, so
+  it cannot be seen in a screenshot taken on it.
+
 ## [0.17.1] - 2026-08-02
 
 ### The hero reads down the middle, and the video is the size it should be

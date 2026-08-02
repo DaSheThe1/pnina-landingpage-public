@@ -1,28 +1,33 @@
 #!/usr/bin/env node
 /**
- * Renders `public/brand/pearl-mark.svg` into `src/app/icon.png` — the site's
- * favicon and the icon a phone uses when someone saves the page to a home
- * screen. Next's App Router picks `src/app/icon.png` up by convention and emits
- * the <link rel="icon"> for it; there is nothing to wire by hand.
+ * Renders the site's favicon into `src/app/icon.png` — the icon a browser tab
+ * shows and the one a phone uses when someone saves the page to a home screen.
+ * Next's App Router picks `src/app/icon.png` up by convention and emits the
+ * <link rel="icon"> for it; there is nothing to wire by hand.
  *
- * Run after editing the mark:  node scripts/brand/generate-icon.mjs
+ * Run after changing the source:  node scripts/brand/generate-icon.mjs
+ *
+ * ── THE SOURCE CHANGED IN 0.17.2 ──
+ * It was `public/brand/pearl-mark.svg`, a geometric shell-and-pearl drawn for
+ * this size. It is now `public/brand/pearl-shell.png`, the PHOTOGRAPHIC shell
+ * and pearl cut out of Pnina's own background image, because that is what she
+ * asked for (2026-08-02, via Daniel): her face in the site header, and the
+ * shell as the website's icon.
+ *
+ * The drawn mark is NOT deleted. It still drives the OG share card, and it is
+ * the fallback if the photograph ever reads badly in a tab — a photograph at
+ * 16px is the hard case for a favicon and this one only just survives it,
+ * which is why the plate and the fill fraction below matter more than they did.
  *
  * Deliberately NOT part of the build, for the same reason the OG card is not:
- * the mark changes about once a year, and a build that has to rasterise an
+ * the icon changes about once a year, and a build that has to rasterise an
  * image is a build that fails on a Tuesday for no reason. The PNG is committed.
  *
  * WHY A CREAM PLATE AND NOT A TRANSPARENT PNG
  * A transparent favicon is at the mercy of the browser chrome behind it, and
- * these strokes are gold: on a dark tab strip a transparent version of this mark
- * is a smear. The cream plate (#fbf7f1, the site's own `--canvas`) means the
- * tab always shows her mark on her paper.
- *
- * THE MARK IS RECOLOURED HERE, on purpose. In the page its strokes are
- * `currentColor`; baked into a 512px plate they need one fixed value, and the
- * decorative gold (--gold #c9a227) is only about 2.3:1 on cream — at 16px in a
- * tab that is a yellow blur. #8a6418 is a deeper gold, 5.0:1 on the plate, and
- * still reads as gold rather than as brown. The pearl's own pale fill is inside
- * the mark and is deliberately NOT recoloured — see the note in the SVG.
+ * this shell is pale cream: on a dark tab strip a transparent version of it
+ * loses its own edges. The cream plate (#fbf7f1, the site's own `--canvas`)
+ * means the tab always shows her shell on her paper.
  */
 import { readFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -35,60 +40,37 @@ const root = join(here, "..", "..");
 
 const SIZE = 512;
 const PLATE = "#fbf7f1"; // --canvas, light
-const MARK = "#8a6418"; // deep gold, 5.0:1 on the plate
-// The mark's artboard is 64×64 but the INKED area is not: including the 2.3
-// stroke it runs x 9.85→54.15 and y 10.35→54.65, i.e. a 44.3 square centred at
-// (32, 32.5) rather than at (32, 32). Scaling the artboard instead of the bbox
-// is what leaves a favicon looking small and lonely with a low centre of
-// gravity, so this scales and centres the bbox.
-const BBOX = { x: 9.85, y: 10.35, size: 44.3 };
-// Share of the plate the mark's bbox occupies. An app icon wants to be nearly
-// edge-to-edge; 0.72 is as far as it goes before the rounded-corner mask some
-// platforms apply starts clipping the dish.
-const FILL = 0.72;
+// A photograph needs more of the plate than a line drawing did: the drawn mark
+// was a high-contrast outline that read at 16px with air around it, while this
+// shell is a low-contrast cream object that needs every pixel it can get before
+// it stops being a peach smudge. 0.86 is as far as it goes before the
+// rounded-corner mask some platforms apply starts clipping the dish.
+const FILL = 0.86;
 
-const markSvg = readFileSync(
-  join(root, "public", "brand", "pearl-mark.svg"),
-  "utf8"
-);
-
-// Strip the XML declaration/comment wrapper and re-host the mark inside a
-// plate-sized artboard. `currentColor` resolves off the wrapping <g>.
-const inner = markSvg
-  .replace(/<\?xml[^>]*\?>/g, "")
-  .replace(/<!--[\s\S]*?-->/g, "")
-  .replace(/^[\s\S]*?<svg[^>]*>/, "")
-  .replace(/<\/svg>\s*$/, "");
-
-const scale = (SIZE * FILL) / BBOX.size;
-const tx = SIZE / 2 - (BBOX.x + BBOX.size / 2) * scale;
-const ty = SIZE / 2 - (BBOX.y + BBOX.size / 2) * scale;
-
-const composed = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
-  <rect width="${SIZE}" height="${SIZE}" fill="${PLATE}"/>
-  <!-- fill="none" is load-bearing: it lives on the mark's own <svg> element,
-       which is exactly the element this composition throws away. Without it the
-       shell's outline path fills solid black and the icon is a black blob. -->
-  <g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${scale.toFixed(4)})" color="${MARK}" fill="none">
-    ${inner}
-  </g>
-</svg>`;
-
+const src = join(root, "public", "brand", "pearl-shell.png");
 const out = join(root, "src", "app", "icon.png");
 mkdirSync(dirname(out), { recursive: true });
 
-// `palette: true` and `effort: 10`, not just `compressionLevel: 9`.
-//
-// This icon is two flat colours — the cream plate and the bronze mark — plus the
-// antialiasing along one thin outline. As a 24-bit truecolour PNG that cost
-// 23 KB, and the browser asks for it at HIGH priority in the first second of
-// every cold load, so it was competing with the stylesheet for a phone's first
-// megabit. Quantised to a palette it is the same drawing at a fraction of the
-// size. Keep the two options together: `palette` picks the encoder, `effort`
-// tells it to actually search.
-await sharp(Buffer.from(composed), { density: 384 })
-  .resize(SIZE, SIZE)
-  .png({ compressionLevel: 9, palette: true, effort: 10 })
+// The cutout is already trimmed to its own bbox and square-padded, so `contain`
+// inside the fill box is a straight scale with no cropping.
+const inner = Math.round(SIZE * FILL);
+const shell = await sharp(readFileSync(src))
+  .resize(inner, inner, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  // A slight sharpen, because everything below 64px is where this asset is
+  // weakest. Kept gentle: pushed harder it produces orange fringing along the
+  // shell's lit edge, which at 16px is worse than the softness it fixes.
+  .sharpen({ sigma: 0.7 })
+  .toBuffer();
+
+// NOT `palette: true`. The drawn mark was two flat colours and quantised to a
+// fraction of its size; this is a photograph with a continuous cream-to-peach
+// ramp across the shell, and a 256-colour palette bands it visibly. Truecolour
+// at max compression is the right trade here.
+await sharp({
+  create: { width: SIZE, height: SIZE, channels: 4, background: PLATE },
+})
+  .composite([{ input: shell, gravity: "center" }])
+  .png({ compressionLevel: 9, effort: 10 })
   .toFile(out);
 
 console.log(`[generate-icon] wrote ${out} (${SIZE}×${SIZE})`);

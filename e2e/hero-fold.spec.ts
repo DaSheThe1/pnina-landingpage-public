@@ -34,10 +34,19 @@ import { expect, test } from "@playwright/test";
  * field) — if someone later makes the SE fit completely, tighten it.
  */
 
-/** The four things the client asked to be visible, in DOM order. */
+/**
+ * The things the client asked to be visible, in DOM order.
+ *
+ * The two copy blocks are addressed by `data-hero`, not by tag or class. They
+ * have already changed shape once — the secondary header was a `<ul>` of three
+ * "בלי…" lines and is now a `<p>` of Pnina's own sentence plus a quieter note —
+ * and a spec that fails because copy was re-tagged is a spec people learn to
+ * ignore. The attribute is the contract; the markup underneath is free.
+ */
 const HERO = {
   headline: "h1",
-  objections: "section:has(h1) ul li",
+  secondary: '[data-hero="secondary"]',
+  secondaryNote: '[data-hero="secondary-note"]',
   video: "section:has(h1) video",
   nameField: 'section:has(h1) input[autocomplete="name"]',
   phoneField: 'section:has(h1) input[autocomplete="tel"]',
@@ -116,7 +125,7 @@ test.describe("the hero fits above the fold", () => {
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     );
-    for (const name of ["headline", "objections", "video"] as const) {
+    for (const name of ["headline", "secondary", "video"] as const) {
       expect(await bottomEdge(page, HERO[name]), `${name} bottom edge`).toBeLessThanOrEqual(667);
     }
   });
