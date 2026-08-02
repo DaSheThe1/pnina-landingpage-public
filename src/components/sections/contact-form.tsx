@@ -400,10 +400,15 @@ function Field({
           at all: a screen reader announced "edit text, blank" with no idea what
           the field wanted, and clicking the word did not focus the box. */}
       <label htmlFor={id} className="block">
-        <span className="mb-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 text-sm font-medium text-foreground-soft">
+        {/* Inline flow, NOT a flex row. As a `flex flex-wrap` the hint was a
+            single unwrappable item, so on a phone the question's own label took
+            two lines and pushed "(לא חובה)" onto a third — 22px of the fold
+            budget spent on two words. Flowing it inline lets it sit at the end
+            of the label's last line instead (Daniel, 2026-08-02). */}
+        <span className="mb-2 block text-sm font-medium text-foreground-soft">
           {label}
           {hint ? (
-            <span className="text-xs font-normal text-subtle-foreground">
+            <span className="ms-1.5 text-xs font-normal text-subtle-foreground">
               {hint}
             </span>
           ) : null}

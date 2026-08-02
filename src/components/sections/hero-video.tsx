@@ -333,7 +333,7 @@ export function HeroVideo() {
     // HeroSection), so the frame takes the column: 3xl from `sm`, 5xl from `lg`.
     // The phone cap stays where it was, because there the fold is the
     // constraint and 16:9 at full width is already 195px tall.
-    <div className="relative mx-auto w-full max-w-[21.5rem] sm:max-w-2xl lg:max-w-4xl">
+    <div className="relative mx-auto w-full max-w-[20.5rem] sm:max-w-2xl lg:max-w-4xl">
       {/* Soft warm halo behind the frame. On a light canvas this is a wash, not
           a glow: it should be barely perceptible. */}
       <div

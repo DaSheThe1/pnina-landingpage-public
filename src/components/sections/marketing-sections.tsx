@@ -264,7 +264,7 @@ export function HeroSection() {
                 her sea, and the same token the filled CTA resolves through, so
                 the headline and the button cannot drift apart. When she sends a
                 colour this is one token, not two call sites. */}
-            <h1 className="text-headline-accent text-[2.55rem] leading-[1.02] text-balance sm:text-[4rem] lg:text-[4.8rem]">
+            <h1 className="text-headline-accent text-[2.8rem] leading-[1.03] text-balance sm:text-[4.5rem] lg:text-[5.4rem]">
               <span className="block">{t("titleLead")}</span>
               {/* The accent, and it is the same colour as the filled CTA below
                   by construction: `--headline-accent` resolves through

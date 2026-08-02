@@ -12,6 +12,21 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.17.3] - 2026-08-02
+
+### The headline reads better, and the form is a line shorter
+
+- The line under the second headline is now in brackets:
+  "(גם אם כבר החלטת שאת רוצה לדבר איתי)".
+- The main headline is bigger and noticeably easier to read. The letters were
+  being squeezed slightly closer together, which is right for a wide font and
+  wrong for this one: Amatic's letters nearly touch already, so tightening them
+  turned the sentence into a pattern rather than words. They now have a little
+  air between them.
+- "(לא חובה)" sits at the end of the question instead of dropping to a line of
+  its own, which gives the headline the room it needed without pushing the send
+  button off the first screen.
+
 ## [0.17.2] - 2026-08-02
 
 ### Her words at the top, and her face back in the header

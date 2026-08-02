@@ -1074,7 +1074,16 @@
        Noto Sans Hebrew, so a serif fallback would swap species mid-load. */
     font-family: var(--font-display), "Segoe UI", system-ui, sans-serif;
     font-weight: 700;
-    letter-spacing: -0.008em;
+    /* ── POSITIVE TRACKING, AND IT IS THE FACE THAT DEMANDS IT ──
+       This was `-0.008em`, tightened for Bona Nova — a wide serif whose default
+       fit is loose at display size. Amatic SC is the opposite animal: a
+       condensed hand-drawn face whose letters already almost touch, so negative
+       tracking closes the counters and the headline turns into a texture you
+       decode rather than a sentence you read. Daniel, 2026-08-02: *"the main
+       header is not easy to read as it should."* Opening it to +0.02em is the
+       single biggest legibility win available on this face short of changing
+       it, and it costs nothing but a little width. */
+    letter-spacing: 0.02em;
     line-height: 1.15;
   }
 
