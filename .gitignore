@@ -31,6 +31,11 @@
 # next.js
 /.next/
 /.next-e2e/
+# The e2e harness builds into its own directory so it cannot fight `pnpm dev`,
+# and parallel agents each suffix it (`.next-e2e-heroCopy`, `.next-e2e-video`).
+# Glob rather than one-off entries: two of those have already been committed by
+# mistake and then added here by name after the fact.
+/.next-e2e-*/
 /out/
 
 # playwright
@@ -74,6 +79,8 @@ next-env.d.ts
 
 # Local tool state and stray generation outputs (committed once by mistake, 2026-07-30)
 .wrangler/
-.next-e2e-alignment-2/
 skills-lock.json
 k*hf_*.png
+
+# Stray agent probe scripts (recreated repeatedly during parallel runs)
+probe-tmp.cjs

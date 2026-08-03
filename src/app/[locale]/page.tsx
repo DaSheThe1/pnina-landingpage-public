@@ -10,6 +10,7 @@ import {
   PageShell,
 } from "@/components/sections/marketing-sections";
 import { FaqSection } from "@/components/sections/faq";
+import { SectionCta } from "@/components/sections/section-cta";
 import { ProcessExperience } from "@/components/sections/process-experience";
 import { JsonLd } from "@/components/seo/json-ld";
 import type { Faq } from "@/content/faq";
@@ -78,6 +79,13 @@ export default async function Home({
       <JsonLd data={faqPageSchema(faqs)} />
       <HeroSection />
       <FounderTeaser />
+      {/* ── A CTA AFTER EVERY SECTION (Pnina, 2026-08-03) ──
+          Six of these, plus the free panel's own button and the hero's, so a
+          reader is never more than one section away from the one action this
+          page wants. Read the header of `SectionCta` for why repeating an
+          OFFER is not the pressure pattern rule 4 bans — the short version is
+          that none of them claims a deadline and none of them moves. */}
+      <SectionCta label="founder" />
       {/* ── PROCESS BEFORE AUDIENCE (2026-07-30, Daniel) ──
           The process/animation section moved ABOVE "למי זה מתאים" at Daniel's
           request: "I think it's nicer and more important." The pearl scrub is
@@ -101,11 +109,15 @@ export default async function Home({
           `ServicesTeaser` itself is kept (unmounted, like `QuoteReveal`) so the
           copy is one line away if it ever earns a place on /about — see
           docs/02-site-structure.md. */}
+      <SectionCta label="process" />
       <section id={sectionIds.audience} className="scroll-mt-20">
         <AudienceSection />
       </section>
+      {/* Her own wording, and the reason it sits HERE: Daniel wanted the
+          "דייט" line somewhere down the page where it arrives as a surprise
+          rather than at the top where it would have to carry the whole hero. */}
+      <SectionCta label="dateWithMe" />
       <OffersSection />
-      <MomentsSection />
       {/* ── THE PEARL SEQUENCE MOVED INTO THE PROCESS SECTION (2026-07-30) ──
           `PearlRevealSection` used to render here: the same pearl frames
           (`motion/pearl/`), as a wordless 300vh beat between the moments and
@@ -120,9 +132,19 @@ export default async function Home({
           ever wanted back it needs its own frame collection, not this one.
           `StageRevealSection` on /lectures is untouched — different frames
           (`motion/stage/`), different page. */}
+      {/* ── PROOF DIRECTLY UNDER THE OFFER (Pnina, 2026-08-03) ──
+          *"הוכחה חברתית אחרי מי אני"* on the call, refined by Daniel the next
+          day to *"right under the offer section"*. So the testimonials swapped
+          places with the moments: what a reader meets immediately after being
+          asked to book a free call is other women saying it was worth it. The
+          moments follow, and they now close the argument rather than delay the
+          proof. */}
       <section id={sectionIds.testimonials} className="scroll-mt-20">
         <Testimonials />
       </section>
+      <SectionCta label="testimonials" />
+      <MomentsSection />
+      <SectionCta label="moments" />
       {/* The pearl quote closes the proof, it does not introduce it (moved
           2026-07-29, Daniel). Read directly after the messages other women
           sent, "פנינה לא נוצרת למרות השכבות שלה" lands as the meaning of what
@@ -132,6 +154,7 @@ export default async function Home({
       <section id={sectionIds.faq} className="scroll-mt-20">
         <FaqSection />
       </section>
+      <SectionCta label="faq" />
       <section id={sectionIds.contact} className="scroll-mt-20">
         <FinalCta />
       </section>

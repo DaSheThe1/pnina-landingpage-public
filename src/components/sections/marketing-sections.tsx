@@ -14,10 +14,10 @@ import { ContactForm } from "@/components/sections/contact-form";
 import { LeadButton } from "@/components/lead/lead-button";
 import { HeroVideo } from "@/components/sections/hero-video";
 import { FreeCallAnchor } from "@/components/motion/free-call-anchor";
+import type { LadderRung } from "@/components/motion/free-call-anchor";
 import { ProcessSpine } from "@/components/motion/process-spine";
 import { InstagramIcon } from "@/components/ui/instagram-icon";
 import { PortraitFrame } from "@/components/ui/portrait-frame";
-import { Price } from "@/components/ui/price";
 import { WhatsAppIcon } from "@/components/ui/whatsapp-icon";
 import { WhatsAppLink } from "@/components/ui/whatsapp-link";
 import { hasMedia, media, type ImageSlot } from "@/content/media";
@@ -26,20 +26,12 @@ import { audienceTopics } from "@/content/audience";
 import { moments as momentConfig } from "@/content/moments";
 import { services as serviceConfig } from "@/content/services";
 import { processSteps } from "@/content/process";
-import { offerTracks } from "@/content/offers";
 import { founderDisplayName, siteConfig } from "@/config/site";
 import { sectionIds } from "@/config/navigation";
 import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 type ServiceItem = { title: string; description: string; details: string[] };
-type TrackItem = {
-  title: string;
-  duration: string;
-  price: string;
-  fit: string;
-  includes: string[];
-};
 type TitledText = { title: string; text: string };
 
 /**
@@ -63,30 +55,36 @@ export function PageShell({ children }: { children: ReactNode }) {
   );
 }
 
-export function Eyebrow({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-surface-2/85 px-3.5 py-1.5 text-sm font-semibold tracking-[0.04em] text-brand-accent shadow-card backdrop-blur-sm">
-      {/* A static dot. It used to carry `animate-ping` — a perpetual pulse on
-          every section label on every page, which is a "live/urgent" signal
-          attached to nothing that is live or urgent. See rule 4 in AGENTS.md:
-          nothing on this site throbs. */}
-      <span
-        aria-hidden
-        className="inline-flex h-1.5 w-1.5 shrink-0 rounded-full bg-brand-accent"
-      />
-      {children}
-    </span>
-  );
-}
-
+/**
+ * ── THE EYEBROW IS GONE, AND IT IS NOT COMING BACK (2026-08-04, Pnina) ──
+ *
+ * Every section on this site used to open with a small pill carrying a dot and
+ * a two-or-three-word label — "מי אני", "למי זה מתאים", "מתוך הליווי". Pnina
+ * asked for all of them removed, in those words: *"remove all those
+ * AI-generated looking small circle things that dictate what section it is
+ * going to be, because it is useless and it is AI-generated"*.
+ *
+ * She is right about what they were. They restated the heading directly beneath
+ * them in fewer words, which is the tell — a label that adds nothing is
+ * decoration pretending to be structure, and this is the second thing on this
+ * site she has identified as reading machine-written (the hero's
+ * "ליווי אישי ודיסקרטי" was the first).
+ *
+ * So the component is DELETED rather than left unused: 14 `eyebrow` keys and 6
+ * `heroEyebrow` keys came out of `messages/he.json` in the same commit, and
+ * `SectionHeading` / `PageHero` no longer take the prop. The two places whose
+ * pill carried real copy rather than a restatement — the contact page's
+ * "מה מקבלים" line and /about's story label — keep their words as plain type.
+ *
+ * ⚠️ Do not reintroduce a section label component. If a section needs a word
+ * above its heading, the heading is not doing its job.
+ */
 export function SectionHeading({
-  eyebrow,
   title,
   description,
   align = "left",
   gradient = false,
 }: {
-  eyebrow?: string;
   title: string;
   description?: string;
   align?: "left" | "center";
@@ -94,11 +92,6 @@ export function SectionHeading({
 }) {
   return (
     <div className={cn("max-w-2xl", align === "center" && "mx-auto text-center")}>
-      {eyebrow ? (
-        <div className={cn("mb-5", align === "center" && "flex justify-center")}>
-          <Eyebrow>{eyebrow}</Eyebrow>
-        </div>
-      ) : null}
       <h2
         className={cn(
           "text-[2.4rem] text-balance sm:text-[2.85rem]",
@@ -159,16 +152,24 @@ export function SectionHeading({
  * is no counter, no deadline and no "within X weeks" anywhere in this section.
  *
  * ── THE FOLD IS A REQUIREMENT, NOT A NICETY ──
- * At 390×844 there are ~680px under the 64px header, and the four blocks above
- * are budgeted against it: headline ~91, objections ~90, video 208, form ~248.
+ * At 390×844 there are ~780px under the 64px header, and every block above is
+ * budgeted against it. Measured on 2026-08-03, as the bottom edge of each block
+ * from the top of the document:
+ *
+ *     headline    137      video       499
+ *     secondary   222      form/submit 812      ← 32px of the fold to spare
+ *     note        253
+ *
  * That is why the video lost its `max-w-[19rem]` cap, why the form runs in
- * `compact` mode (name and phone on one row — see the long note on that prop in
- * contact-form.tsx), and why `pt-4` rather than the old `pt-6`. It fits at
- * 390×844 and 393×852. It does NOT fit on a 375×667 iPhone SE, where the submit
- * button lands just below the fold; that is a knowingly accepted limit on a
- * screen size this audience largely does not carry, and it is measured by
- * `e2e/hero-fold.spec.ts` rather than assumed.
- * If you add anything to this section, something else has to come out.
+ * `compact` mode (name and phone on one row, and no privacy note — see the long
+ * notes on that prop in contact-form.tsx), and why `pt-3` rather than the old
+ * `pt-6`. It fits at 390×844 and 393×852. It does NOT fit on a 375×667 iPhone
+ * SE, where the submit button lands just below the fold; that is a knowingly
+ * accepted limit on a screen size this audience largely does not carry, and it
+ * is measured by `e2e/hero-fold.spec.ts` rather than assumed.
+ * If you add anything to this section, something else has to come out. The
+ * bottom padding is NOT spare room: it is the band her ring mark stands in, and
+ * all of it is below the fold.
  */
 export function HeroSection() {
   const t = useTranslations("hero");
@@ -212,6 +213,75 @@ export function HeroSection() {
         className="pointer-events-none absolute left-[-12%] top-56 h-[26rem] w-[26rem] wash-cool animate-float rounded-full blur-[100px]"
       />
 
+      {/* ── THE LIGHT RAYS (Pnina, 2026-08-03) ──
+          Two diagonal shafts of light from the top corners, the one piece of
+          furniture taken from the dark VSL page she sent as her model. It is a
+          pure decoration layer: `aria-hidden`, no pointer events, no content,
+          and the `.hero-rays` class it hangs on lives in globals.css §12 with
+          the rest of the dark-mode light system.
+
+          It is a STATIC gradient, not a sweep. Rule 4 in AGENTS.md: nothing on
+          this page may loop while she reads. If this ever starts moving, it has
+          become pressure furniture and it comes out. */}
+      <div
+        aria-hidden
+        className="hero-rays pointer-events-none absolute inset-x-0 top-0 h-[34rem]"
+      />
+
+      {/* ── HER RING MARK, BEHIND THE HEADLINE (Daniel, 2026-08-03) ──
+          *"There is a logo between the first section and the about section,
+          which is on the left for some reason. The logo itself should be behind
+          the header in the main area. Why is it there even where it is right
+          now?"*
+
+          Fair question, and the answer is that it was answering a different
+          instruction. Pnina's note described the hero as a composition — the
+          dark turquoise behind and *"לוגו בפינה שמאלית תחתונה"* — so it was
+          pinned to the bottom-left corner of the section. On her brand board
+          that corner is the bottom of a LOGO CARD; on a page it is the bottom of
+          a very tall hero, which put the mark in the dead band between the form
+          and the About section, off to one side, reading as a stray badge rather
+          than as branding. Daniel is right that it looked wrong there.
+
+          It is now a WATERMARK behind the headline: centred on the copy column,
+          sitting behind the h1 at low opacity, which is where her own brand book
+          puts the mark relative to her name. It reads as the page being hers
+          rather than as an object someone left on it.
+
+          ⚠️ It is HER logo — the four hairline ripples and the pearl off her
+          brand book, redrawn as vector at `public/brand/pearl-rings.svg`. Read
+          the comment inside that file before touching it; its colours are baked
+          in on purpose, so DO NOT put a `text-*` or `bg-*` utility on this
+          element, and do not swap in `pearl-mark.svg` (our scallop, which is the
+          favicon and is drawn for 16-32px, not for display sizes).
+
+          ⚠️ OPACITY IS A LEGIBILITY NUMBER, NOT A TASTE ONE. The h1 sits on top
+          of this, so the mark is competing with the one thing on the page that
+          must be readable. At 0.14 its gold hairlines are visible as texture and
+          measured against `--canvas` they move the surface by under two levels
+          of sRGB, which is inside the slack the headline's own contrast already
+          carries. Do not raise it to make the mark "read" — make it BIGGER, the
+          way a watermark is supposed to work.
+
+          `-z-10` puts it under the content and above the washes, and it is
+          `absolute`, so it costs the fold budget exactly nothing —
+          e2e/hero-fold.spec.ts is tight and nothing decorative may spend it.
+
+          A plain <img>, not next/image: it is a vector, so there is no ladder to
+          pick a rung from, and the custom loader would only put a pointless
+          `srcSet` on it. `alt=""` plus `aria-hidden` because the header already
+          carries her name and her face as the page's real identity — this is the
+          same mark a second time, and announcing it twice is noise. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/brand/pearl-rings.svg"
+        alt=""
+        aria-hidden
+        width={420}
+        height={420}
+        className="pointer-events-none absolute left-1/2 top-2 -z-10 h-52 w-52 -translate-x-1/2 opacity-[0.14] sm:top-4 sm:h-72 sm:w-72 lg:h-[26rem] lg:w-[26rem]"
+      />
+
       {/* ── THE SCRIM, AND WHY THE HERO NEEDS ITS OWN ──
           Every other band on the site paints `--background`, the 40% paper veil
           that makes type readable over the photograph (globals.css, the note
@@ -245,7 +315,29 @@ export function HeroSection() {
           screen on a desktop and that is fine — the "no scrolling" requirement
           is about PHONES, where the stack still fits (e2e/hero-fold.spec.ts).
           Do not reintroduce a side-by-side layout here. */}
-      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-6 pb-10 pt-3 sm:pb-16 lg:pb-20 lg:pt-12">
+      {/* The bottom padding came back DOWN to pb-10/16/20 in 0.19.0. It had
+          been pb-28/36/40, and that was not free space — it was the band her
+          ring mark stood in while the mark was pinned to the bottom-left corner.
+          The mark is a watermark behind the headline now, so the band it needed
+          is gone with it, and leaving it would have been an empty 112-160px gap
+          between the form and the About section. The two move together. */}
+      {/* ⚠️ `px-4` ON A PHONE, NOT `px-6`, AND IT IS THE HEADLINE THAT NEEDS IT.
+          Daniel, 2026-08-03: the h1 *"needs to be bolder, bigger text… as big as
+          possible"*, looking at mobile, which he called the view that matters.
+          The h1 has to stay TWO LINES (Pnina), so its ceiling is whatever size
+          still lets the longer sentence sit on one line — i.e. it is set by the
+          COLUMN WIDTH, not by the fold. Measured at 390px with Rubik 700:
+              px-6 → column 332px → one line up to 1.65rem
+              px-4 → column 348px → one line up to 1.86rem
+              px-3 → column 356px → one line up to 1.86rem (no further gain)
+          So 8px of padding is worth ~13% of headline size and px-3 is worth
+          nothing on top of that. From `sm` up there is no pressure and the
+          roomier gutter looks better, so this is a phone-only change.
+          ⚠️ THE VIDEO'S NEGATIVE MARGIN MOVES WITH THIS. It steps out of this
+          padding to sit ~4px from each screen edge; at `-mx-5` against `px-4`
+          it would overhang the viewport by 4px and the "no horizontal scroll"
+          test would fail. The two numbers are a pair — see hero-video.tsx. */}
+      <div className="relative mx-auto flex w-full max-w-6xl flex-col items-center px-4 pb-10 pt-3 sm:px-6 sm:pb-16 lg:pb-20 lg:pt-12">
         <div className="order-1 w-full max-w-4xl text-center">
           <Reveal>
             {/* Two BLOCKS, not two inline runs.
@@ -264,33 +356,57 @@ export function HeroSection() {
                 her sea, and the same token the filled CTA resolves through, so
                 the headline and the button cannot drift apart. When she sends a
                 colour this is one token, not two call sites. */}
-            {/* SIZE: 2.2rem on a phone, and it was MEASURED against the fold
-                rather than taken off the x0.704 ladder like every other display
-                call site (which would have given 1.97rem here).
+            {/* ── SIZE: TWO LINES IS NOW THE CONSTRAINT, AND THE FOLD IS STILL
+                THE OTHER ONE (Pnina, 2026-08-03) ──
+                She asked for the headline area to be louder and easier to see,
+                and for these to be EXACTLY TWO LINES with no full stop on
+                either. "Two lines" is a fact about the rendered box, not about
+                the markup: each sentence is its own block below, so the headline
+                sets on two lines only while each sentence FITS on one.
 
-                Daniel asked twice for this headline to be bigger, so the rung is
-                set to the largest value that still passes `e2e/hero-fold.spec.ts`
-                with a margin worth trusting. Measured at 390x844, submit-button
-                bottom against an 844 fold:
+                It did not. The previous rung (2.2rem/3.17rem/3.8rem) was chosen
+                against the fold alone and broke the first sentence in half on
+                every width — three lines on a phone, and the note here used to
+                argue that was fine. It is not what she asked for, so the rung
+                came down until "את לא צריכה להסביר לי כלום", the longer of the
+                two, sets on one line. It is the longer sentence that sets the
+                ceiling at every breakpoint; the second has ~30% of slack.
 
-                    1.97rem → 823   (the ladder value, 21px spare)
-                    2.2rem  → 834   ← shipped, 10px spare
-                    2.3rem  → 839   fits, but 5px is inside font-load jitter
-                    2.4rem  → 844   fails
-                    2.5rem  → 890   the second sentence wraps too, 4 lines
+                MEASURED, Rubik 700, rendered width of the longer sentence
+                against the column it has to fit in:
 
-                ⚠️ IT SETS ON THREE LINES NOW, and that is not a regression to
-                fix by shrinking. Under Amatic this was two lines at 2.8rem, but
-                Amatic is condensed to 58% of Rubik's set width — the old rung
-                bought line count, not presence. At 2.2rem Rubik Bold this
-                headline is optically far larger and heavier than 2.8rem Amatic
-                was, which is what Daniel was asking for. The break falls between
-                the two sentences and inside the first, which `text-balance`
-                keeps even.
+                    phone 390px, column 332px
+                        1.65rem → 304px   ← shipped, 28px spare
+                        1.72rem → 324px      fits, 8px — inside font-load jitter
+                        1.75rem → wraps, 3 lines
+                    sm 640px, column 582px      (the tightest width in the range)
+                        2.90rem → 550px   ← shipped, 32px spare
+                        3.05rem → 574px      fits, 8px
+                        3.10rem → wraps
+                    lg ≥1024px, column 896px    (max-w-4xl, so width-independent)
+                        4.50rem → 844px   ← shipped, 52px spare
+                        4.70rem → 888px      fits, 8px
+                        4.80rem → wraps
 
-                If a future edit needs room here, take it from the video, not
-                from this rung, and never by raising the numbers in the spec. */}
-            <h1 className="text-headline-accent text-[2.2rem] leading-[1.03] text-balance sm:text-[3.17rem] lg:text-[3.8rem]">
+                Each rung is a step below its own ceiling on purpose. 8px of
+                slack is about one glyph, and this line has to survive a fallback
+                face during font swap, `.headline-neon`'s own metrics and any
+                future word change without silently becoming three lines again.
+                Note the DESKTOP rung went UP (3.8rem → 4.5rem): there is no fold
+                on a desktop, so "louder" is free there and only the phone had to
+                pay for the second line.
+
+                ⚠️ THE FOLD IS STILL THE HARD CONSTRAINT (e2e/hero-fold.spec.ts).
+                The phone rung is now well below what the fold would allow, so the
+                headline is no longer what is spending the budget — the video is.
+                That is the right order: do NOT spend the slack this bought by
+                pushing the rung back up, and never by raising the numbers in the
+                spec. If a future edit needs room, take it from the video.
+
+                The loss of raw size is paid back by `.headline-neon` (globals.css)
+                rather than by points: on the dark canvas the glow is what makes
+                this read as the loudest thing on the screen. */}
+            <h1 className="headline-neon text-headline-accent text-[1.82rem] leading-[1.08] text-balance sm:text-[2.9rem] lg:text-[4.5rem]">
               <span className="block">{t("titleLead")}</span>
               {/* The accent, and it is the same colour as the filled CTA below
                   by construction: `--headline-accent` resolves through
@@ -305,6 +421,56 @@ export function HeroSection() {
             </h1>
           </Reveal>
 
+          {/* ── THE LEAD HALF OF HER SENTENCE, IN OYSTER BEIGE ──
+              This stays in the copy column, outside the video's frame (Daniel,
+              2026-08-03) — it names the feeling, which is a statement about the
+              page, where the half that moved into the frame is a caption for a
+              specific clip.
+
+              ⚠️ THE COLOUR IS ONE OF HER FIVE, and it is doing a job. Daniel:
+              *"maybe better color to distinguish between main header?"* The h1
+              above is her Pearl White #F8F7F4 (L 96%) and this used to be
+              `--foreground-soft`, a derived near-white — two almost identical
+              off-whites stacked, so the eye read them as one block of text and
+              the headline stopped being the headline. It is now her Oyster Beige
+              #DDD4C7 (L 82%), which is a visible step down in lightness AND a
+              step across in temperature: warm against the pearl's neutral, so it
+              separates twice over. Measured 12.31:1 on her canvas, far above the
+              4.5 floor, so nothing is bought at the cost of legibility.
+              Her Mist Grey #A8ADB2 was the other candidate and is the fallback
+              if this reads too warm — it separates harder (L 68%) but reads as
+              grey rather than as a colour, and this page has enough grey in it.
+              ⚠️ Do NOT put a derived off-white back here. The point is that both
+              lines are hers and that they are visibly different from each other.
+
+              ── HER COMMA IS GONE (Daniel, 2026-08-03) ──
+              The sentence ended "…להרגיש תקועה," because the two halves used to
+              be one paragraph. They are in two different places now, so a
+              trailing comma was punctuation pointing at nothing. Removed in
+              `messages/he.json`, not here. */}
+          {/* ── TWO LINES, AND BIGGER (Pnina, 2026-08-03) ──
+              *"נמאס לך - לעבור לשורה ולהגדיל את הטקסט"*. It was one long
+              sentence that wrapped wherever the column happened to end; the
+              break is now hers and it falls before "ונמאס לך", which is the
+              half that names the feeling she wants the reader to recognise.
+              An array rather than a string with a `<br>`, matching how the
+              process steps carry their lines: the break is CONTENT here, and
+              content belongs in `messages/he.json` where she can move it.
+              Sized up a rung and a half in the same pass — 1.2 → 1.35rem on a
+              phone — because she asked for the text bigger too. */}
+          <Reveal delay={80}>
+            <p
+              data-hero="secondary-lead"
+              className="mx-auto mt-3 max-w-2xl text-[1.35rem] leading-snug text-heading-oyster sm:mt-6 sm:text-[1.6rem]"
+            >
+              {(t.raw("secondaryLead") as string[]).map((line) => (
+                <span key={line} className="block">
+                  {line}
+                </span>
+              ))}
+            </p>
+          </Reveal>
+
           {/* ── THE SECONDARY HEADER IS HERS NOW (2026-08-02) ──
               This was three "בלי…" lines I wrote, each removing one reason not
               to call. Pnina replaced them with one sentence of her own, which
@@ -317,62 +483,127 @@ export function HeroSection() {
               ⚠️ ONE CHARACTER OF HERS WAS CHANGED. She wrote an en dash before
               "צפי". AGENTS.md bans en and em dashes in Hebrew copy — they read
               as machine-set English typography in a Hebrew sentence — so it is a
-              comma. Nothing else in the sentence is touched. */}
-          <Reveal delay={80}>
-            <p
-              data-hero="secondary"
-              className="mx-auto mt-3 max-w-2xl text-[1.02rem] leading-snug text-foreground-soft sm:mt-6 sm:text-[1.45rem]"
-            >
-              {t("secondary")}
-            </p>
-          </Reveal>
+              comma. Nothing else in the sentence is touched.
 
-          {/* Her own footnote to that line, and it is deliberately quieter: it
-              is for the woman who has already decided, so it must not compete
-              with the sentence that is still persuading everyone else. */}
-          <Reveal delay={120}>
-            <p
-              data-hero="secondary-note"
-              className="mx-auto mt-1.5 max-w-2xl text-sm leading-snug text-subtle-foreground sm:text-base"
-            >
-              {t("secondaryNote")}
-            </p>
-          </Reveal>
+              ── SPLIT IN THREE, NOT REWRITTEN (2026-08-03) ──
+              In the dark VSL page she sent as her model, the equivalent line is
+              underlined and the "watch it to the end" instruction is set larger
+              and in the headline's colour. Her sentence is unchanged; it is now
+              three keys so the markup can do that:
+
+                  secondaryLead   the quiet half, the feeling being named
+                  secondaryWatch  the instruction, loud: bigger, accent, underlined
+                  secondaryPoint  her 👇🏻, pointing at the video
+
+              The instruction is the only thing in this block that is allowed to
+              compete with the h1, and it stays a step under it — the headline
+              has to remain the loudest thing on the screen.
+
+              TWO SMALL THINGS ARE DELIBERATE. The loud half stays in the BODY
+              face (Heebo bold), not `font-display`: Rubik is headings-only on
+              this site, and a paragraph fragment is not a heading. And the 👇🏻
+              is `aria-hidden` — it is a pointer at the video, and a screen
+              reader announcing "backhand index pointing down, light skin tone"
+              in the middle of her sentence is noise. */}
         </div>
 
         <Reveal
           delay={160}
           className="order-2 mt-3 w-full sm:mt-7 lg:mt-9"
         >
-          <HeroVideo />
+          {/* ── ONLY THE INSTRUCTION GOES INSIDE THE FRAME (Daniel, 2026-08-03)
+              *"the text needs to be inside the rectangle above the video"*, and
+              then, on seeing it: *"the text 'אם את מרגישה…' should be outside
+              the rectangle."*
+
+              So the sentence is split across the boundary, and the split is the
+              right one rather than a compromise. The lead half NAMES A FEELING
+              and belongs to the page — it is the reason to keep reading at all,
+              and it sits in the copy column under the headline. The second half
+              is a CAPTION FOR A SPECIFIC VIDEO: "watch it to the end" plus a
+              pointing emoji only means anything when the thing being pointed at
+              is directly beneath it, which is exactly what the reference page
+              Pnina sent does.
+
+              The `data-hero` hooks travel with the parts, so
+              `e2e/hero-fold.spec.ts` still measures the same two elements and
+              still requires both above the fold. */}
+          <HeroVideo
+            caption={
+              <>
+                <Reveal delay={80}>
+                  <p
+                    data-hero="secondary"
+                    className="mx-auto max-w-2xl leading-snug"
+                  >
+                    {/* `whitespace-nowrap` on the pair, not on the <strong> alone.
+                        The instruction is the loud thing in this block and it has to
+                        arrive whole — left to itself it broke as "…צפי בסרטון /
+                        עד הסוף", which turns one instruction into two half-lines. The
+                        emoji is a separate box with no space before it, but an emoji
+                        is its own line-break opportunity, so it needs to be inside the
+                        same nowrap or it drifts onto the next line by itself. */}
+                    <span className="whitespace-nowrap text-[1.42rem] sm:text-[1.72rem]">
+                      <strong className="text-neon-gold font-bold underline decoration-from-font underline-offset-[0.22em]">
+                        {t("secondaryWatch")}
+                      </strong>
+                      <span aria-hidden>{t("secondaryPoint")}</span>
+                    </span>
+                  </p>
+                </Reveal>
+
+                {/* Her own footnote to that line, and it is deliberately quieter: it
+                    is for the woman who has already decided, so it must not compete
+                    with the sentence that is still persuading everyone else. */}
+                <Reveal delay={120}>
+                  <p
+                    data-hero="secondary-note"
+                    className="mx-auto mt-1.5 max-w-2xl text-sm leading-snug text-heading-pearl sm:text-base"
+                  >
+                    {t("secondaryNote")}
+                  </p>
+                </Reveal>
+              </>
+            }
+          />
         </Reveal>
 
         <div className="order-3 w-full max-w-3xl">
-          {/* ── THE FORM, EMBEDDED (Pnina, 2026-08-02) ──
-              This used to be a `LeadButton` that opened the app-wide popup.
-              Her instruction was to put the form itself here "like we have at
-              the end of the page", and she is right about the mechanics: a
-              popup costs a tap, a modal and a decision before anyone has typed
-              anything, and this is the moment a visitor is most likely to act.
+          {/* ── ⚠️ THE FORM IS A BUTTON AGAIN (Pnina, 2026-08-03 call) ──
+              This has now been both things, twice, and both times at her
+              request — so read the history before changing it a third time.
 
-              It is the SAME `ContactForm` the final CTA and the popup render —
-              not a copy — so there is one lead flow, one validation, one
-              `/api/contact`, one `/thank-you`. Two live instances on one page
-              is safe: every field id comes from `useId()`.
+              0.17.0 replaced a button with the embedded form, on her own
+              instruction ("put the form itself here like we have at the end of
+              the page") and with a good argument behind it: a popup costs a tap,
+              a modal and a decision before anyone has typed anything.
 
-              `showIntro={false}` matters twice over. The h1 and the objection
-              lines above ARE this form's introduction, and the intro block
-              carries its own <h2>, which would put a second-level heading above
-              the page's real sections and break the document outline that
-              `e2e/smoke.spec.ts` guards.
+              She reversed it on the 2026-08-03 call: *"להחליף את השדות לכפתור"*.
+              The counter-argument is about this page rather than about forms in
+              general — three input fields at the top of a landing page is a
+              form, and a form is a task. What is above the fold now is a
+              headline, her sentence, the video and one thing to press, which is
+              the shape of the reference page she keeps pointing at.
 
-              `source="hero"` is the only new thing reaching n8n: same audience
-              and same treatment as "landing" (see the note in
-              worker/src/contact.js), split purely so we can see whether this
-              hero is doing its job. */}
+              `source="hero"` still reaches n8n unchanged: `LeadButton` opens the
+              app-wide dialog and that dialog renders the SAME `ContactForm`, so
+              there is still one lead flow, one validation, one `/api/contact`,
+              one `/thank-you`. Nothing about the pipeline moved.
+
+              ⚠️ `e2e/hero-fold.spec.ts` used to assert the name and phone fields
+              were above the fold. It now asserts THIS BUTTON is, and its header
+              records why — the fields it named no longer exist here. */}
           <Reveal delay={200}>
-            <div className="mx-auto mt-3 w-full max-w-md rounded-2xl border border-foreground/[0.08] bg-surface-2 p-4 shadow-card sm:mt-7 sm:p-6">
-              <ContactForm source="hero" showIntro={false} compact />
+            <div className="mx-auto mt-4 flex w-full max-w-md justify-center sm:mt-8">
+              <LeadButton
+                source="hero"
+                variant="brand"
+                data-hero="cta"
+                className="cta-hot h-14 w-full rounded-2xl px-6 text-[1.25rem] tracking-[0.01em] sm:text-[1.4rem] [&_svg]:size-5"
+              >
+                {t("ctaPrimary")}
+                <ArrowRight data-icon="inline-end" />
+              </LeadButton>
             </div>
           </Reveal>
 
@@ -507,7 +738,6 @@ export function ProcessSection() {
       <div className="relative mx-auto max-w-6xl">
         <Reveal>
           <SectionHeading
-            eyebrow={t("eyebrow")}
             align="center"
             title={t("title")}
             description={t("description")}
@@ -605,25 +835,12 @@ export function ProcessSection() {
 
                     {/* Copy */}
                     <div className="flex flex-1 flex-col p-5 sm:p-6 lg:p-5">
-                      <div className="flex items-center gap-2">
-                        <span
-                          aria-hidden
-                          className={cn("h-px w-6 shrink-0", tint.rule)}
-                        />
-                        {/* `uppercase` used to sit on this class list. Hebrew
-                            has no case, so it did nothing to "שלב" and only
-                            ever shouted at the Latin digits; the 0.18em
-                            tracking that came with it pulled the two Hebrew
-                            letters apart into ש ל ב. Both gone — a small label
-                            is made small by size and colour, not by spacing
-                            letters a script does not letterspace. */}
-                        <span className="text-sm font-semibold tracking-[0.06em] text-subtle-foreground">
-                          {t("stepLabel")}{" "}
-                          <span dir="ltr">
-                            {number}
-                          </span>
-                        </span>
-                      </div>
+                      {/* ⚠️ THE "שלב N" LABEL WAS HERE AND IS DELETED (Pnina,
+                          2026-08-03) — same instruction as the scrub cards, and
+                          it has to be obeyed in BOTH renderings or the reduced-
+                          motion visitor gets a numbering the motion one does
+                          not. The rule that used to precede it went with it;
+                          a hairline leading to nothing is not a decoration. */}
                       {/* No `lg:` step any more: with the 0.14 scale `text-xl`
                           is already 27px from 640px up, so the arbitrary rem
                           this used to carry had become a SHRINK at the widest
@@ -709,7 +926,6 @@ export function ServicesTeaser() {
             />
             <div className="relative">
               <SectionHeading
-                eyebrow={t("eyebrow")}
                 title={t("title")}
                 description={t("description")}
               />
@@ -817,7 +1033,7 @@ function ShellNode({ size, strokeWidth = 1.6 }: NodeSizeProps = {}) {
 type NodeSizeProps = { size?: string; strokeWidth?: number };
 
 /** מסלול צדפה — an empty circle, same hairline. */
-function HollowNode({ size }: NodeSizeProps = {}) {
+export function HollowNode({ size }: NodeSizeProps = {}) {
   return (
     <span
       aria-hidden
@@ -831,7 +1047,7 @@ function HollowNode({ size }: NodeSizeProps = {}) {
  *  design: see the note on `.pearl-sphere` in globals.css. `.pearl-sphere` draws
  *  the object (the cursor pearl in §3 wears the same class); `.offer-node--pearl`
  *  only sets this instance's size. */
-function PearlNode({ size }: NodeSizeProps = {}) {
+export function PearlNode({ size }: NodeSizeProps = {}) {
   return (
     <span
       aria-hidden
@@ -865,7 +1081,7 @@ function PearlNode({ size }: NodeSizeProps = {}) {
  * photograph. When a file arrives nothing here changes — the slot's `src` stops
  * being null and the photograph takes the frame.
  */
-function TrackFigure({
+export function TrackFigure({
   slot,
   node,
 }: {
@@ -912,7 +1128,7 @@ function TrackFigure({
  *  and amber letters on rose light are the muddy pair Daniel flagged on
  *  2026-07-30. The bright gold on this line is the NODE, which is exactly what
  *  the palette rule in the header of globals.css asks for. */
-function NodeLabel({
+export function NodeLabel({
   node,
   children,
 }: {
@@ -929,7 +1145,7 @@ function NodeLabel({
 
 /** What a block includes. Hairline dots rather than tick icons — a column of
  *  green checkmarks turns a plain fact into a sales point. */
-function OfferIncludes({
+export function OfferIncludes({
   items,
   className,
 }: {
@@ -1005,18 +1221,16 @@ function OfferIncludes({
 export function OffersSection() {
   const t = useTranslations("offers");
   const intro = t.raw("intro") as IntroCall;
-  const tracks = t.raw("items") as TrackItem[];
+  const ladder = t.raw("ladder") as {
+    rungs: LadderRung[];
+    freeLabel: string;
+  };
 
   return (
     <section className="bg-background px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-5xl">
         <Reveal>
-          <SectionHeading
-            align="center"
-            eyebrow={t("eyebrow")}
-            title={t("title")}
-            description={t("description")}
-          />
+          <SectionHeading align="center" title={t("title")} />
         </Reveal>
 
         {/* ── The free introductory call ──
@@ -1055,8 +1269,8 @@ export function OffersSection() {
                   as a struck-through number — read the header of
                   `FreeCallAnchor` before changing anything about it. */}
               <FreeCallAnchor
-                valueLabel={intro.valueLabel}
-                valuePrice={intro.valuePrice}
+                rungs={ladder.rungs}
+                freeLabel={ladder.freeLabel}
                 free={intro.free}
               >
                 {/* The button is the sequence's last beat, which is why it is
@@ -1077,110 +1291,6 @@ export function OffersSection() {
           </div>
         </Reveal>
 
-        {/* ── The two tracks ──
-            Deliberately BELOW the call and behind their own label, so they read
-            as "what we would talk about" rather than as two more things being
-            sold. Two equal columns on lg; both end in a full stop, because
-            nothing here should ask a woman to buy a three-month process before
-            she has spoken to anyone. */}
-        <Reveal delay={120}>
-          <div className="mt-12 flex items-center gap-4 sm:mt-14">
-            <span aria-hidden className="h-px flex-1 bg-gold/25" />
-            {/* `text-base`, not the `text-sm` the rest of the eyebrows wear:
-                Daniel named THIS string ("המסלולים שנדבר עליהם בשיחה") as his
-                example of type that is too small on a 27-inch monitor. It was
-                pinned at 14px and never moved with the scale at all. */}
-            <p className="text-center text-base font-semibold tracking-[0.04em] text-foreground-soft">
-              {t("tracksEyebrow")}
-            </p>
-            <span aria-hidden className="h-px flex-1 bg-gold/25" />
-          </div>
-        </Reveal>
-
-        {/* ── The two track cards ──
-            PICTURE ON THE VISUAL RIGHT, WORDS ON THE VISUAL LEFT (Daniel,
-            2026-07-30: "right-side image, left-side text, with price and
-            everything — currently it's ugly").
-
-            The figure is FIRST in the DOM, and in this RTL document `flex-row`
-            therefore puts it at the inline start, which is the RIGHT of the
-            card. That is the layout Daniel described, and it is also the correct
-            reading order: the picture is what the card is, the words are what it
-            costs and contains. `ltr:sm:flex-row-reverse` pins it to the right in
-            physical terms too, so an `en` locale later would not silently mirror
-            a composition that was chosen visually.
-
-            WHY THEY STACK INSTEAD OF SITTING IN TWO COLUMNS. Up to 0.11.4 these
-            were two equal columns on lg (see the section note above). A card
-            that is 38% picture and 62% words does not fit in half of a 1024px
-            container — the copy column lands at ~19 characters a line, which is
-            a newspaper column, not a premium card. So from `sm` up each card is
-            a full-width horizontal band and the two stack. You still see both
-            without scrolling; they are still equal, still in her order (צדפה
-            then פנינה), still with no badge, no glow and no winner.
-
-            The prices stay SMALL and muted on purpose — rule 4 in CLAUDE.md. The
-            wide layout makes room for them, which is not permission to grow
-            them: a price set large is a price being sold. */}
-        <ol className="mt-7 space-y-5 sm:mt-8 sm:space-y-6">
-          {tracks.map((track, index) => (
-            <Reveal key={track.title} as="li" delay={160 + index * 80}>
-              <div className="flex flex-col overflow-hidden rounded-2xl border border-foreground/[0.08] bg-surface-1/60 sm:flex-row ltr:sm:flex-row-reverse">
-                <TrackFigure
-                  slot={
-                    offerTracks[index]?.node === "pearl"
-                      ? media.trackPearl
-                      : media.trackShell
-                  }
-                  node={offerTracks[index]?.node ?? "hollow"}
-                />
-                <div className="flex-1 p-6 sm:p-8 lg:p-9">
-                  <NodeLabel
-                    node={
-                      offerTracks[index]?.node === "pearl" ? (
-                        <PearlNode />
-                      ) : (
-                        <HollowNode />
-                      )
-                    }
-                  >
-                    {track.duration}
-                  </NodeLabel>
-                  {/* Name and price on one baseline: the price is a fact ABOUT
-                      the name, not a headline of its own, and putting it on the
-                      same line is what keeps it from reading as a price tag.
-                      `flex-wrap` because "מסלול הפנינה" + "₪2,880" does not fit
-                      one line on a phone. */}
-                  <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1">
-                    <h3 className="font-display text-[2.0rem] leading-tight text-foreground sm:text-[2.2rem]">
-                      {track.title}
-                    </h3>
-                    <p className="text-base text-muted-foreground">
-                      <Price>{track.price}</Price>
-                    </p>
-                  </div>
-                  <p className="mt-3.5 max-w-xl text-base leading-relaxed text-foreground-soft">
-                    {track.fit}
-                  </p>
-                  {/* Two short items each, so on the wide card they sit side by
-                      side rather than as a two-item column with a lot of nothing
-                      beside it. `sm:space-y-0` is what releases the stacked
-                      rhythm the vertical version needs. */}
-                  <OfferIncludes
-                    items={track.includes}
-                    className="mt-4 sm:flex sm:flex-wrap sm:gap-x-9 sm:gap-y-2 sm:space-y-0"
-                  />
-                </div>
-              </div>
-            </Reveal>
-          ))}
-        </ol>
-
-        <Reveal>
-          <p className="mt-9 text-center text-base leading-relaxed text-balance text-subtle-foreground">
-            {t("note")}
-          </p>
-        </Reveal>
       </div>
     </section>
   );
@@ -1206,18 +1316,26 @@ export function AudienceSection() {
     <section className="process-boundary-surface bg-background px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <Reveal>
-          <SectionHeading
-            align="center"
-            eyebrow={t("eyebrow")}
-            title={t("title")}
-            description={t("description")}
-          />
+          <SectionHeading align="center" title={t("title")} />
         </Reveal>
 
+        {/* ── HER TWO PANELS, ALTERNATING ──
+            Pnina, 2026-08-04: each square a different colour and a different
+            style, so the block reads as something rather than as eight grey
+            boxes. The two treatments are her Oyster Beige and her Mist Grey,
+            both carrying `--panel-ink` — see the long note beside those tokens
+            in globals.css for why gold is deliberately NOT one of them, and for
+            the measured ratios.
+
+            `index % 2` and not `% 4`: on a phone the grid is one column and on
+            `sm` it is two, so alternating by index gives a true checkerboard at
+            every width. At `lg` (four across) the rows offset, which is what
+            keeps it from banding into stripes. */}
         <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:mt-12 lg:grid-cols-4">
           {items.map((item, index) => {
             const config = audienceTopics[index];
             const Icon = config?.icon ?? Sparkles;
+            const oyster = index % 2 === 0;
             return (
               <Reveal
                 key={item.title}
@@ -1225,19 +1343,21 @@ export function AudienceSection() {
                 delay={(index % 4) * 80}
                 className="h-full"
               >
-                <div className="process-boundary-card h-full rounded-2xl border border-foreground/[0.08] bg-surface-1/70 p-5 shadow-card backdrop-blur-sm">
-                  <span
-                    className={cn(
-                      "flex h-10 w-10 items-center justify-center rounded-xl border",
-                      CARD_TINTS[config?.tint ?? "plum"]
-                    )}
-                  >
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <h3 className="mt-4 text-base font-semibold leading-snug text-foreground">
+                <div
+                  className={cn(
+                    "process-boundary-card h-full rounded-2xl p-5 text-panel-ink shadow-card",
+                    oyster ? "bg-panel-oyster" : "bg-panel-mist"
+                  )}
+                >
+                  {/* Icon and title on ONE line — her instruction, and the
+                      reason the icon lost its tinted 40px plate: a boxed icon
+                      beside a heading reads as a second element competing with
+                      it, where a bare glyph reads as punctuation for the words. */}
+                  <h3 className="flex items-center gap-2.5 text-base font-semibold leading-snug">
+                    <Icon className="h-5 w-5 shrink-0" aria-hidden />
                     {item.title}
                   </h3>
-                  <p className="mt-1.5 text-sm leading-normal text-muted-foreground">
+                  <p className="mt-2 text-sm leading-normal opacity-85">
                     {item.text}
                   </p>
                 </div>
@@ -1245,12 +1365,6 @@ export function AudienceSection() {
             );
           })}
         </ul>
-
-        <Reveal className="mt-8 flex justify-center">
-          <p className="max-w-xl text-center text-sm leading-normal text-foreground-soft">
-            {t("closing")}
-          </p>
-        </Reveal>
       </div>
     </section>
   );
@@ -1279,7 +1393,6 @@ export function MomentsSection() {
         <Reveal>
           <SectionHeading
             align="center"
-            eyebrow={t("eyebrow")}
             title={t("title")}
             description={t("description")}
           />
@@ -1335,7 +1448,6 @@ export function WhySection() {
       <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
         <Reveal>
           <SectionHeading
-            eyebrow={t("eyebrow")}
             title={t("title")}
             description={t("description")}
           />
@@ -1388,7 +1500,16 @@ export function FounderTeaser() {
     <section className="process-boundary-surface bg-background px-6 py-12 sm:py-16">
       <div className="mx-auto max-w-6xl">
         <Reveal>
-          <div className="ring-shine relative grid gap-10 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1 p-7 md:grid-cols-[auto_1fr] md:items-center md:gap-12 md:p-10">
+          {/* ── ⚠️ ONE COLUMN NOW: WORDS FIRST, HER FACE UNDER THEM ──
+              Pnina, 2026-08-03: *"התמונה במי אני להוריד למתחת לטקסט"*. This was
+              a two-column grid with the portrait beside the story from `md` up.
+              The story leads at every width now and the photograph closes the
+              block, which also means a reader on a phone meets her sentence
+              before her picture instead of scrolling past a portrait to reach
+              it. `flex flex-col-reverse` rather than reordering the JSX: the
+              portrait stays FIRST in the DOM so the `hasMedia` branch and the
+              `PortraitFrame` fallback below are untouched. */}
+          <div className="ring-shine relative flex flex-col-reverse gap-10 overflow-hidden rounded-3xl border border-foreground/[0.08] bg-surface-1 p-7 md:gap-12 md:p-10">
             {/* One temperature, two corners. This used to be a plum wash in
                 one corner and a mint one in the other, which split the card
                 down the middle into a warm half and a cold half. Both washes
@@ -1404,7 +1525,7 @@ export function FounderTeaser() {
             />
 
             {/* Portrait card */}
-            <div className="relative mx-auto flex w-full max-w-[19rem] flex-col items-center text-center md:mx-0">
+            <div className="relative mx-auto flex w-full max-w-[19rem] flex-col items-center text-center">
               <div className="relative w-full">
                 {/* Two offset frame lines — brown inside, gold outside — so
                     the photograph sits inside the palette instead of floating
@@ -1418,7 +1539,14 @@ export function FounderTeaser() {
                   className="absolute -inset-6 rounded-[2.25rem] border border-gold/35"
                 />
                 {hasMedia(portrait) ? (
-                  <div className="relative aspect-[2/3] w-full overflow-hidden rounded-2xl bg-surface-2 shadow-[0_26px_60px_-26px_rgba(107,79,58,0.55)]">
+                  /* ── 4:5, NOT 2:3 (Pnina, 2026-08-03) ──
+                     *"במי אני תמונה מעל הראש עד הכתפיים או חזה"*, and Daniel on
+                     the photo she sent: crop it so it takes *"way less green
+                     space"* — it is an outdoor selfie with a garden behind her,
+                     and a tall 2:3 frame was mostly geraniums. 4:5 with
+                     `object-top` lands on head, shoulders and a little chest,
+                     which is exactly the crop she described. */
+                  <div className="relative aspect-[4/5] w-full overflow-hidden rounded-2xl bg-surface-2 shadow-[0_26px_60px_-26px_rgba(29,53,63,0.55)]">
                     <Image
                       src={portrait.src}
                       alt={portrait.alt}
@@ -1430,7 +1558,7 @@ export function FounderTeaser() {
                 ) : (
                   <PortraitFrame
                     slot={portrait}
-                    className="relative aspect-[2/3] w-full rounded-2xl"
+                    className="relative aspect-[4/5] w-full rounded-2xl"
                     sizes="19rem"
                   />
                 )}
@@ -1442,15 +1570,46 @@ export function FounderTeaser() {
               <p className="mt-1 text-sm leading-normal text-muted-foreground">
                 {t("role")}
               </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-                {chips.map((chip) => (
-                  <span
-                    key={chip}
-                    className="rounded-full border border-brand/20 bg-brand-wash px-2.5 py-1 text-sm font-medium text-brand-accent"
-                  >
-                    {chip}
-                  </span>
-                ))}
+              {/* ── ⚠️ TWO BUTTONS, NOT THREE CHIPS (Pnina, 2026-08-03) ──
+                  These were three inert pills — ליווי אישי · ליווי בוואטסאפ ·
+                  הרצאות — that looked tappable and did nothing. She asked for
+                  two of them to become real destinations styled *"exactly like
+                  the button in the header"*, and for the WhatsApp one to go:
+
+                    ליווי אישי  →  scrolls to the process animation (#process)
+                    הרצאות      →  /lectures
+
+                  ⚠️ WhatsApp support is NOT being denied as a service — it is
+                  still named in process step 4 and in both track cards on
+                  /offers. What went is a chip that made a support channel look
+                  like a third product.
+
+                  `buttonVariants({ variant: "brand" })` is the header's own
+                  skin, so these two and every `SectionCta` are literally the
+                  same design; if that variant changes, all of them change. */}
+              <div className="mt-5 flex w-full flex-wrap justify-center gap-2.5">
+                <Link
+                  href={`/#${sectionIds.process}`}
+                  data-a11y-no-underline
+                  className={cn(
+                    buttonVariants({ variant: "brand" }),
+                    "h-11 flex-1 rounded-lg px-4"
+                  )}
+                >
+                  {chips[0]}
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+                <Link
+                  href="/lectures"
+                  data-a11y-no-underline
+                  className={cn(
+                    buttonVariants({ variant: "brand" }),
+                    "h-11 flex-1 rounded-lg px-4"
+                  )}
+                >
+                  {chips[1]}
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
               </div>
               {siteConfig.profiles.instagram ? (
                 <a
@@ -1467,8 +1626,7 @@ export function FounderTeaser() {
 
             {/* Story */}
             <div className="relative">
-              <Eyebrow>{t("eyebrow")}</Eyebrow>
-              <h2 className="mt-4 text-[2.4rem] text-balance sm:text-[2.85rem]">
+              <h2 className="text-[2.4rem] text-balance sm:text-[2.85rem]">
                 {t("title")}
               </h2>
               <p className="mt-5 text-lg leading-relaxed text-foreground-soft">

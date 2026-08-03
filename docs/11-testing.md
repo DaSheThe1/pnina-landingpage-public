@@ -113,6 +113,18 @@ controller and are stale assertions:
 - the anchor-navigation test looks for an old `הליווי` header link;
 - the lectures navigation click passed on retry and remains flaky.
 
+Two more were identified in 0.19.0 and belong on this list rather than being
+blamed on that release. Both were checked by reverting and re-running:
+
+- `reduced motion stops automatic carousel progression` asserts
+  `page.locator("video").first().paused`. Since 0.17.0 the FIRST `<video>` on the
+  home page is the hero's `aria-hidden` blurred letterback backdrop, which has no
+  ref and is deliberately never paused — the assertion is reaching the wrong
+  element, not catching a broken gate. The visible clip does pause. Fix the
+  selector, not the behaviour.
+- `all accessibility preferences persist and reset` passes in isolation and fails
+  only in a full run. It is order-dependent, i.e. flaky, not a real failure.
+
 Keep this list honest when those tests are updated. Do not call the full suite
 green while any of them remains.
 

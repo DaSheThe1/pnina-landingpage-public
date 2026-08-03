@@ -14,10 +14,18 @@ export const imageVariants: Record<string, readonly number[]> = {
     640,
     854
   ],
-  "/images/pnina-portrait.jpg": [
+  "/images/pnina-mark.jpg": [
     128,
     256,
     320
+  ],
+  "/images/pnina-portrait.jpg": [
+    128,
+    256,
+    320,
+    480,
+    640,
+    900
   ],
   "/images/poster-about.jpg": [
     128,

@@ -72,14 +72,42 @@ means here, and these rules are not stylistic preferences:
    her numbers, never from plausible ones. The same rule governs prices: the
    only ones on the site (₪490 / ₪990 / ₪2,880) are hers.
 4. **No pressure mechanics.** No countdown timers, no "only 2 spots left", no
-   flashing discounts. The template's always-on pulsing price animation was
-   removed for exactly this reason (it also overrode `prefers-reduced-motion`
-   with `!important`). The funnel it belonged to is gone too: the offer
-   (`OffersSection`) is the free שיחת היכרות as one panel carrying the section's
-   ONLY button, with the two tracks below it as two equal columns — track prices
-   as small facts, no strikethrough, no badge, no `featured` flag, no winner. Do
-   not reintroduce a struck-through "before" price; the only ones that ever
-   existed here were invented.
+   flashing discounts.
+   **⚠️ TWO PARTS OF THIS RULE WERE REVERSED ON 2026-08-04, BY THE PEOPLE WHO SET
+   THEM.** Read both before touching the offer panel; an agent that "restores"
+   either one is overruling the client and the owner.
+   - **A STRUCK-THROUGH PRICE IS NOW ALLOWED, ON THIS PANEL, WITH HER NUMBERS.**
+     This rule used to end "do not reintroduce a struck-through 'before' price;
+     the only ones that ever existed here were invented" — and that clause is the
+     whole reason it existed. ₪690 and ₪490 are **Pnina's own**, given on the
+     2026-08-03 call, and she asked for the ladder herself after seeing the one
+     on Daniel's `yarin-landinpage`. A line through a number a person really
+     charges is a disclosure; the ban was about fiction.
+     It still may not become a discount: **no red, no "%", no היה/עכשיו, no
+     countdown, no capacity claim.** The panel it was ported from carries
+     "ל-10 הראשונים החודש" and "נשארו מעט מקומות לחודש הזה" — NEITHER came across
+     and neither may.
+   - **THE OFFER PANEL'S GLOW MAY LOOP. THE PRICES MAY NOT.** Daniel asked
+     directly why the glow could not breathe forever the way Yarin's does
+     (2026-08-04). It can, and `offer-panel-breathe` in globals.css does. A slow
+     box-shadow breath on a container that paints no type names no deadline and
+     claims no scarcity. What stayed banned is Yarin's `.price-pulse`, which
+     scales the struck prices up and down on a timer — that IS the mechanic this
+     rule is about. ⚠️ The glow obeys the accessibility switch and carries no
+     `!important` (rule 5); Yarin's `!important`s straight through reduced motion
+     and that is not permitted here.
+   The offer (`OffersSection`) is now the free שיחת היכרות **alone** — one panel,
+   the price ladder, one button. **The two tracks left the home page** at her
+   request (*"the page sells the CALL, and she sells the tracks on the call"*)
+   and live on `/offers`, which is `noindex`, out of the sitemap and unlinked.
+   ⚠️ That page is still a PUBLIC URL — `noindex` is not access control. Nothing
+   private goes on it.
+   **A CTA now follows every section** (`SectionCta`, seven of them, all gold).
+   That is Pnina's instruction and Daniel confirmed all seven loud. It is not the
+   pattern this rule bans, and the argument is written out at the head of that
+   component: they all offer the same free call, none claims a deadline, none
+   moves, and the wording changes down the page. ⛔ The moment one of them gains
+   a timer or a counter it becomes the thing this rule forbids.
    **That panel — and ONLY that panel — may be loud (Daniel, 2026-07-29):** warm
    gold wash, a hot gradient CTA, "ללא עלות" set larger than anything in the
    section but its h2, and a one-time entrance where the ₪490 lands, a gold
@@ -229,6 +257,24 @@ with a version bump and a `CHANGELOG.md` entry in the same commit.
   panel's switch, off `data-a11y-reduce-motion` — plus the doomed
   `?motion=force` override, and must stay in step. Neither reads the device's
   `prefers-reduced-motion` setting; see rule 5.
+- **⚠️ THERE ARE NO SECTION EYEBROWS, AND NO BLACK (both 2026-08-04, Pnina).**
+  Two sweeps landed in 0.21.0 and both are easy to undo by accident:
+  · The small pill-with-a-dot above every section heading is **deleted**, not
+    unused — the `Eyebrow` component, the `eyebrow` prop on `SectionHeading` and
+    `PageHero`, and all 20 `eyebrow` / `heroEyebrow` keys. She called them
+    *"AI-generated looking small circle things"* and she is right: each one
+    restated the heading beneath it in fewer words. If a section seems to need a
+    word above its heading, the heading is not doing its job.
+  · **No black anywhere.** `--cta-ink` is `#1d353f` — her Deep Ocean at L 18%,
+    not a near-black — and it is also `--panel-ink`, the one dark ink on all her
+    light surfaces (5.06:1 on the darkest gold stop, 8.77 on Oyster, 5.69 on
+    Mist). The process animation's overlay is `rgba(38,70,83,0.68)`, her hex at
+    the same alpha the brown-black had. White ink on gold is NOT an alternative:
+    it measures 2.27:1.
+  · Her two card panels are `--panel-oyster` / `--panel-mist`. ⚠️ **Gold is the
+    BUTTON colour and nothing else may claim it** — gold cards beside gold
+    buttons read as giant buttons, which is why the audience grid uses her cream
+    and her silver instead.
 - `src/config/` — `site.ts` (identity, all the PLACEHOLDERs) and `navigation.ts`.
 - `src/content/` — structure only, matched by index to `messages/he.json`.
   **`media.ts` is the single registry of every image/video the client owes**;

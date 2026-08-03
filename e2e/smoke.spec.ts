@@ -103,14 +103,19 @@ test("every WhatsApp link carries the pre-filled message", async ({ page }) => {
   }
 });
 
-test("the mobile menu's WhatsApp row carries it too", async ({ page }) => {
-  // Only rendered below lg, so the desktop sweep above cannot see it.
+test("the header's WhatsApp link carries it on a phone", async ({ page }) => {
+  // ⚠️ REWRITTEN 2026-08-04. This used to open the mobile MENU and look for a
+  // row labelled "וואטסאפ" inside it. That row no longer exists: Pnina asked
+  // for the header's CTA to be replaced by her Instagram and WhatsApp icons and
+  // for the CTA to move into the menu, so the menu's social row went and the
+  // WhatsApp link is now an icon on the bar itself at every width.
+  //
+  // The guarantee is unchanged and is the thing worth keeping — a WhatsApp link
+  // that opens an EMPTY chat asks a woman in distress to compose the first
+  // message herself. It is only measured somewhere else now.
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
-  await page.locator("header button[aria-expanded]").click();
-  const row = page
-    .locator("header")
-    .locator('a[href*="wa.me"]')
-    .filter({ hasText: "וואטסאפ" });
-  await expect(row).toHaveAttribute("href", /\?text=/);
+  const link = page.locator("header").locator('a[href*="wa.me"]').first();
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", /\?text=/);
 });

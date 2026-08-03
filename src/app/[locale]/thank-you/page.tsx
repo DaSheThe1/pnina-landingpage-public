@@ -13,7 +13,7 @@ import {
   Star,
 } from "lucide-react";
 
-import { Eyebrow, PageShell } from "@/components/sections/marketing-sections";
+import { PageShell } from "@/components/sections/marketing-sections";
 import { ThankYouVideo } from "@/components/sections/thank-you-video";
 import { buttonVariants } from "@/components/ui/button";
 import { Reveal } from "@/components/ui/reveal";
@@ -85,11 +85,8 @@ export default async function ThankYouPage({
 
         <div className="relative mx-auto w-full max-w-6xl px-6 pb-20 pt-20 lg:pt-24">
           <div className="mx-auto max-w-3xl text-center">
-            <Reveal className="flex justify-center">
-              <Eyebrow>{t("eyebrow")}</Eyebrow>
-            </Reveal>
             <Reveal delay={80}>
-              <h1 className="mt-6 text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
+              <h1 className="text-[2.85rem] leading-[1.06] text-balance sm:text-[3.75rem]">
                 <span className="text-foreground">{t("titleLead")}</span>
                 <span className="text-shimmer">{t("titleHighlight")}</span>
               </h1>

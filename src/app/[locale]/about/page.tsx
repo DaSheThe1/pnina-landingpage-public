@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 
 import {
-  Eyebrow,
   FinalCta,
   PageShell,
   WhySection,
@@ -92,7 +91,6 @@ export default async function AboutPage({
       />
       <JsonLd data={personSchema()} />
       <PageHero
-        eyebrow={t("heroEyebrow")}
         title={
           <>
             {t("heroTitleLead")}
@@ -157,7 +155,7 @@ export default async function AboutPage({
                   />
                 </div>
               </div>
-              <Eyebrow>{t("storyEyebrow")}</Eyebrow>
+              <span className="block text-sm font-semibold tracking-[0.04em] text-heading-gold">{t("storyEyebrow")}</span>
               <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("storyTitle")}
               </h2>
@@ -222,8 +220,7 @@ export default async function AboutPage({
           <div className="flex flex-col gap-10">
             <Reveal>
               <div className="text-center">
-                <Eyebrow>{tVideo("eyebrow")}</Eyebrow>
-                <h2 className="mb-8 mt-5 text-[2.0rem] text-balance sm:text-[2.4rem]">
+                <h2 className="mb-8 text-[2.0rem] text-balance sm:text-[2.4rem]">
                   {tVideo("title")}
                 </h2>
                 <MessageVideo

@@ -1,8 +1,78 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ⛔ DARK-ONLY (2026-08-03) — the fifteenth line of the revert.
+   Tailwind's own `dark:` variant compiles to `@media (prefers-color-scheme:
+   dark)`, which this file no longer uses (see the banner below). A handful of
+   shadcn template variants still carry `dark:` utilities — `dark:bg-input/30`
+   on the select trigger, `dark:aria-invalid:ring-destructive/40` on buttons and
+   badges — and without this line those would be the ONE thing on the page still
+   waiting for an OS setting that nothing else reads.
+   Re-declaring the variant as the identity selector makes them always apply,
+   which on a dark-only site is what they mean.
+   TO REVERT: delete this line. */
+@custom-variant dark (&);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ⛔ THIS SITE IS DARK-ONLY. THERE IS NO LIGHT MODE. (2026-08-03)
+   ═══════════════════════════════════════════════════════════════════════════
+   Pnina, through Daniel: the site "doesn't speak luxury". Her reference is a
+   dark Hebrew VSL landing page — near-black background, one huge glowing
+   headline, light rays washing down from the top corners — and she then
+   confirmed the background herself in words: *"הרקע יהיה הטורקיז הכהה"*, the
+   background is the dark turquoise. That is her brand book's Deep Ocean
+   #264653 taken down into its own darker family, and it is HER instruction
+   rather than an interpretation of one.
+
+   HOW IT IS DONE, AND HOW TO UNDO IT — one line per block, both ways.
+   Dark used to live in `@media (prefers-color-scheme: dark)` blocks. Not one of
+   them was deleted, moved or merged. Every one of them now reads:
+
+       @media (prefers-color-scheme: dark), (prefers-color-scheme: light),
+              (prefers-color-scheme: no-preference) {
+
+   which is the complete set of values the feature can take, so it matches on
+   every device, always. There are FOURTEEN of them, and one of those fourteen
+   is a compound query that lost its scheme half instead:
+
+       @media (max-width: 767px) and (prefers-color-scheme: dark)   ← was
+       @media (max-width: 767px)                                    ← is
+
+   TO PUT LIGHT MODE BACK: search this file for `(prefers-color-scheme: light),`
+   and cut that clause and the `no-preference` one from all thirteen (they are
+   marked `DARK-ONLY` in a trailing comment so they are greppable), restore the
+   `and (prefers-color-scheme: dark)` on the phone rule marked the same way, and
+   set `color-scheme` on `:root` back to `light dark`. That is the whole revert.
+   It is ~14 lines, and it is why THE LIGHT VALUES IN `:root` WERE NOT DELETED:
+   they are still the fallback that the always-on dark block overrides, and
+   keeping them is the only thing that makes this cheap to reverse. Do not
+   "tidy" them away.
+
+   FOUR THINGS THE DARK-ONLY PASS ALSO DID, all inside those same blocks:
+     · re-based the dark canvas from the cream scheme's warm brown-black
+       (#1c1611) onto her Deep Ocean's hue, so `#264653` ITSELF is now the
+       ELEVATED surface — her logo card and her business card are that navy;
+     · moved the ink ladder onto her Pearl White / Mist Grey, and added her
+       four HEADING colours as measured tokens (`--heading-*` below);
+     · moved the filled CTA onto her Soft Gold with a deep-navy ink;
+     · added `.headline-neon` and `.hero-rays` (§12) — the glow and the corner
+       rays from her reference. NEITHER MOVES. Rule 4 in CLAUDE.md: nothing on
+       this page may loop while she reads, so both are static gradients and
+       this pass added no keyframes, no transitions and no `@media
+       (prefers-reduced-motion)` (rule 5: the OS signal is not read anywhere).
+
+   WHAT IS STILL LIGHT-MODE ONLY, and therefore now unreachable:
+   every ratio in the long header below is measured against the CREAM canvas.
+   Those numbers are a true record of how the light ladder was derived and they
+   are kept for the revert, but NOT ONE OF THEM DESCRIBES WHAT A VISITOR SEES.
+   The live table is at the top of the always-on dark block; that is the one to
+   trust and the one to keep current.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
 /* ───────────────────────────────────────────────────────────
    פנינה פאף — ליווי אישי | cream · gold · brown system  (v0.8.0)
+   ⚠️ HISTORY as of 2026-08-03 — this whole header describes the LIGHT scheme,
+   which no longer renders. See the dark-only banner above.
 
    The palette is Pnina's own: white, cream, beige, peach, gold, natural brown,
    silver-blue — read off the two brand references in
@@ -201,13 +271,15 @@
    ─────────────────────────────────────────────────────────── */
 
 :root {
-  /* Both schemes are supported, so let the UA pick form controls, scrollbars
-     and the default canvas to match. The page itself follows the OS/browser
-     preference via the dark block at the bottom of this file — there is no
-     in-page toggle, deliberately: a woman reading this on a phone in a dark
-     room should not have to find a switch, and a toggle would have to persist a
-     choice about this site in her browser storage. */
-  color-scheme: light dark;
+  /* ⛔ DARK-ONLY (2026-08-03). `light dark` until then — see the banner at the
+     top of this file, and put that value back as the last step of the revert.
+     This is not decoration: it is what tells the UA to draw form controls,
+     scrollbars and the pre-paint canvas dark, and what tells a reading-comfort
+     extension (Dark Reader) that the page is ALREADY dark so it stands down
+     instead of inverting a dark page on top of itself.
+     There is still no in-page light/dark toggle, deliberately, and now there is
+     nothing for one to switch between. */
+  color-scheme: dark;
 
   /* Surfaces — warm cream paper canvas; cards rise toward pure white, and the
      two tinted surfaces step down into beige and then soft peach.
@@ -323,7 +395,27 @@
      for the beige to come FORWARD, the honest lever is `--surface-2`, and the
      whole header table has to be re-measured with it. */
   --canvas: #fbf7f1;
-  /* ── OFF → 34% (0.17.0). THE PLATE CHANGED UNDER IT ──
+  /* ⚠️ EVERYTHING IN THIS COMMENT IS HISTORY AS OF 2026-08-03, and it is marked
+     rather than deleted for the same reason the footer numbers below it were
+     (see the ⚠️ block in `--paper-veil`'s note): it is a true record of how a
+     shipped number was derived, and the revert to light mode needs it.
+
+     THE PAPER VEIL DOES NOT RENDER ANY MORE. The site is dark-only (banner at
+     the top of this file), and the always-on dark block sets `--paper-veil:
+     transparent` — it always did, because the two schemes want opposite veils.
+     So the 40% cream below, and the whole "the plate's DARKEST pixel is what
+     binds" argument, describe a page nobody sees.
+
+     WHAT REPLACED IT, because the problem itself did not go away: after dark
+     the binding pixel is the plate's BRIGHTEST one, and that is paid for on the
+     plate instead of over it — `.sand-floor__plate` in §10 now carries a
+     `saturate(0.3) brightness(0.55)` grade at 34% opacity, so her photograph
+     recedes into the navy as deep-sea atmosphere. The arithmetic is written out
+     there. If you revert to light mode you get this veil back and that grade
+     comes off in the same commit; they are one system, exactly as this comment
+     already says about the veil and the plate's FLOOR.
+
+     ── OFF → 34% (0.17.0). THE PLATE CHANGED UNDER IT ──
      Daniel turned this OFF on launch night: "Just put the color that we have and
      if something is not really seen, well I will tell you myself. Stop
      remeasuring... Just use our photo." That was the right call FOR THAT PLATE.
@@ -807,6 +899,39 @@
      4.92:1 there. */
   --whatsapp-ink: #186c37;
   --whatsapp-ink-hover: #12522b;
+
+  /* ── HER FOUR HEADING COLOURS (Pnina, 2026-08-03) ──────────────────
+     *"והכותרות בצבעים הבהירים - Pearl white / Oyster Beige / Soft Gold / Mist
+     Grey"* — the headings are in the light colours, and she named all four.
+     Until this instruction Oyster Beige was the one colour in her brand book
+     with no job on the page at all (see the note beside `--canvas`: it sits
+     BELOW every beige this site had, so it could not be a light surface). It is
+     type now, and it is the second-brightest of the four.
+
+     They are a SET, not a ladder: any heading may take any of them, and the
+     choice is hers. Which is why they are four named tokens rather than one
+     `--heading` — a call site says which of her colours it is wearing, and
+     `?accent=` (§11) may not touch them, because they are her identity and not
+     an accent role.
+
+     THE VALUES HERE ARE THE LIGHT-MODE FALLBACK and are deliberately not her
+     hexes: on the cream canvas Pearl White is 1.00:1 and Oyster Beige 1.20:1,
+     i.e. invisible. Each therefore points at the already-measured light ink
+     that plays the same role, so the revert to light mode needs no new
+     measuring. Her four verbatim hexes are in the always-on dark block, which
+     is what actually renders. */
+  --heading-pearl: var(--foreground); /* light: #241c16, 15.71:1 on --canvas */
+  --heading-oyster: var(--brand-accent); /* light: #7d4b25, 6.77:1 */
+  --heading-gold: var(--gold-deep); /* light: #71531c, 6.66:1 */
+  --heading-mist: var(--teal-deep); /* light: #4b5865, 6.83:1 */
+
+  /* Light-mode fallbacks for her two card panels. Same reasoning as the four
+     heading colours above: her hexes are near-invisible on a cream canvas, so
+     the light revert reuses already-measured surfaces. The real values are in
+     the always-on dark block. */
+  --panel-oyster: var(--surface-2);
+  --panel-mist: var(--surface-3);
+  --panel-ink: var(--foreground);
 }
 
 @theme inline {
@@ -860,6 +985,16 @@
   --color-headline-accent: var(--headline-accent);
   --color-whatsapp-ink: var(--whatsapp-ink);
   --color-whatsapp-ink-hover: var(--whatsapp-ink-hover);
+  /* `text-heading-pearl` / `-oyster` / `-gold` / `-mist` — her four named
+     heading colours (see the note in `:root`). A heading picks one; nothing
+     else on the page may. */
+  --color-heading-pearl: var(--heading-pearl);
+  --color-heading-oyster: var(--heading-oyster);
+  --color-heading-gold: var(--heading-gold);
+  --color-heading-mist: var(--heading-mist);
+  --color-panel-oyster: var(--panel-oyster);
+  --color-panel-mist: var(--panel-mist);
+  --color-panel-ink: var(--panel-ink);
   --color-teal: var(--teal);
   --color-teal-deep: var(--teal-deep);
   --color-teal-soft: var(--teal-soft);
@@ -2260,160 +2395,368 @@
    reachable by any alpha of #e5dfd6 on this canvas.
    ═══════════════════════════════════════════════════════════ */
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   :root {
-    /* Declare, at OS-dark, that this page IS already dark.
+    /* ══════════════════════════════════════════════════════════════════
+       THE PALETTE THAT ACTUALLY RENDERS — HER DARK TURQUOISE (2026-08-03)
+       ══════════════════════════════════════════════════════════════════
+       This block used to be "the dark scheme". Since the dark-only pass
+       (banner at the top of this file) it is THE scheme: the media query above
+       matches on every device, so every value below is what a visitor sees, and
+       the cream table in the file header is history.
+
+       It was re-based in the same pass. The canvas was #1c1611, a warm
+       brown-black left over from the cream system; Pnina asked for
+       *"הרקע יהיה הטורקיז הכהה"* — the background is the dark turquoise — and
+       her brand book names it: **Deep Ocean #264653**, and THAT HEX IS THE PAGE.
+
+       ══ IT TOOK THREE GOES AND THE FIRST TWO WERE THE SAME MISTAKE ══
+       The dark-only pass shipped #0b181d — her hue at lightness 8%, chosen to be
+       "near-black" because the reference page she sent is near-black. Daniel:
+       *"the background is not blue like the deep ocean that we talked about."*
+       It went to #162d36, lightness 15%, visibly blue. Daniel again: *"I still
+       don't see #264653 in the entire background."* Both cuts were DERIVATIONS,
+       and what was asked for was the COLOUR. Pnina's instruction reads the same
+       way — *"הרקע יהיה הטורקיז הכהה"*, the background IS the dark turquoise —
+       and her brand book gives that colour a hex. There is nothing to derive.
+       ⛔ Do not take this back down toward black for contrast. Every rung below
+       is measured against her hex and every one of them clears.
+
+       ── THE SURFACE LADDER, AND THE INVERSION HER HEX FORCED ──
+       #264653 is lightness 24%, so the canvas is no longer the darkest thing
+       available. The three surfaces used to STRADDLE it, and there is no room
+       above it: measured, cards at L 30% put `--subtle-foreground` at 3.67:1 and
+       gold body type at 3.43:1 — both under AA, on the surface the lead dialog
+       sits on.
+
+       So the whole stack moved BELOW the canvas. The three surfaces keep their
+       existing ORDER and their existing spacing — `--surface-2` is still the
+       most recessed and `--surface-3` still the shallowest — they simply sit
+       under the page instead of straddling it. Panels read as wells cut into
+       her colour rather than as cards floating on it: a normal dark-UI pattern,
+       and the only arrangement in which every rung clears AA. This file has now
+       inverted a surface order twice for the same kind of reason; read the
+       value, not the name.
+
+         --canvas     #264653   HER Deep Ocean, verbatim   L 24%
+         --surface-3  #1d3944   the shallowest step down   L 19%
+         --surface-1  #18303a   cards                      L 16%
+         --surface-2  #11252c   the most recessed          L 12%
+
+       ── THE INK LADDER — HER PEARL WHITE TO HER MIST GREY ──
+       Measured (WCAG 2.x: sRGB → linear → 0.2126/0.7152/0.0722 → (L+0.05)
+       ratio) against the canvas and the three surfaces below it. THE CANVAS IS
+       THE WORST BACKGROUND ON THE SITE NOW — it is the lightest surface, so
+       every panel is roomier than the page behind it, which is the opposite of
+       how this ladder used to fail.
+
+                       canvas(#264653)   s3      s1      s2
+         --foreground         9.41     11.39   12.87   14.80
+         --foreground-soft    7.71      9.34   10.56   12.13
+         --muted-foreground   5.96      7.21    8.15    9.37
+         --subtle-foreground  4.75      5.75    6.50    7.47
+                               ← the floor, and the CANVAS sets it now, not a
+                                 card. Do not lighten the canvas or darken this.
+       On the three deep tints and the brand wash, same four inks:
+         --rose-soft  12.76 / 10.46 / 8.08 / 6.44
+         --gold-soft  13.06 / 10.71 / 8.27 / 6.60
+         --teal-soft  15.14 / 12.41 / 9.59 / 7.65
+         --brand-wash 14.54 / 11.93 / 9.21 / 7.35
+
+       ⚠️ `--subtle-foreground` IS HER MIST GREY LIFTED 2.2 POINTS OF LIGHTNESS,
+       and the reason is one number. #a8adb2 verbatim measures **4.46:1 on her
+       own canvas** — it misses AA for small type by 0.04, on the page itself.
+       Her hex is not wrong; it is a colour named for a brand book, not for
+       15.5px type on it. So her Mist Grey stays verbatim wherever it is
+       DECORATIVE or a HEADING (`--teal`, `--heading-mist`) and the body rung is
+       hsl(210 8% 70%), which clears at 4.75. Do not "restore her hex" here
+       without darkening the canvas, which is the one thing Daniel has now asked
+       twice not to do.
+
+       ── HER FOUR HEADING COLOURS, VERBATIM ──
+       *"והכותרות בצבעים הבהירים - Pearl white / Oyster Beige / Soft Gold / Mist
+       Grey"*. All four ship as her exact hexes, because a heading is LARGE text
+       and its floor is 3:1, which every one of them clears on every surface by
+       a wide margin. At BODY size two of them would not, and those two numbers
+       are the whole reason the ink ladder above and the gold ladder below are
+       derived rather than copied:
+
+                                     canvas    s3     s1     s2
+         --heading-pearl  #f8f7f4 hers   9.41  11.39  12.87  14.80
+         --heading-oyster #ddd4c7 hers   6.87   8.32   9.40  10.81
+         --heading-gold   #c7a86d hers   4.44 ✗ 5.38   6.07   6.98
+         --heading-mist   #a8adb2 hers   4.46 ✗ 5.40   6.10   7.01
+                                          ↑ ON HER OWN CANVAS her Soft Gold and
+       her Mist Grey miss AA for BODY-size type by 0.06 and 0.04. Fine as
+       HEADINGS (floor 3:1) and fine on every panel. At body size the derived
+       rungs exist for exactly this: --gold-deep (5.39) and
+       --subtle-foreground (4.75).
+                                                                ↑ under 4.5, so
+       fine as a heading (≥3:1) and NOT to be reached for at body size. The body
+       equivalents are `--gold-deep` (5.39) and `--subtle-foreground` (4.75).
+
+       ── THE ACCENT IS HER SOFT GOLD, AND THAT IS A ROLE SWAP ──
+       Her brand book's own website mockup puts a GOLD button on the navy, so
+       after the dark-only pass the two families trade places: her **Deep Ocean
+       is the surface family** (canvas → elevated → footer) and her **Soft Gold
+       is the accent family** (`--rose-*`, which is what `--cta-fill`,
+       `--halo`, `--accent-ink` and `--headline-accent` all resolve through).
+       The `--rose-*` keys still describe nothing — read the value, not the key;
+       that has been true since the pink left in 0.17.0.
+       Keeping the accent on `--rose-deep` rather than pinning `--cta-fill` to a
+       literal is what keeps §11 alive: every `?accent=` arm re-points
+       `--rose-deep`, so each of them still takes the button back.
+
+       ── WHAT THE WARM BROWN FAMILY BECAME ──
+       `--brand` was a lit amber (#c3873f) and its washes were brown. Brown on
+       navy is dirt, and brown is not in her brand book. `--brand` is her Soft
+       Gold now, so every `bg-brand/8…45` wash reads as gold light; the washes
+       that were deep BROWN tints (`--brand-wash`) are deep navies. Nothing on
+       this page is brown any more, deliberately.
+       ⚠️ `--brand-soft` is the one rung that did NOT go gold — it is a
+       background (the step panels' gradient end), and a light value there would
+       put a beige band under light ink. It is a mid ocean; see its own note.
+
+       Previous cut, for the revert and for comparison: canvas #1c1611, surfaces
+       #221b15 / #27201a / #352c25, ink #e5dfd6 / #d0cabf / #b8b0a5 / #a29a8f,
+       accent the lit sky-blue #98cde1 carrying #081216.
+       ══════════════════════════════════════════════════════════════════ */
+
+    /* Redundant with `:root`'s own `color-scheme: dark` since the dark-only
+     * pass, and kept anyway: it is one declaration, it costs nothing, and it is
+     * what this block has to say again the moment light mode comes back.
      *
-     * `:root` above says `color-scheme: light dark` — "I support both" — which
-     * is true but tells a reading-comfort extension nothing about the page it
-     * is currently looking at. Dark Reader treats a page that resolves to
-     * `color-scheme: dark` as natively dark and stands down; without this it
-     * inverts an already-dark page on top of itself, which is where the muddy
-     * washed-out result and the vanishing gradient headlines came from.
-     *
-     * This is NOT `darkreader-lock`, and we deliberately still do not ship one:
-     * a reader who needs her extension's exact settings keeps them. This only
-     * stops the extension doing work that is already done. */
+     * Why it matters at all: Dark Reader treats a page that resolves to
+     * `color-scheme: dark` as natively dark and stands down; without it the
+     * extension inverts an already-dark page on top of itself, which is where
+     * the muddy washed-out result and the vanishing gradient headlines came
+     * from. This is NOT `darkreader-lock`, and we deliberately still do not
+     * ship one: a reader who needs her extension's exact settings keeps them. */
     color-scheme: dark;
 
-    /* Surfaces — warm-dim brown paper. `--canvas` is the solid base.
-       Note the light-mode order is inverted here on purpose: `--surface-2` is
-       the SUNKEN surface (darker than the canvas) and `--surface-3` is the
-       ELEVATED one, because a tint that steps up from cream has to step down
-       from brown to keep meaning the same thing. */
-    --canvas: #1c1611;
-    /* ⚠️ THE VEIL IS OFF AFTER DARK, AND THIS LINE IS WHAT MAKES IT SO.
-       In light, `--background` is a 40% cream over the plate because the plate's
-       DARKEST pixel is what binds against dark ink. After dark the ink is white
-       and the binding pixel is the BRIGHTEST one, which is handled upstream
-       instead: `extend-sunset.mjs` grades the dark plates into a narrow band
-       (`DARK_LO`/`DARK_HI`) whose brightest pixel is already 6.24:1 against
-       `--subtle-foreground` unaided (6.24 desktop, 6.12 phone).
-       Without this line the dark scheme would INHERIT the light cream from
+    /* Surfaces — her dark turquoise. See the table above.
+       ⚠️ RAISED AND SATURATED FROM THE FIRST CUT. That was #0b181d
+       (hsl 197 44% 8%), chosen to match the near-black of the reference page
+       Pnina sent. Rendered, it reads as BLACK rather than as her colour, and her
+       instruction was a colour: *"או שהרקע יהיה הטורקיז הכהה"* — or the
+       background will be the DARK TURQUOISE. Near-black is arguably not either
+       of the two options she offered.
+       So the canvas is hsl(197 42% 15%): seven points of lightness up, visibly
+       blue, and only nine points below her Deep Ocean itself — which is what
+       keeps `--surface-3` reading as an ELEVATION of the same colour instead of
+       as a different colour. Every ratio in the table above was re-measured
+       against it and every rung still clears.
+       If it wants to go back toward the reference's black, this one value is the
+       lever and the table above has to be re-measured with it. */
+    --canvas: #264653; /* HER Deep Ocean, verbatim */
+    /* ⚠️ THE VEIL IS OFF, AND THIS LINE IS WHAT MAKES IT SO.
+       In light, `--background` was a 40% cream over the plate, because the
+       plate's DARKEST pixel is what binds against dark ink. Here the ink is
+       light and the binding pixel is the BRIGHTEST one, which is paid for on
+       the plate instead: §10 grades her photograph down to 34% opacity through
+       `saturate(0.3) brightness(0.55)`, and the worst pixel that leaves behind
+       (#151d1f) is 8.07:1 against `--subtle-foreground` unaided.
+       Without these two lines the page would INHERIT the light cream from
        `:root` — a 40% cream wash laid over every band of a dark page — which is
-       exactly the bug 0.17.0 shipped for about an hour. The two schemes want
-       opposite veils, so neither can be derived from the other. */
+       exactly the bug 0.17.0 shipped for about an hour. */
     --background: transparent;
-    /* Off after dark — see the note on this line above. The dark plates are
-       graded so their brightest pixel already clears the ink unaided, and a
-       CREAM sheet over a dark page is exactly the bug this token shipped with
-       for an hour. */
     --paper-veil: transparent;
-    --surface-2: #221b15; /* sunken */
-    --surface-1: #27201a; /* cards */
-    --surface-3: #352c25; /* elevated */
+    --surface-2: #11252c; /* the most recessed */
+    --surface-1: #18303a; /* cards */
+    --surface-3: #1d3944; /* the shallowest step down from the canvas */
 
-    /* Ink — warm off-white, tinted toward the brand hue like its light-mode
-       counterpart. Deliberately NOT white: #ffffff on this canvas glares, and
-       #e5dfd6 still clears 13.5:1. */
-    --foreground: #e5dfd6;
-    --foreground-soft: #d0cabf;
-    --muted-foreground: #b8b0a5;
-    /* The floor, and it is set by the ELEVATED surface, not the canvas: 6.45:1
-       on --canvas but 4.91:1 on --surface-3. Do not darken, and do not use it
-       below 14px on an elevated card. */
-    --subtle-foreground: #a29a8f;
+    /* Ink — HER Pearl White at the top, HER Mist Grey (lifted 2.2 points; see
+       the ⚠️ above) at the floor, with two rungs derived between them on the
+       same 205-210° hue so the ladder reads as one silver. */
+    --foreground: #f8f7f4; /* HER Pearl White, verbatim */
+    --foreground-soft: #dde2e4;
+    --muted-foreground: #c1c8cd;
+    --subtle-foreground: #acb3b9;
 
-    /* Brand. `--brand` is the CTA fill and every decorative wash. On paper it
-       is a natural brown carrying cream ink; here it inverts to a lit amber
-       carrying near-black warm ink, because a brown fill on a brown canvas is
-       a hole rather than a button. `--brand-accent` is the peach you set TYPE
-       in — the light-mode bronze seen by lamplight. */
-    --brand: #c3873f;
-    --brand-accent: #eab59d;
-    --brand-deep: #7a5738;
-    --brand-hover: #f3cdb8;
-    --brand-soft: #4a3524;
-    --brand-wash: #2a2018;
-    --brand-ink: #1d140d;
-    --brand-cta-hover: #d1954b;
+    /* HER FOUR HEADING COLOURS, verbatim. See the table above and the note in
+       `:root`. `?accent=` (§11) may not touch these. */
+    --heading-pearl: #f8f7f4;
+    --heading-oyster: #ddd4c7;
+    --heading-gold: #c7a86d;
+    --heading-mist: #a8adb2;
 
-    /* The cool note — her Mist Grey by lamplight, hue 210° at 12-16% saturation.
-       `--teal-deep` is the readable one, so it goes light; `--teal` stays
-       decorative. #90b7cf / #aecee2 / #22323d (hue 203° at 40-47%) until
-       2026-08-03: the family stopped being blue in light and it stops being blue
-       here too, or the two schemes would disagree about what it is.
-       ⚠️ It is separated from the accent by SATURATION now, not by hue — read
-       the note beside `--teal` in `:root`; it binds after dark as well. */
-    --teal: #a9b3bc;
-    --teal-deep: #c4ccd4;
-    --teal-soft: #272e35;
+    /* ── HER LIGHT PANELS, AND THE ONE INK THAT SITS ON ALL OF THEM ──
+       "למי זה מתאים" used to be eight identical translucent cards on the dark
+       canvas, and Pnina read the block as boring. She asked (2026-08-04, via
+       Daniel) for the cards to alternate between two BRIGHT backgrounds from her
+       own palette with DARK text on them — daylight panels on a dark page.
 
-    /* Metal — gold, split three ways here. See the header note above: `-deep`
-       is for type, plain `--gold` is decorative, `--gold-line` is hairlines
-       only and must never carry a glyph. All three moved to HER Soft Gold's hue
-       and saturation on 2026-08-03; the header note argues why dark does not get
-       to keep the brass. */
-    --gold: #e4c181; /* HER Soft Gold, lit — hue 39°, sat 65% */
-    --gold-deep: #ddcaa7; /* AMBER, the readable one, hue 39° at sat 44% */
-    --gold-soft: #372d1b; /* a deep tint: a BACKGROUND here, not a wash */
-    --gold-line: #c5a567; /* hue 39°, 5.82:1 on the elevated surface */
+       ⚠️ GOLD WAS THE FIRST CANDIDATE AND WAS DROPPED ON PURPOSE. Her Soft Gold
+       is now the fill of every CTA on this site, so eight gold panels beside
+       seven gold buttons would read as eight enormous buttons. Daniel agreed:
+       gold is the BUTTON colour and nothing else claims it.
 
-    /* Her Deep Ocean, by lamplight — hue-shifted with the light block on
-       2026-08-03 (184-186° turquoise → her 197°; see the long note in `:root`).
-       Nothing structural changed here, which is the point and is now the second
-       time it has been the point: the dark scheme was always an INVERSION of the
-       family rather than a copy of it, so moving the family moves this with it,
-       and the whole block is six values and four rgba()s each time.
+       So the two panels are her Oyster Beige and her Mist Grey — cream against
+       silver, obviously different from each other, and neither of them gold.
 
-       The readable rung goes LIGHT, exactly as `--gold-deep` does: --rose-ink is
-       10.52:1 on this canvas and 8.01:1 on the elevated --surface-3. --rose-soft
-       inverts from a pale wash to a deep tint, i.e. a BACKGROUND here (--rose-ink
-       on it is 8.02:1, --foreground 10.32:1, --subtle-foreground 4.92:1).
-       --rose-deep is the CTA fill and carries near-black ink (--cta-ink #081216
-       on it is 10.97:1), because a sea colour dark enough to hold cream ink is a
-       hole on this canvas. Hover goes LIGHTER here and darker in light; both read
-       as "pressed" on their own canvas.
-       Previous cut, for comparison: #94e0e6 / #7dcbd4 / #86e3ea / #16333b /
-       #8bdee4 / #aae9ee, preserved whole at `?accent=sea` in §11. */
-    --rose: #9ed1e5;
-    --rose-line: #7dbbd4;
-    --rose-ink: #94cfe6;
+       `--panel-ink` is her Deep Ocean taken from L 24% down to L 18% at the
+       same hue and saturation (197°, 37%). Her own #264653 measures 6.78:1 on
+       Oyster and only 4.40:1 on Mist Grey, which is under AA for the body copy
+       inside these cards; L 18% clears both with room:
+         --panel-ink #1d353f  vs  --panel-oyster #ddd4c7 ..... 8.77:1
+                              vs  --panel-mist   #a8adb2 ..... 5.69:1
+       It is also the ink on every gold CTA (see `--cta-ink`), which is what
+       keeps "no black anywhere" true — read the note there. */
+    --panel-oyster: #ddd4c7;
+    --panel-mist: #a8adb2;
+    --panel-ink: #1d353f;
+
+    /* Brand — the warm family, re-based off brown and onto her gold and her
+       ocean. `--brand` carries every decorative wash; `--brand-accent` is the
+       colour brand TYPE is set in, and it is gold now because she asked for
+       gold type. */
+    --brand: #c7a86d; /* HER Soft Gold — the wash colour, 7.96:1 on canvas */
+    --brand-accent: #d6ba85; /* gold TYPE: 9.65 / 9.22 / 8.24 / 5.39 */
+    /* The small badge with WHITE ink baked in. It was #2e5a6b, a clear step up
+       from the old near-black canvas and now within four points of lightness of
+       her #264653 — a badge you cannot see. It steps DOWN with the surfaces
+       instead: #fff8f2 on it is 12.99:1. */
+    --brand-deep: #16313b;
+    --brand-hover: #e3cc9d; /* hover for brand LINK TEXT — lighter after dark */
+    /* Still a deep tint, and it had to stay one: its real call sites are the
+       step panels' gradient END (`to-brand-soft/70`, marketing-sections
+       STEP_TINTS) and the scroll progress bar's tail, and a light value there
+       would put a beige band under light ink. Re-based off the brown and onto
+       her ocean. At the alpha the panel uses it composites to #21414e, on which
+       the ink ladder is 10.15 / 6.43 / 5.13 and `--gold-deep` 5.81. */
+    --brand-soft: #2a5263;
+    --brand-wash: #16262c; /* a deep navy panel: gold type on it is 8.33:1 */
+    --brand-ink: #11252c; /* on the gold fill: 6.98:1 */
+    --brand-cta-hover: #d6ba85;
+
+    /* The cool note — HER Mist Grey, verbatim, decorative. `--teal-deep` is the
+       readable silver and therefore goes LIGHT, like every `-deep` rung here.
+       ⚠️ It is separated from the accent by HUE now rather than by saturation:
+       the accent went gold (39°) and this is 210°, so the two can no longer be
+       confused whatever their saturation does. That retires the warning that
+       stood here and beside `--teal` in `:root` — which still binds in light
+       mode, so do not delete it there. */
+    --teal: #a8adb2; /* HER Mist Grey, verbatim — 7.99:1 on canvas */
+    --teal-deep: #bfc7cf; /* the silver for TYPE — 10.57 / 10.09 / 9.02 / 5.90 */
+    --teal-soft: #1b2128; /* a deep tint: a BACKGROUND here, not a wash */
+
+    /* Metal — HER Soft Gold, verbatim, plus the two rungs it cannot do itself.
+       `--gold` is the metal and stays decorative by role even though on this
+       canvas it happens to measure 7.96:1; `--gold-deep` is the one you may set
+       TYPE in, and it is her gold lifted 8 points of lightness so it also
+       clears on the elevated surface (5.39 against her hex's 4.44). */
+    --gold: #c7a86d; /* HER Soft Gold, verbatim */
+    --gold-deep: #d6ba85; /* the readable one — 9.65 / 9.22 / 8.24 / 5.39 */
+    --gold-soft: #242e2b; /* a deep tint: a BACKGROUND here, not a wash */
+    --gold-line: #bd9751; /* HAIRLINES ONLY — 6.63 / 6.33 / 5.66 / 3.70 */
+
+    /* ── THE ACCENT, AFTER THE ROLE SWAP: HER SOFT GOLD ──
+       Read the block at the top of this comment first. The family that was her
+       Deep Ocean is now the SURFACE family, and this — the accent, i.e. the
+       filled CTA, the panel light, the small accent label and the highlighted
+       headline line — is her Soft Gold. Her brand book's own website mockup is
+       a gold button on the navy; this is that.
+
+       The rungs, measured on the surfaces each one actually lands on:
+         --rose       #ddc392  DECORATIVE ONLY (this is `--halo`, the wash
+                               behind a whole panel). Never a glyph.
+         --rose-line  #c9ab73  HAIRLINES ONLY — a 1px rule, ≥3:1 everywhere.
+         --rose-ink   #d6ba85  the accent you may set TYPE in — 9.65 on canvas,
+                               7.66 on --rose-soft, 5.39 on --surface-3. It is
+                               deliberately NOT her #c7a86d: at label size on an
+                               elevated card that is 4.44 and misses AA by 0.06.
+         --rose-soft  #16313b  the wash --rose-ink sits on, and it is HER DEEP
+                               OCEAN rather than a deep gold — on a navy page a
+                               brown-gold tint is dirt, and gold-on-ocean is
+                               what her brand book shows. --rose-ink on it is
+                               7.30:1, --foreground 12.76, --subtle 6.44.
+         --rose-deep  #c7a86d  HER Soft Gold, verbatim: the filled CTA and,
+                               through `--headline-accent`, the headline.
+                               --cta-ink (#081216) on it is 8.35:1.
+         --rose-cta-hover #ddc392  the pressed/hover fill, 11.09:1 with the same
+                               ink. Hover goes LIGHTER on a dark canvas.
+       ⚠️ `--headline-accent` resolves through `--rose-deep`, so the headline is
+       her Soft Gold at 7.96:1 on the canvas — which is where headlines are. It
+       is 4.44 on the ELEVATED surface, so do not put a display heading on a
+       `--surface-3` card without moving it to `--gold-deep` (5.39) or to one of
+       the four `--heading-*` tokens. */
+    --rose: #ddc392;
+    --rose-line: #c9ab73;
+    --rose-ink: #d6ba85;
     --rose-soft: #16313b;
-    --rose-deep: #98cde1;
-    --rose-cta-hover: #b8dcea;
+    --rose-deep: #c7a86d;
+    --rose-cta-hover: #ddc392;
 
-    /* The accent roles, after dark. `--cta-fill` and `--halo` follow the tokens
-       above on their own (they are `var()`s), but the INK flips: the CTA inverts
-       from a deep terracotta carrying cream to a lit peach carrying near-black,
-       for the same reason the brown CTA always has (a dark fill on a dark canvas
-       is a hole, not a button). */
-    --cta-ink: #081216; /* 10.97:1 on --rose-deep, 13.05:1 on the hover fill */
-    --cta-edge: rgba(8, 18, 22, 0.5);
-    --cta-glow: rgba(152, 205, 225, 0.32); /* = --rose-deep #98cde1 */
-    --cta-edge-hover: rgba(8, 18, 22, 0.6);
-    --cta-glow-hover: rgba(152, 205, 225, 0.48);
+    /* The accent roles. `--cta-fill` and `--halo` follow the tokens above on
+       their own (they are `var()`s); the INK is declared here because it
+       inverts — a gold fill takes a dark label, for the same reason every
+       filled CTA on a dark canvas has: a dark fill on a dark canvas is a hole,
+       not a button. (White is not an option and never was: #fff8f5 on her Soft
+       Gold measures 2.27:1.)
 
-    --card: #27201a;
-    --card-foreground: #e5dfd6;
-    --popover: #27201a;
-    --popover-foreground: #e5dfd6;
-    /* Primary fully inverts — the default button becomes a light pill with
-       dark ink. The brand CTA does NOT follow it; it wears `--brand-ink`. */
-    --primary: #ede6db;
-    --primary-foreground: #221b15;
-    --secondary: rgba(229, 223, 214, 0.07);
-    --secondary-foreground: #e5dfd6;
-    --muted: #241d17;
-    --accent: #7a5738;
-    --accent-foreground: #fff8f2;
-    --destructive: #ff9d93;
-    --success: #c4ccd4; /* follows --teal-deep, and must keep following it */
+       ── ⚠️ IT IS HER DEEP OCEAN NOW, NOT A NEAR-BLACK (0.21.0) ──
+       This was #081216 — hsl(197 47% 6%), the canvas hue taken almost to black.
+       Pnina asked (2026-08-04, via Daniel) not to use black anywhere on the
+       site if it can be avoided, and with her Soft Gold now the fill of EVERY
+       CTA here, this token is the largest surface of near-black left.
+
+       #1d353f is her #264653 at the same hue and saturation (197°, 37%) taken
+       from L 24% down to L 18% — far enough to carry a label, close enough that
+       it is recognisably her colour rather than the absence of one. Measured on
+       every gold this ink ever lands on:
+         --rose-deep       #c7a86d (the fill) ........ 5.66:1
+         --rose-cta-hover  #ddc392 ................... 7.53:1
+         --cta-hot-from    #bf9e5f (darkest stop) .... 5.06:1
+         --cta-hot-to      #d0b47c ................... 6.43:1
+       The darkest stop sets the floor at 5.06 and clears AA with room. It is
+       the same value as `--panel-ink` on her two card colours, deliberately:
+       one dark ink on all her light surfaces, and no black anywhere. */
+    --cta-ink: #1d353f;
+    --cta-edge: rgba(29, 53, 63, 0.5);
+    --cta-glow: rgba(199, 168, 109, 0.42); /* = --rose-deep #c7a86d */
+    --cta-edge-hover: rgba(29, 53, 63, 0.6);
+    --cta-glow-hover: rgba(221, 195, 146, 0.55); /* = --rose #ddc392 */
+
+    /* ── AND THE FOOTER STAYS HER DEEP OCEAN, WHICH TAKES A LINE OF ITS OWN ──
+       `<footer>` is `bg-cta-fill` (site-footer.tsx, 0.18.0) because her brand
+       book anchors it on the navy and, at the time, `--cta-fill` WAS the navy.
+       The accent has moved to gold, and following it would have painted a
+       full-width gold slab across the bottom of a near-black page — which is
+       neither her brand book nor the reference she sent. The pair is
+       re-pointed, as a PAIR and measured together, on that one element. See the
+       `footer:where(.bg-cta-fill)` rule further down this file. */
+
+    --card: #18303a;
+    --card-foreground: #f8f7f4;
+    --popover: #18303a;
+    --popover-foreground: #f8f7f4;
+    /* Primary fully inverts — the default button becomes a pearl pill with
+       navy ink (16.86:1). The brand CTA does NOT follow it; it wears the
+       `--cta-fill` / `--cta-ink` pair above. */
+    --primary: #f8f7f4;
+    --primary-foreground: #11252c; /* 14.80:1 on --primary */
+    --secondary: rgba(248, 247, 244, 0.07);
+    --secondary-foreground: #f8f7f4;
+    --muted: #101f25;
+    --accent: #1d3944; /* shadcn component background… */
+    --accent-foreground: #f8f7f4; /* …and its label, 11.39:1 on it */
+    --destructive: #ff9d93; /* 9.03:1 on canvas, 5.04 on --surface-3 */
+    --success: #bfc7cf; /* follows --teal-deep, and must keep following it */
 
     /* ── The dividing hairline, and why 14% was not enough ──
-       This is the boundary between a card and what is behind it, and after dark
-       it was 14% of the ink — 1.45:1 against `--surface-1`, which on a phone at
-       night is an outline you have to hunt for rather than one you see. The
-       light scheme's 12% of #3a2e27 does the same job at a much bigger step in
-       perceived lightness, so the two schemes were never actually matched; the
-       dark one just looked plausible in a token list.
+       This is the boundary between a card and what is behind it, and it was
+       once 14% of the ink — 1.45:1 against `--surface-1`, which on a phone at
+       night is an outline you have to hunt for rather than one you see.
 
-       At 22% (measured, composited over each surface):
-         --border  vs --canvas #1c1611 ....... 1.82:1
-                   vs --surface-2 #221b15 .... 1.83:1  (sunken)
-                   vs --surface-1 #27201a .... 1.84:1  (cards)
-                   vs --surface-3 #352c25 .... 1.82:1  (elevated)
-       Up from 1.42 / 1.44 / 1.45 / 1.46:1 at 14%.
+       At 22% of her Pearl White, composited over each surface. ⚠️ RE-MEASURED
+       against the SHIPPED stack — the numbers that stood here were written for
+       the first dark cut, when the canvas was #0b181d and the surfaces sat
+       ABOVE it. The canvas is her literal #264653 now and the stack inverted,
+       so both the hexes and the ordering below had gone stale:
+         --border  vs --canvas   #264653 .... 1.84:1  (the floor)
+                   vs --surface-3 #1d3944 ... 1.92:1  (elevated)
+                   vs --surface-1 #18303a ... 1.97:1  (cards)
+                   vs --surface-2 #11252c ... 1.98:1  (sunken)
 
        ⚠️ THIS DOES NOT REACH 3:1, AND IT IS NOT SUPPOSED TO. WCAG 1.4.11 asks
        3:1 of a boundary that is the ONLY thing identifying a component — and no
@@ -2426,25 +2769,60 @@
        If a control ever appears whose only edge is `--border`, it needs
        `--input`, not a bigger number here.
 
-       `--border-subtle` stays where it is (1.17-1.20:1): it is the hairline
-       between two things that are already obviously separate, and lifting it
-       would put a visible grid over pages that are meant to read as paper. */
-    --border: rgba(229, 223, 214, 0.22);
-    --border-subtle: rgba(229, 223, 214, 0.07);
+       `--border-subtle` stays where it is: it is the hairline between two
+       things that are already obviously separate, and lifting it would put a
+       visible grid over pages that are meant to read as one dark surface. */
+    --border: rgba(248, 247, 244, 0.22);
+    --border-subtle: rgba(248, 247, 244, 0.07);
     /* SOLID, and the single most load-bearing value in this block: the form is
        what this site exists for, and an alpha-of-the-ink border disappears on
-       the elevated surface the lead dialog sits on. #83786f is the one value
-       that clears 3:1 against the canvas, the card, the sunken and the elevated
-       surface at once (4.16 / 3.73 / 3.95 / 3.17:1). Do not swap it back for an
-       rgba(). */
-    --input: #83786f;
-    --ring: #e0b771;
+       the elevated surface the lead dialog sits on. hsl(205 10% 58%) clears 3:1
+       against the canvas, the elevated surface, the card and the sunken surface
+       at once — re-measured on the shipped stack:
+         --canvas #264653 3.32:1 · --surface-3 4.02:1 · --surface-1 4.55:1 ·
+         --surface-2 5.23:1
+       Do not swap it back for an rgba(), and do not lighten the canvas — her
+       #264653 is the brightest thing this border ever sits on and is what sets
+       the 3.32 floor. */
+    --input: #89969f;
+    /* The focus ring is the gold now, because the CTA is. ⚠️ Re-measured on the
+       shipped stack — the pair here was written against the first dark cut's
+       #0b181d canvas: 5.39:1 on her #264653 canvas, 6.52:1 on the elevated
+       surface, 7.37:1 on a card. The canvas is the floor and clears 3:1 with
+       room to spare. Anything painted with `--cta-fill`
+       still rings in `--cta-ink` instead — see the `:where(.bg-cta-fill)` rule
+       further down. */
+    --ring: #d6ba85;
 
     /* Ink-tinted shadows vanish on a dark canvas; only real black separates. */
     --shadow-strong: rgba(0, 0, 0, 0.72);
 
-    --whatsapp-ink: #5fe08c;
+    --whatsapp-ink: #5fe08c; /* 10.78 / 10.29 / 9.20 / 6.01 */
     --whatsapp-ink-hover: #8bebae;
+  }
+
+  /* ⛔ THE DRIFTING COLOUR FIELD IS OFF (2026-08-03) ─────────────────────────
+     Daniel confirmed the site uses Pnina's exact palette — "the exact color
+     palette that she sent in the image", her five named hexes and nothing
+     invented. This layer is what stood between one of them and the screen.
+
+     It is five blurred blobs and a vignette laid over the whole page.
+     Every one of them was tuned for the cream scheme, and even after being
+     re-pointed onto her colours and cut three times it was still the thing
+     standing between her hex and the screen: with it on, the hero measured
+     rgb(43,60,66) against her rgb(38,70,83) — five points of red UP and
+     seventeen of blue DOWN. That is not her colour, and it is exactly the kind
+     of "close enough" she has now sent back twice.
+
+     There is nothing to tune here. A wash over a named brand colour changes the
+     named brand colour. It is off, and what a visitor sees on every band of
+     every route is #264653 itself.
+
+     TO REVERT: delete the `display: none` rule immediately below. Everything
+     else in this block is intact and already re-pointed onto her five colours,
+     so the field comes back in her palette rather than in the cream scheme's. */
+  .site-bg {
+    display: none;
   }
 
   /* ── The drifting colour field ──
@@ -2458,58 +2836,78 @@
      on the sand photograph below it (globals.css §10), and a near-opaque mass
      across the middle of the viewport is a lid on the picture rather than a wash
      over it. It still darkens the centre, which is where the type is — it just no
-     longer erases the ripples while doing it. */
+     longer erases the ripples while doing it.
+
+     ── 2026-08-03, THIRD REVIEW: AND THEN THEY GOT OUT OF THE WAY ──
+     Daniel: *"I still don't see #264653 in the entire background."* Part of
+     that was the canvas (fixed at the token), and part was this layer sitting
+     on top of it: blob 5 alone was a 55% darkening mass that pulled the hero to
+     rgb(43,60,66) — five points of red UP and thirteen of blue DOWN from her
+     hex, i.e. visibly greyer and warmer than the colour she picked. The whole
+     field is now weak enough that her hex is what a visitor actually sees, and
+     these are light on it rather than a lid over it. If you can clearly "see"
+     this layer, it is still too strong.
+
+     ── 2026-08-03: THE FIVE BLOBS ARE NOW HER FIVE COLOURS ──
+     They were the cream scheme's amber, peach, blue, bronze and warm brown, and
+     on her dark turquoise the warm ones read as nicotine. Each is now one of
+     her brand book's hexes at the alpha its predecessor carried: gold, oyster,
+     mist, gold-line and — for the knitting mass, blob 5 — her Deep Ocean itself
+     taken below the canvas, so the centre of the viewport settles INTO the sea
+     rather than being lifted out of it by a brown. Nothing here carries a
+     glyph; these are light, not surfaces. */
   .site-bg__blob--1 {
     background: radial-gradient(
       circle at center,
-      rgba(236, 186, 80, 0.15),
+      rgba(199, 168, 109, 0.045),
       transparent 68%
     );
   }
   .site-bg__blob--2 {
     background: radial-gradient(
       circle at center,
-      rgba(220, 152, 128, 0.16),
+      rgba(221, 212, 199, 0.035),
       transparent 68%
     );
   }
   .site-bg__blob--3 {
     background: radial-gradient(
       circle at center,
-      rgba(144, 183, 207, 0.13),
-      transparent 70%
+      rgba(168, 173, 178, 0.05),
+      transparent 72%
     );
   }
   .site-bg__blob--4 {
     background: radial-gradient(
       circle at center,
-      rgba(177, 120, 50, 0.14),
+      rgba(38, 70, 83, 0.1),
       transparent 70%
     );
   }
   .site-bg__blob--5 {
     background: radial-gradient(
       circle at center,
-      rgba(53, 44, 37, 0.4),
+      rgba(9, 26, 33, 0.16),
       transparent 72%
     );
   }
 
   /* The light-mode vignette pools WHITE light on the centre. Here that would
-     grey the whole page out, so the top pool becomes a faint amber bloom and
-     the bottom settles into black — the same "light falling on a surface" idea,
-     read from the dark side. */
+     grey the whole page out, so the top pool is a faint bloom of HER SOFT GOLD
+     and the bottom settles into black — the same "light falling on a surface"
+     idea, read from the dark side. The bloom was an amber (#d89e48) until
+     2026-08-03; it is her gold now, at the same alpha. */
   .site-bg__vignette {
     background: radial-gradient(
         130% 100% at 50% -10%,
-        rgba(216, 158, 72, 0.07) 30%,
+        rgba(199, 168, 109, 0.03) 30%,
         transparent 70%
       ),
       linear-gradient(
         to bottom,
         transparent 0%,
         transparent 70%,
-        rgba(0, 0, 0, 0.45) 100%
+        rgba(0, 0, 0, 0.1) 100%
       );
   }
 
@@ -2522,12 +2920,12 @@
 }
 
 @layer base {
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
     ::-webkit-scrollbar-thumb {
-      background: rgba(229, 223, 214, 0.16);
+      background: rgba(248, 247, 244, 0.16);
     }
     ::-webkit-scrollbar-thumb:hover {
-      background: rgba(224, 183, 113, 0.45);
+      background: rgba(199, 168, 109, 0.5);
     }
   }
 }
@@ -2536,48 +2934,38 @@
    that a `hover:shadow-[…]` utility on the same element still wins. Moving them
    out of the layer would silently kill every hover shadow in dark mode. */
 @layer utilities {
-  @media (prefers-color-scheme: dark) {
+  @media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
     .bg-dot {
       background-image: radial-gradient(
-        rgba(229, 223, 214, 0.08) 1px,
+        rgba(248, 247, 244, 0.08) 1px,
         transparent 1px
       );
     }
 
-    /* Cut right back on the dark canvas. A wash that reads as low sun on cream
-       reads as fog over brown, and the two page heroes were running at 0.3 and
-       0.4 — enough that the blur's outer edge showed as a seam across the top of
-       every sub-page. */
+    /* ⛔ OFF, with `.site-bg` above and for the same reason (Daniel, third
+       review): these are five more warm washes over her named hex, and on a
+       page whose whole point is #264653 they are the difference between her
+       colour and nearly her colour. The hero keeps ONE piece of light — the
+       corner rays in §12, which she asked for by name.
+       TO REVERT: put the gradients back; they are recorded in each rule. */
     .aurora-hero,
     .aurora-page {
-      background: radial-gradient(
-        circle at center,
-        rgba(216, 158, 72, 0.14),
-        transparent 62%
-      );
+      /* was: radial-gradient(circle at center, rgba(199,168,109,0.05), transparent 62%) */
+      background: none;
     }
 
     /* Half strength, later falloff — see the note on the light-mode rules. */
     .wash-warm {
-      background: radial-gradient(
-        circle at center,
-        rgba(220, 152, 128, 0.15),
-        transparent 72%
-      );
+      /* was: rgba(221,212,199,0.04) — her Oyster Beige */
+      background: none;
     }
     .wash-cool {
-      background: radial-gradient(
-        circle at center,
-        rgba(144, 183, 207, 0.1),
-        transparent 74%
-      );
+      /* was: rgba(168,173,178,0.05) — her Mist Grey */
+      background: none;
     }
     .aurora-cta {
-      background: radial-gradient(
-        circle at center,
-        rgba(216, 158, 72, 0.16),
-        transparent 82%
-      );
+      /* was: rgba(199,168,109,0.08) — her Soft Gold */
+      background: none;
     }
 
     /* `.text-gradient` needs no dark override any more — it is a flat
@@ -2585,12 +2973,16 @@
        `--rose-deep`, which already flips to the lit pink in this block. See the
        light-mode rule for why the clipped gradient was removed. */
 
+    /* The pale stop was #f0bcd6, a PINK, left behind by the 0.12.x scheme and
+       still sitting inside a sweep that had been turquoise and is now gold. It
+       is a pale gold now (#f3e6c8, 14.59:1 on the canvas — the sweep's lightest
+       point, and the one that has to stay legible). */
     .text-shimmer {
       color: var(--headline-accent);
       background: linear-gradient(
         100deg,
         var(--foreground) 18%,
-        #f0bcd6 42%,
+        #f3e6c8 42%,
         var(--headline-accent) 54%,
         var(--foreground) 80%
       );
@@ -2600,18 +2992,19 @@
       color: transparent;
     }
 
-    /* Frost, from the dark side. */
+    /* Frost, from the dark side. The tint follows `--surface-1`, so it is a
+       deep navy now rather than the cream scheme's warm brown. */
     .glass {
-      background: rgba(39, 32, 26, 0.72);
-      border: 1px solid rgba(229, 223, 214, 0.1);
+      background: rgba(21, 39, 46, 0.72);
+      border: 1px solid rgba(248, 247, 244, 0.1);
     }
 
     .ring-shine::after {
       background: linear-gradient(
         120deg,
-        rgba(229, 223, 214, 0.1),
-        rgba(207, 163, 58, 0.6),
-        rgba(229, 223, 214, 0.04)
+        rgba(248, 247, 244, 0.1),
+        rgba(199, 168, 109, 0.65),
+        rgba(248, 247, 244, 0.04)
       );
     }
 
@@ -2619,21 +3012,22 @@
        has nothing to darken, so a card is lifted by a hairline of light at its
        edge PLUS a deep black pool for depth. */
     .shadow-card {
-      box-shadow: 0 0 0 1px rgba(229, 223, 214, 0.05),
+      box-shadow: 0 0 0 1px rgba(248, 247, 244, 0.05),
         0 14px 36px -18px rgba(0, 0, 0, 0.8);
     }
 
+    /* The rim was the brass #ffd44f; it is her Soft Gold. */
     .glow-brand {
-      box-shadow: 0 0 0 1px rgba(255, 212, 79, 0.42),
-        0 10px 34px -12px rgba(207, 163, 58, 0.5);
+      box-shadow: 0 0 0 1px rgba(199, 168, 109, 0.5),
+        0 10px 34px -12px rgba(199, 168, 109, 0.5);
     }
 
     .anim-shimmer {
       background: linear-gradient(
         90deg,
-        rgba(229, 223, 214, 0.04) 0%,
-        rgba(229, 223, 214, 0.09) 50%,
-        rgba(229, 223, 214, 0.04) 100%
+        rgba(248, 247, 244, 0.04) 0%,
+        rgba(248, 247, 244, 0.09) 50%,
+        rgba(248, 247, 244, 0.04) 100%
       );
       background-size: 200% 100%;
     }
@@ -2729,14 +3123,26 @@ html[data-a11y-enhanced-contrast="true"] {
   --foreground-soft: #f5f5f5;
   --muted-foreground: #e1e1e1;
   --subtle-foreground: #cecece;
-  --brand: #d84f94;
-  --brand-accent: #ff9bc9;
-  --brand-deep: #8a1f58;
-  --brand-hover: #ffc3de;
-  --brand-soft: #5a1839;
-  --brand-wash: #260b18;
-  --brand-ink: #ffffff;
-  --brand-cta-hover: #a82c6d;
+  /* ⚠️ THIS FAMILY WAS STILL PINK UNTIL 2026-08-03 — #d84f94 / #ff9bc9 / … —
+     four accent moves after the pink left the shipped site. It was never
+     visible enough to catch, because `--brand-accent` is TYPE and it read as
+     "a bright colour" on black either way. On a gold-and-ocean site it is
+     wrong, and it is re-based here onto the same two colours the default
+     palette uses for these roles, at this palette's own saturation and
+     brightness. Measured on the black canvas / #080808 / #121212 / #1c1c1c:
+       --brand-accent #ffdc82   15.81 / 15.08 / 14.11 / 12.83
+       white on --brand-deep #0e3f52 .......... 11.34:1
+     Every one of those is far above the same pair in the default palette
+     (gold type on the navy canvas is 9.65:1), which is the only thing this
+     palette has to promise. */
+  --brand: #ffd98f;
+  --brand-accent: #ffdc82;
+  --brand-deep: #0e3f52;
+  --brand-hover: #fff0c8;
+  --brand-soft: #ffd98f;
+  --brand-wash: #10222a;
+  --brand-ink: #000000;
+  --brand-cta-hover: #e0c060;
   --teal: #3dd8cc;
   --teal-deep: #7ff5eb;
   --teal-soft: #123d39;
@@ -2763,6 +3169,21 @@ html[data-a11y-enhanced-contrast="true"] {
   --shadow-strong: rgba(0, 0, 0, 0.9);
   --whatsapp-ink: #8af5ae;
   --whatsapp-ink-hover: #c3ffd7;
+
+  /* Her four heading colours, at this palette's own brightness. Every one is
+     the brightest honest rendering of hers, and every one beats its default:
+       --heading-pearl  #ffffff  21.00:1  (default 16.86)
+       --heading-oyster #f4ece0  17.92:1  (default 12.31)
+       --heading-gold   #ffdc82  15.81:1  (default  7.96)
+       --heading-mist   #dfe6ea  16.64:1  (default  7.99)
+     …on the black canvas; on the elevated #1c1c1c they are 17.04 / 14.54 /
+     12.83 / 13.51, against 9.41 / 6.87 / 4.44 / 4.46 in the default palette.
+     A reader who asked for more contrast gets more of it in every one of the
+     eight pairs. */
+  --heading-pearl: #ffffff;
+  --heading-oyster: #f4ece0;
+  --heading-gold: #ffdc82;
+  --heading-mist: #dfe6ea;
 }
 
 html[data-a11y-enhanced-contrast="true"] .site-bg {
@@ -2806,6 +3227,42 @@ html[data-a11y-enhanced-contrast="true"] :focus-visible {
   --ring: var(--cta-ink);
 }
 
+/* ── THE FOOTER KEEPS HER DEEP OCEAN WHEN THE ACCENT LEAVES IT (2026-08-03) ──
+   `<footer>` is `bg-cta-fill` (site-footer.tsx). That was written in 0.18.0
+   when `--cta-fill` WAS her Deep Ocean, and it was the right call then: the
+   footer took her navy through a PAIR whose two halves are always re-pointed
+   and measured together, so no accent could ever ship a near-black label on a
+   sea-blue footer.
+
+   The dark-only pass moved the accent to her Soft Gold. Following it would have
+   painted a full-width GOLD SLAB across the bottom of a near-black page — which
+   is neither her brand book (whose logo card and business card are the navy)
+   nor the reference she sent (a dark VSL page that simply ends dark). The gold
+   belongs to the BUTTON.
+
+   So the pair is re-pointed on that one element, as a pair, and measured
+   together — which is the whole discipline the footer's own comment asks for,
+   applied one level lower. Nothing inside the footer changes: every glyph is
+   still `--cta-ink`, the inverted CTA is still `bg-cta-ink text-cta-fill`, and
+   `--ring` still follows `--cta-ink` through the rule above.
+
+     surface  --cta-fill = --surface-3  #264653   (HER Deep Ocean, verbatim)
+     ink      --cta-ink  = --foreground #f8f7f4   (HER Pearl White)
+       ink on surface, 100% .......... 9.41:1
+       ink on surface, 85% ........... 7.29:1   (the `text-cta-ink/85` copy)
+       inverted CTA: navy label on the pearl fill ......... 9.41:1
+       focus ring (pearl) on the surface ................. 9.41:1
+
+   ⚠️ THIS DECOUPLES THE FOOTER FROM `?accent=` (§11). That is deliberate — the
+   footer is her brand book's colour and not an accent role — but it does mean
+   the per-accent table in site-footer.tsx no longer describes this surface.
+   TO UNDO: delete this rule. The footer goes back to following `--cta-fill`
+   and the table there becomes true again. */
+footer:where(.bg-cta-fill) {
+  --cta-fill: var(--surface-3);
+  --cta-ink: var(--foreground);
+}
+
 /* Hebrew receives more room between words and lines, never forced spacing
    between letters, which can make Hebrew glyphs and marks harder to read. */
 /* ── The redesign's own tokens, in the high-contrast palette ──
@@ -2826,25 +3283,35 @@ html[data-a11y-enhanced-contrast="true"] :focus-visible {
    brief by taking colour away from the one reader who asked for more of it.
    Only the accent's HUE follows, because the accent has to agree with itself. */
 html[data-a11y-enhanced-contrast="true"] {
-  --rose: #8ad5f2;
-  --rose-line: #b8e6f8;
-  --rose-ink: #8ad5f2; /* 12.88:1 on the black canvas */
-  --rose-soft: #061b23;
-  --rose-deep: #b8e6f8; /* 15.71:1 on the black canvas */
+  /* ⚠️ THE ACCENT FOLLOWED THE ROLE SWAP (2026-08-03). It was a sky blue here
+     because the shipped accent was her Deep Ocean; the dark-only pass moved the
+     accent to her Soft Gold and the surface family to the ocean, so this
+     follows — the accent has to agree with itself, which is the same rule that
+     moved this block's hue on 2026-08-03's first pass. It stays the MOST
+     saturated, brightest rendering of the accent on the site, because a reader
+     who asked for more contrast should not also be asked to find a subtle
+     colour: every rung below beats its default counterpart outright
+     (fill 15.81 against 7.96, ink on the fill 14.66 against 8.35).
+     Previous cut: #8ad5f2 / #b8e6f8 / #8ad5f2 / #061b23 / #b8e6f8 / #ffffff. */
+  --rose: #ffd98f; /* 15.57:1 on the black canvas — decorative */
+  --rose-line: #ffe6b0;
+  --rose-ink: #ffdc82; /* 15.81:1 on the black canvas */
+  --rose-soft: #241a05; /* --rose-ink on it is 12.91:1 */
+  --rose-deep: #ffdc82; /* 15.81:1 on the black canvas */
   --rose-cta-hover: #ffffff;
   --gold-line: #f3c95e;
 
-  --cta-fill: #b8e6f8;
-  --cta-ink: #040e12; /* 14.59:1 on --cta-fill */
+  --cta-fill: #ffdc82;
+  --cta-ink: #120c00; /* 14.66:1 on --cta-fill, 19.47:1 on the hover fill */
   --cta-fill-hover: #ffffff;
   --cta-image: none;
   --cta-image-hover: none;
   --cta-edge: rgba(255, 255, 255, 0.7);
-  --cta-glow: rgba(138, 213, 242, 0.45);
+  --cta-glow: rgba(255, 217, 143, 0.45);
   --cta-edge-hover: rgba(255, 255, 255, 0.9);
-  --cta-glow-hover: rgba(138, 213, 242, 0.65);
-  --halo: #8ad5f2;
-  --accent-ink: #8ad5f2;
+  --cta-glow-hover: rgba(255, 217, 143, 0.65);
+  --halo: #ffd98f;
+  --accent-ink: #ffdc82;
 }
 
 /* The sand photograph goes, exactly as it does for `prefers-contrast: more`
@@ -3020,10 +3487,30 @@ html[data-a11y-emphasize-links="true"]
    sticky stage has occupied one viewport. Wide screens use the ordinary 400svh
    contract. Phones use the same four-view story measured in `lvh`, so Safari's
    collapsing toolbar cannot compress it after entry. */
+/* ── THE LETTERBOX BEHIND THE FRAMES: NEVER NAME A BADGE TOKEN AS A SURFACE ──
+   This is a 3600px-tall block and it was `var(--brand-deep)`. That token is
+   documented two hundred lines up as "the small filled badge that carries WHITE
+   ink" — it was never a surface, and it only ever worked here by coincidence: in
+   the cream scheme it happened to be a dark warm brown that sat close enough to
+   the sunset frames to pass. The dark-only pass re-based it onto her ocean at
+   badge lightness, and the coincidence broke loudly: a mid-teal slab #2e5a6b,
+   3600px tall, behind the animation and reading as the largest single colour on
+   the page.
+
+   `--canvas` is the correct value because this is the page continuing behind a
+   letterboxed clip, not a panel with an identity of its own. The frames are
+   untouched and always were — they are WebP images and nothing in this file
+   tints them; the grade that DOES apply to the media lives on
+   `.process-scrub__video` / `__poster` and is documented there.
+
+   The general rule, since this is the second token-role bug the dark-only pass
+   exposed (the other was `bg-foreground` as the hero video's letterbox): ink
+   tokens and surface tokens INVERT AGAINST EACH OTHER by design, so borrowing
+   one for the other's job is a bug that lies dormant until the scheme flips. */
 .process-scrub {
   height: 400svh;
   min-height: 1600px;
-  background: var(--brand-deep);
+  background: var(--canvas);
 }
 
 .process-scrub__stage {
@@ -3045,6 +3532,28 @@ html[data-a11y-emphasize-links="true"]
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+  /* Same grade as `.process-scrub__video` below, and it has to be the SAME
+     NUMBERS: this poster is what stands in for the clip before it is ready, on
+     Save-Data, and behind a failed video request. If the two drift apart the
+     section visibly flashes from one exposure to the other the moment the video
+     decodes — exactly the kind of thing nobody notices until it ships.
+     Change one, change both. The argument for this value is on
+     `.process-scrub__video`. */
+  /* ⛔ NO GRADE (Daniel, 2026-08-03): *"the process steps have a darker shade
+     on them, which they shouldn't have."* Her frames play at full strength.
+     A `brightness(0.55)` stood here to stop the section reading as a bright
+     block in the middle of her deep-ocean page. That trade is his to make and
+     he has made it: her artwork over a tidy page.
+     ⚠️ The cost is real and is not a CSS problem — her footage is a bright peach
+     sunset (mean rgb(215,175,145) measured over its own poster) and the page is
+     #264653, so this section is now the one light band on a dark site. If that
+     reads wrong, the honest fix is a REGRADE pass over `public/motion/pearl/`,
+     not a runtime filter, and it should wait until Pnina says whether the
+     section survives at all.
+     ⚠️ This value and the one on the other of `.process-scrub__poster` /
+     `.process-scrub__video` must ALWAYS match, or the poster and the first
+     video frame disagree and the section flashes when the clip decodes. */
+  filter: none;
 }
 
 :root[data-save-data="false"]:not([data-a11y-reduce-motion="true"])
@@ -3059,6 +3568,85 @@ html[data-a11y-emphasize-links="true"]
 .process-scrub__video {
   z-index: 1;
   opacity: 0;
+  /* ── GRADED INTO THE DARK PAGE (0.19.0) ──
+     This footage is a bright peach sunset: measured over every pixel of its own
+     poster, mean rgb(215,175,145) on desktop and rgb(196,150,118) on mobile.
+     That was right when the site was cream. On the near-black canvas Pnina asked
+     for it was a full-screen LIGHTBOX in the middle of the page — you scroll out
+     of a dark hero into a blazing peach whiteout and back into dark, which is
+     the one thing a dark page cannot survive.
+
+     Done as a filter rather than by regrading the files, deliberately:
+       - the MP4s are 8.1MB + 3.7MB. Re-encoding bakes in a taste decision that
+         this client has already reversed twice, costs every visitor a fresh
+         download, and is a lossy pass over her own artwork;
+       - a filter is GPU-composited, costs nothing measurable even while the clip
+         is being scrubbed, and reverts by deleting three lines;
+       - it also keeps `public/motion/pearl/` byte-identical to what she signed
+         off, which matters if she ever wants the bright version back.
+
+     The numbers: brightness trims the sun, saturate pulls the orange back toward
+     the page's blue-grey without going monochrome (her shell and pearl still
+     read), and the slight contrast lift stops the whole thing turning to mud.
+     The overlay panels are translucent DARK cards with light type, so darkening
+     what is behind them only increases the contrast of the copy on top — this
+     grade cannot make the text harder to read, and measurement confirmed it.
+
+     ⚠️ THE SATURATE AND CONTRAST STEPS CAME BACK OFF, AND THE BRIGHTNESS STAYED.
+     The full grade was `brightness(0.42) saturate(0.55) contrast(1.08)`, and the
+     `saturate` was the wrong half of it: pulling her peach toward the page's
+     blue-grey is tinting HER ARTWORK to match the page, which is a different act
+     from dimming it. Her sunset should still be her sunset.
+     Brightness alone is the honest version — the frames stay her colours, they
+     are simply lit like the rest of a dark page, so scrolling into the section
+     is no longer walking from a dark room into full sun.
+     Removing the grade entirely was tried and is worse than either: at full
+     strength this is a peach whiteout in the middle of a #264653 page.
+     If the section survives Pnina's review, the RIGHT fix is a regrade pass over
+     `public/motion/pearl/` rather than a runtime filter — but nothing should be
+     re-encoded until she has decided whether the section stays at all.
+     ⚠️ This value and the one on `.process-scrub__poster` above must ALWAYS
+     match, or the poster and the first video frame will not agree and the
+     section visibly flashes the moment the clip decodes. */
+  /* ⛔ NO GRADE (Daniel, twice): *"the section of the animation has like that
+     blue filter on top of it, which I don't think we want"* and then *"I still
+     see the dark filter on top of our animation."*
+     It was `brightness(0.42) saturate(0.55) contrast(1.08)` and then
+     `brightness(0.55)`; both are the same idea — dim her footage so it stops
+     being a lightbox in the middle of a #264653 page.
+
+     ⚠️ SETTLED AT BRIGHTNESS ONLY. Three values have been tried here and the
+     middle one is right:
+       `brightness(0.42) saturate(0.55) contrast(1.08)` — the `saturate` pulled
+         her peach toward the page's blue-grey, which is TINTING HER ARTWORK to
+         match the page rather than dimming it. Her sunset should stay her
+         sunset. Wrong.
+       `none` — her footage is a bright peach sunset (mean rgb(215,175,145) on
+         its own poster) against her deep ocean, so the section becomes a
+         whiteout you scroll into and out of. Also wrong.
+       `brightness(0.55)` — her colours, her artwork, simply lit like the rest
+         of a dark page. Shipped.
+     If the section survives Pnina's review, the RIGHT fix is a regrade pass over
+     `public/motion/pearl/` rather than a runtime filter — but nothing should be
+     re-encoded until she has decided whether the section stays at all.
+     ⚠️ This value and the one on `.process-scrub__poster` must ALWAYS match, or
+     the poster and the first video frame disagree and the section flashes the
+     moment the clip decodes. Never change one without the other. */
+  /* ⛔ NO GRADE (Daniel, 2026-08-03): *"the process steps have a darker shade
+     on them, which they shouldn't have."* Her frames play at full strength.
+     A `brightness(0.55)` stood here to stop the section reading as a bright
+     block in the middle of her deep-ocean page. That trade is his to make and
+     he has made it: her artwork over a tidy page.
+     ⚠️ The cost is real and is not a CSS problem — her footage is a bright peach
+     sunset (mean rgb(215,175,145) measured over its own poster) and the page is
+     #264653, so this section is now the one light band on a dark site. If that
+     reads wrong, the honest fix is a REGRADE pass over `public/motion/pearl/`,
+     not a runtime filter, and it should wait until Pnina says whether the
+     section survives at all.
+     ⚠️ This value and the one on the other of `.process-scrub__poster` /
+     `.process-scrub__video` must ALWAYS match, or the poster and the first
+     video frame disagree and the section flashes when the clip decodes. */
+  filter: none;
 }
 
 .process-scrub__video[data-ready] {
@@ -3074,13 +3662,22 @@ html[data-a11y-emphasize-links="true"]
    brightest possible video pixel it composites to about rgb(101,95,93):
    #fff8f5 copy is 5.97:1 and #ffdff0 step type is 5.10:1. Thirty-two percent of
    the pearl film still reads through it without making contrast frame-dependent. */
+/* ── THE OVERLAY IS HER DEEP OCEAN, NOT A BROWN-BLACK (0.21.0) ──
+   This panel floats over the pearl frames and used to be `rgba(28,20,17,0.68)`,
+   a warm near-black left over from the cream system. Pnina asked for it changed
+   to "the deep blue that she likes, in the same almost-transparent way"
+   (2026-08-04) — and the alpha is what makes that instruction precise, so it is
+   unchanged at 0.68 and the frames read through it exactly as much as before.
+   Only the hue moved: rgba(38,70,83) is her #264653 verbatim.
+   The shadow followed for the same reason — a pure-black drop under a turquoise
+   panel is the one place the old system was still visible. */
 .scrub-copy {
   z-index: 3;
   opacity: 1;
   color: #fff8f5;
   border-color: rgba(255, 248, 245, 0.24);
-  background: rgba(28, 20, 17, 0.68);
-  box-shadow: 0 18px 46px -28px rgba(0, 0, 0, 0.72);
+  background: rgba(38, 70, 83, 0.68);
+  box-shadow: 0 18px 46px -28px rgba(13, 26, 31, 0.72);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
   pointer-events: none;
@@ -3141,20 +3738,68 @@ html[data-a11y-emphasize-links="true"]
 /* The two sections WebKit uncovers at the process boundaries must be complete
    paint surfaces of their own on phones. Neither depends on the fixed sand,
    filtered colour field or a backdrop sample before its copy can appear. */
+/* ⚠️ THESE TWO BANDS CARRY THEIR OWN COPY OF THE PLATE, and that is worth
+   knowing before anyone tries to turn the photograph off site-wide: they do NOT
+   read the fixed `.sand-floor` layer, they paint the file themselves, because on
+   phones they have to be complete paint surfaces in their own right. So a
+   `display: none` on `.sand-floor` leaves the picture visible in exactly these
+   two places — immediately before and after the process section — which reads
+   as a bug rather than as a decision. If the photograph is ever switched off,
+   these two `background-image` URLs (portrait here, dark-portrait below) have to
+   go in the same commit. */
 @media (max-width: 767px) {
   section.process-boundary-surface.bg-background {
     background-color: var(--canvas);
-    background-image: url("/images/bg-sunset-portrait.webp");
+    /* ⛔ NO PHOTOGRAPH IN THESE TWO BANDS (2026-08-03, Daniel, twice):
+       *"The image before and after animation is still not our color."*
+       These are the two sections WebKit uncovers at the process boundaries, and
+       on phones they paint their OWN copy of the plate instead of reading the
+       fixed `.sand-floor` — which is why switching that layer off did not switch
+       these off with it, and why the picture survived in exactly the two places
+       he kept naming. They measure 1550px and 2064px tall, so between them they
+       are most of what a woman scrolls past around the animation.
+       Everything that made them complete paint surfaces of their own is kept;
+       only the picture is gone, and `background-color: var(--canvas)` above is
+       now the whole band — her #264653. TO REVERT: put this URL back
+       (`/images/bg-sunset-portrait.webp`) and the dark-portrait one below. */
+    background-image: none;
     background-position: center top;
     background-repeat: no-repeat;
     background-size: cover;
     background-attachment: scroll;
   }
 
+  /* ⚠️ `background-color`, NOT `background`. This rule exists to give the cards
+     at the process boundaries a SOLID paint surface on phones (no backdrop
+     filter, nothing sampling what is behind them), and it used to hard-code
+     `--surface-1` as well. That made it impossible for a card to choose its own
+     colour: the audience grid's `bg-panel-oyster` / `bg-panel-mist` are Tailwind
+     utilities and this unlayered rule outranks them, so all eight of Pnina's
+     light cards rendered as `--surface-1` and nobody could see why.
+     `background-color` as the fallback keeps the "solid surface" guarantee for
+     every card that does NOT set one, and lets a utility win where one does. */
   .process-boundary-card {
-    background: var(--surface-1);
+    background-color: var(--surface-1);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+
+  /* ⚠️ THE AUDIENCE CARDS HAVE TO RESTATE THEIR COLOUR HERE, and this is not
+     duplication for its own sake. The rule above is UNLAYERED, and Tailwind's
+     utilities live in `@layer utilities`, which loses to unlayered CSS no matter
+     how specific it is — so `bg-panel-oyster` on the card lost to
+     `--surface-1` and all eight of Pnina's light cards rendered dark on exactly
+     the phone width she reviews on. Measured, twice, after two cache clears
+     that were not the problem.
+     These two selectors are the same colours as the utilities on the elements
+     (globals.css `--panel-*`), in the same at-rule as the thing that was
+     overriding them. Change one, change the other. */
+  .process-boundary-card.bg-panel-oyster {
+    background-color: var(--panel-oyster);
+  }
+
+  .process-boundary-card.bg-panel-mist {
+    background-color: var(--panel-mist);
   }
 
   .process-founder-glow {
@@ -3178,9 +3823,9 @@ html[data-a11y-emphasize-links="true"]
   }
 }
 
-@media (max-width: 767px) and (prefers-color-scheme: dark) {
+@media (max-width: 767px) { /* DARK-ONLY: was `and (prefers-color-scheme: dark)` — see the banner at the top of this file */
   section.process-boundary-surface.bg-background {
-    background-image: url("/images/bg-sunset-dark-portrait.webp");
+    background-image: none; /* was bg-sunset-dark-portrait.webp — see above */
   }
 }
 
@@ -3942,20 +4587,28 @@ html[data-a11y-emphasize-links="true"]
 }
 
 /* ── The dark panel's wash is WEAKER, and that is not a taste call ──
-   `--gold` after dark is a near-#ffd700 metal, so the same 30% corner that reads
-   as a warm bloom on cream turns the top of this panel into a lit gold plate —
-   and "הצעד הראשון", which sits in exactly that corner in `--gold-deep`, was
-   measured at 4.17:1 on it. A fail, in the panel the whole page is aimed at. At
-   18% the same corner is 5.6:1 for that label and 7.5:1 for body copy, and it
-   still reads as the brightest thing in the section. If you brighten `--gold`
-   again, re-measure this corner before touching this number. */
-@media (prefers-color-scheme: dark) {
+   The same 30% corner that reads as a warm bloom on cream turns the top of this
+   panel into a lit gold plate, and "הצעד הראשון" sits in exactly that corner in
+   `--accent-ink`. It was 22% while the accent was the sea; the accent is HER
+   SOFT GOLD now (2026-08-03), so the corner and the label are the same colour
+   family and the margin closed. Re-measured over the panel's real base
+   (`bg-surface-1/90` over the canvas = #14262c):
+
+                       corner   "הצעד הראשון"   body   --subtle-foreground
+       halo 22%       #404942       4.99        8.71        4.40 ✗
+       halo 18%       #38423e       5.56        9.72        4.91   ← shipped
+
+   22% put the smallest ink on the site under AA inside the one panel the whole
+   page is aimed at. 18% clears every rung, and the corner still reads as the
+   brightest thing in the section. If you brighten `--halo` again, re-measure
+   this corner before touching this number. */
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   .offer-free-panel {
     background-image:
       radial-gradient(
         125% 155% at 100% 0%,
-        color-mix(in srgb, var(--halo) 22%, transparent) 0%,
-        color-mix(in srgb, var(--halo) 8%, transparent) 32%,
+        color-mix(in srgb, var(--halo) 18%, transparent) 0%,
+        color-mix(in srgb, var(--halo) 7%, transparent) 32%,
         transparent 60%
       ),
       radial-gradient(
@@ -4033,7 +4686,7 @@ html[data-a11y-emphasize-links="true"]
    gold (5.96:1 / 5.67:1 in light).
    Declared HERE rather than up with the panel override because it has the same
    specificity as the base rule and would otherwise lose to it. */
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   .free-anchor::before {
     background: radial-gradient(
       closest-side,
@@ -4044,43 +4697,93 @@ html[data-a11y-emphasize-links="true"]
   }
 }
 
-/* ── The value line ──
-   It stays a quiet fact: this is the number the page is giving away, not the
-   number it is selling. */
-.free-anchor__value {
-  font-weight: 500;
+/* ── THE PRICE LADDER ──
+   Three rungs down a column: two struck prices and then the payoff. Read the
+   header of `free-call-anchor.tsx` first — it records that the strikethrough
+   ban and the no-looping rule were both reversed here by the people who set
+   them, and exactly how far each reversal goes.
+
+   Every delay below is driven off `--rung`, the row index the component writes
+   on each rung, so adding a third price is a copy change and not a CSS change. */
+.free-anchor__ladder {
+  position: relative;
 }
 
-/* ── The arrow ──
-   Heavier than the process spine (2px against 1px) because this one is a
-   gesture, not a margin rule, and a whisper-thin line under a 37px word reads
-   as an accident. The drop shadow is a warm bloom rather than a shadow: it
-   makes the gold feel lit on the pale panel. */
-.free-anchor__arrow {
+.free-anchor__rung-label {
+  font-size: var(--text-sm);
+  line-height: 1.35;
+  color: var(--muted-foreground);
+}
+
+/* The number itself stays QUIET. It is a fact being disclosed on the way to
+   zero, not a headline: `--foreground-soft` rather than the gold, no display
+   face, and nowhere near the size of "ללא עלות" underneath it. A struck price
+   set large is a discount being sold. */
+.free-anchor__rung-price {
+  margin-top: 0.15rem;
+  padding-bottom: 0.1em;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--foreground-soft);
+}
+
+/* `fit-content` is load-bearing: it is what makes the X exactly as wide as the
+   digits instead of as wide as the column. */
+.free-anchor__rung-figure {
+  position: relative;
+  display: inline-block;
+  width: fit-content;
+}
+
+/* ⚠️ `width`/`height` MUST BE EXPLICIT PERCENTAGES, not `auto`. An <svg> is a
+   REPLACED element, so `inset: 0` alone does not stretch it the way it would a
+   <div> — `width: auto` resolves to the intrinsic 300x150 default and the X
+   draws its own size, hanging below and beside the digits instead of across
+   them. Measured that exact failure on the first cut. */
+.free-anchor__x {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* Gold, NOT red. Yarin's version strikes in coral, and a red X on a price is
+   the visual grammar of a discount ad; on this page it would also be the only
+   red on the site and the only colour outside Pnina's palette. Her Soft Gold
+   says "this number does not apply" without saying "hurry". */
+.free-anchor__x-stroke {
+  fill: none;
+  stroke: var(--gold);
+  stroke: url(#free-anchor-metal);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+/* ── The arrow BETWEEN two rungs ──
+   Pnina asked for the old single sweeping curve to be replaced by arrows
+   between the price steps. That is not only what she likes — it is what makes
+   the ladder parse, because the arrow is now the operator between two numbers
+   rather than decoration beside one.
+
+   The last rung's arrow is the one that points at "ללא עלות", so none of them
+   is redundant and none is hidden. */
+.free-anchor__step-arrow {
   display: block;
-  /* Sits in the gutter between the two lines, indented a little from the text
-     edge so the curve starts under the value rather than beside it. */
-  margin-block: 0.15rem -0.35rem;
-  margin-inline-start: 0.4rem;
-  /* The stroke would otherwise be clipped by the viewBox at the arrowhead. */
+  margin: 0.55rem 0 0.35rem;
+  margin-inline-start: 0.9rem;
   overflow: visible;
   filter: drop-shadow(
     0 1px 5px color-mix(in srgb, var(--gold) 45%, transparent)
   );
 }
 
-/* ── The arrow's METAL ──
-   The stroke is painted from an SVG `<linearGradient>` declared inside the arrow
-   itself (free-call-anchor.tsx), not from a flat token, because a flat fill can
-   only ever be a colour — the light-dark-light banding is the whole difference
-   between "a gold line" and "a line made of gold". `stroke: var(--gold)` stays
-   as the declaration underneath so that anything which cannot resolve the
-   gradient reference paints the bright gold instead of black (SVG's default
-   stroke is `none`, but a mis-resolved `url()` falls back to the previous
-   declaration in the cascade, which is the point of keeping it). It is
-   decorative and `aria-hidden`, so it is free to be as bright as it likes. */
-.free-anchor__line,
-.free-anchor__head {
+.free-anchor__step-line,
+.free-anchor__step-head {
   fill: none;
   stroke: var(--gold);
   stroke: url(#free-anchor-metal);
@@ -4089,11 +4792,36 @@ html[data-a11y-emphasize-links="true"]
   stroke-linejoin: round;
 }
 
-.free-anchor__line {
-  /* pathLength="1" on the element, so this is exactly one full stroke and the
-     resting state is the drawn line. */
-  stroke-dasharray: 1;
+/* ⚠️ THE DASH IS IN USER UNITS HERE, NOT NORMALISED — AND THAT IS DELIBERATE.
+   The 0.17.x curve used `pathLength="1"` with `stroke-dasharray: 1`, so the draw
+   was a plain 1 → 0 dashoffset independent of the rendered size. Carried onto
+   this straight 32-unit path it rendered NOTHING: the computed value came back
+   as `1px` and the pathLength normalisation was not applied to it, leaving a
+   1px dash with a 1px gap on a 2px stroke — invisible at this size. Measured on
+   the built page, twice.
+   The path is `M 12 2 L 12 34`, i.e. exactly 32 units, so the dash is 32 and the
+   draw is 32 → 0. ⚠️ If you change the `d` attribute in free-call-anchor.tsx,
+   change this number and the keyframe in the same commit. */
+.free-anchor__step-line {
+  /* ⚠️ NO `stroke-dasharray` AT REST, DELIBERATELY. The resting state has to be
+     the finished drawing (rule 1 of this file's motion contract: nothing is ever
+     hidden waiting for an animation), and a dash pattern at rest is one more way
+     for the line to come out invisible — which is exactly what happened twice
+     while this was being built. The dash exists ONLY in the `armed` and
+     `playing` rules below, where it is the mechanism for the draw. */
   stroke-dashoffset: 0;
+}
+
+/* "היום, בשבילך" — the one line that turns the ladder into a sentence. It sits
+   with the payoff, not with the rungs, so it takes the payoff's alignment. */
+.free-anchor__free-label {
+  width: fit-content;
+  margin-inline-start: auto;
+  margin-top: 0.5rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--gold-deep);
 }
 
 /* ── "ללא עלות" ──
@@ -4191,11 +4919,14 @@ html[data-a11y-emphasize-links="true"]
    bright end of the metal measures 11.06:1 on the elevated surface and the deep
    end 6.23:1, so this is the real thing — a pale highlight running through the
    word and out the other side. Same shape, same angle, no compromise needed.
-   Re-derived onto her Soft Gold's hue on 2026-08-03. Measured on the elevated
-   surface, new against old: 11.06 / 6.23 / 9.83 against #ffe6b0 / #d3a662 /
-   #f2d59d's 11.18 / 6.11 / 9.61. The word is the same word; only its metal is
-   antique now. */
-@media (prefers-color-scheme: dark) {
+   Re-derived onto her Soft Gold's hue on 2026-08-03, and re-measured against
+   the navy canvas in the dark-only pass. On the panel's lit corner (#38423e,
+   the worst background any of these stops can land on) the five stops measure
+   5.56 / 8.44 / 5.56 / 4.75 / 7.49; on `--surface-3` they are 5.39 / 8.17 /
+   5.39 / 4.60 / 7.26. Every one clears 4.5:1, and this is display type at
+   47.2px, whose floor is 3:1 — the margin is deliberate, because a metallic
+   gradient's darkest stop is the one a reader actually has to resolve. */
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   @supports (
     (-webkit-background-clip: text) or (background-clip: text)
   ) {
@@ -4270,7 +5001,7 @@ html[data-a11y-emphasize-links="true"]
   pointer-events: none;
 }
 
-@keyframes free-anchor-value-in {
+@keyframes free-anchor-rung-in {
   from {
     opacity: 0;
     transform: translate3d(0, 10px, 0);
@@ -4281,20 +5012,13 @@ html[data-a11y-emphasize-links="true"]
   }
 }
 
-/* The value receding as the gift lands — a change of PRESENCE, not of
-   legibility. It ends on `--muted-foreground`, the line's resting colour, which
-   is a measured 5.86:1; it never fades the number toward the background,
-   because ₪490 is a factual claim and not a decoration. */
-@keyframes free-anchor-value-recede {
-  from {
-    color: var(--foreground-soft);
-  }
-  to {
-    color: var(--muted-foreground);
-  }
-}
-
-@keyframes free-anchor-draw {
+/* The X stamping onto the number. It DRAWS (dashoffset) rather than fading, so
+   it reads as a hand crossing something out — and it arrives at a slight
+   over-scale that settles, which is the one gesture borrowed from the Yarin
+   panel. Borrowed ONCE: it plays with the sequence and then stops. Yarin's
+   `.price-pulse`, which throbs the struck price forever, did NOT come across —
+   see the header of free-call-anchor.tsx. */
+@keyframes free-anchor-x-draw {
   from {
     stroke-dashoffset: 1;
   }
@@ -4303,14 +5027,24 @@ html[data-a11y-emphasize-links="true"]
   }
 }
 
-/* The head arrives along the curve's own tangent, so it reads as the tip of the
-   line catching up rather than as a glyph appearing. Under `[dir="rtl"]` the
-   whole SVG is mirrored by the `data-icon` rule, which mirrors this translation
-   with it — the head still comes from behind. */
+@keyframes free-anchor-draw {
+  from {
+    stroke-dasharray: 32;
+    stroke-dashoffset: 32;
+  }
+  to {
+    stroke-dasharray: 32;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* The head arrives along the line's own axis, so it reads as the tip of the
+   stroke catching up rather than as a glyph appearing. This arrow is vertical,
+   so unlike the 0.17.x curve it needs no RTL mirroring at all. */
 @keyframes free-anchor-head-in {
   from {
     opacity: 0;
-    transform: translate3d(-5px, -5.7px, 0);
+    transform: translate3d(0, -7px, 0);
   }
   to {
     opacity: 1;
@@ -4413,17 +5147,25 @@ html[data-a11y-emphasize-links="true"]
    ⚠️ IF YOU EDIT A `from`/`0%` FRAME BELOW, EDIT THE MATCHING VALUE HERE. They
    are two halves of one design and a mismatch shows up as a jump on the first
    frame of the sequence. */
-.free-anchor[data-anchor="armed"] .free-anchor__value {
+.free-anchor[data-anchor="armed"] .free-anchor__rung-label,
+.free-anchor[data-anchor="armed"] .free-anchor__rung-price {
   opacity: 0;
   transform: translate3d(0, 10px, 0);
-  color: var(--foreground-soft);
 }
-.free-anchor[data-anchor="armed"] .free-anchor__line {
+.free-anchor[data-anchor="armed"] .free-anchor__x-stroke {
   stroke-dashoffset: 1;
 }
-.free-anchor[data-anchor="armed"] .free-anchor__head {
+.free-anchor[data-anchor="armed"] .free-anchor__step-line {
+  stroke-dasharray: 32;
+  stroke-dashoffset: 32;
+}
+.free-anchor[data-anchor="armed"] .free-anchor__step-head {
   opacity: 0;
-  transform: translate3d(-5px, -5.7px, 0);
+  transform: translate3d(0, -7px, 0);
+}
+.free-anchor[data-anchor="armed"] .free-anchor__free-label {
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
 }
 .free-anchor[data-anchor="armed"] .free-anchor__free {
   opacity: 0;
@@ -4444,53 +5186,75 @@ html[data-a11y-emphasize-links="true"]
   opacity: 0;
 }
 
-/* ── PLAYING: the beats ──
-      0 →  520ms   the value line lands
-    380 → 1180ms   the hairline draws toward the inline end, with weight
-   1100 → 1420ms   the arrowhead arrives along the tangent
-   1180 → 1900ms   "ללא עלות" arrives: up from 0.72, overshoots, settles
-   1250 → 1790ms   the value settles back to its resting tone
-   1560 → 2560ms   light crosses "ללא עלות", once
-   1900 → 2700ms   the button rises; its halo swells and falls back
-   2260 → 3160ms   one sheen across the button, and it is over
-   About 3.2 seconds. It runs on arrival, it runs again if the reader scrolls the
+/* ── PLAYING: the beats (two rungs) ──
+      0 →  480ms   ₪690 and its label land
+    320 →  750ms   the first stroke of its X draws, then the second
+    560 → 1140ms   the arrow under it draws, head last
+    420 →  900ms   ₪490 and its label land
+   1170 → 1500ms   its X, then its arrow, pointing at the payoff
+   1500 → 1920ms   "היום, בשבילך"
+   1620 → 2340ms   "ללא עלות" arrives: up from 0.72, overshoots, settles
+   2000 → 3000ms   light crosses "ללא עלות", once
+   2340 → 3140ms   the button rises; its halo swells and falls back
+   2700 → 3600ms   one sheen across the button, and it is over
+   About 3.6 seconds. It runs on arrival, it runs again if the reader scrolls the
    panel off the screen and back, and it NEVER runs on a timer — nothing here
    repeats while she is looking at it. See rule 4 in CLAUDE.md and the header of
    free-call-anchor.tsx for where that line is drawn. */
-.free-anchor[data-anchor="playing"] .free-anchor__value {
-  animation:
-    free-anchor-value-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both,
-    free-anchor-value-recede 540ms ease 1250ms both;
+/* Per-rung, off `--rung`: rung 0 starts at 0ms, rung 1 at 420ms, rung N at
+   N x 420ms. Everything after the ladder is timed off the LAST rung, which with
+   two rungs finishes at about 1500ms. */
+.free-anchor[data-anchor="playing"] .free-anchor__rung-label,
+.free-anchor[data-anchor="playing"] .free-anchor__rung-price {
+  animation: free-anchor-rung-in 480ms cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--rung) * 420ms) both;
 }
 
-.free-anchor[data-anchor="playing"] .free-anchor__line {
-  animation: free-anchor-draw 800ms cubic-bezier(0.45, 0, 0.25, 1) 380ms both;
+.free-anchor[data-anchor="playing"] .free-anchor__x-stroke {
+  animation: free-anchor-x-draw 300ms cubic-bezier(0.45, 0, 0.25, 1)
+    calc(var(--rung) * 420ms + 320ms) both;
 }
 
-.free-anchor[data-anchor="playing"] .free-anchor__head {
-  animation: free-anchor-head-in 320ms cubic-bezier(0.16, 1, 0.3, 1) 1100ms both;
+/* The second stroke lands a beat after the first, which is what makes it read
+   as two pen strokes rather than as an X fading in. */
+.free-anchor[data-anchor="playing"] .free-anchor__x-stroke--second {
+  animation-delay: calc(var(--rung) * 420ms + 450ms);
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__step-line {
+  animation: free-anchor-draw 420ms cubic-bezier(0.45, 0, 0.25, 1)
+    calc(var(--rung) * 420ms + 560ms) both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__step-head {
+  animation: free-anchor-head-in 260ms cubic-bezier(0.16, 1, 0.3, 1)
+    calc(var(--rung) * 420ms + 880ms) both;
+}
+
+.free-anchor[data-anchor="playing"] .free-anchor__free-label {
+  animation: free-anchor-rung-in 420ms cubic-bezier(0.16, 1, 0.3, 1) 1500ms both;
 }
 
 .free-anchor[data-anchor="playing"] .free-anchor__free {
-  animation: free-anchor-gift-in 720ms cubic-bezier(0.34, 1.45, 0.64, 1) 1180ms
+  animation: free-anchor-gift-in 720ms cubic-bezier(0.34, 1.45, 0.64, 1) 1620ms
     both;
 }
 
 .free-anchor[data-anchor="playing"] .free-anchor__free::before {
-  animation: free-anchor-shine 1000ms cubic-bezier(0.4, 0, 0.3, 1) 1560ms both;
+  animation: free-anchor-shine 1000ms cubic-bezier(0.4, 0, 0.3, 1) 2000ms both;
 }
 
 .free-anchor[data-anchor="playing"] .free-anchor__cta {
-  animation: free-anchor-cta-in 800ms cubic-bezier(0.16, 1, 0.3, 1) 1900ms both;
+  animation: free-anchor-cta-in 800ms cubic-bezier(0.16, 1, 0.3, 1) 2340ms both;
 }
 
 .free-anchor[data-anchor="playing"] .free-anchor__cta::before {
-  animation: free-anchor-cta-bloom 900ms cubic-bezier(0.16, 1, 0.3, 1) 1900ms
+  animation: free-anchor-cta-bloom 900ms cubic-bezier(0.16, 1, 0.3, 1) 2340ms
     both;
 }
 
 .free-anchor[data-anchor="playing"] .free-anchor__cta .btn-sheen::after {
-  animation: free-anchor-cta-sheen 900ms cubic-bezier(0.16, 1, 0.3, 1) 2260ms;
+  animation: free-anchor-cta-sheen 900ms cubic-bezier(0.16, 1, 0.3, 1) 2700ms;
 }
 
 /* ── The accent-aware CTA skin ──
@@ -4615,15 +5379,15 @@ html[data-a11y-emphasize-links="true"]
     0 18px 44px -14px color-mix(in srgb, var(--cta-hot-mid) 70%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   .cta-hot {
-    /* Hue-shifted with the rest of the family, same lightness spread.
-       Every stop with --cta-ink #081216 on it: from 9.97 · mid 10.97 · to 11.62
-       · hover-to 13.92. */
-    --cta-hot-from: #87c5dc;
-    --cta-hot-mid: #98cde1;
-    --cta-hot-to: #a2d2e4;
-    --cta-hot-hover-to: #c3e2ee;
+    /* Re-based onto her Soft Gold with the accent (2026-08-03), same lightness
+       spread the sea cut had. Every stop measured with --cta-ink #081216 on it:
+       from 7.46 · mid 8.35 · to 9.47 · hover-to 11.52. */
+    --cta-hot-from: #bf9e5f;
+    --cta-hot-mid: #c7a86d;
+    --cta-hot-to: #d0b47c;
+    --cta-hot-hover-to: #e0c795;
     --cta-hot-edge: color-mix(in srgb, var(--rose-line) 80%, transparent);
     --cta-hot-edge-hover: color-mix(in srgb, var(--rose-line) 95%, transparent);
   }
@@ -4747,6 +5511,40 @@ html[data-a11y-emphasize-links="true"]
    the shader code, because the flag is a hold and not a removal. The static plate
    is the whole layer for everybody, which is exactly the state reduced-motion and
    no-WebGL visitors were always in. */
+/* ── HER PHOTOGRAPH IS ON, AND TURNING IT OFF IS A CLIENT DECISION ──
+   A `display: none` was briefly added here and has been reverted. The argument
+   for it is real and worth keeping on the record: Pnina's instruction was
+   *"או שהרקע יהיה הטורקיז הכהה"* — "or the background will be the dark
+   turquoise" — and a turquoise page with a photograph hazing through it is
+   arguably neither of the two things she offered.
+   It is reverted anyway, because she asked for this picture full-bleed on
+   2026-08-02 and nobody has asked for it to go. Removing an asset the client
+   specifically requested is her call and Daniel's, not an inference from the
+   sentence next to it.
+   If they do want it gone, `display: none` on this selector is the whole change
+   and the plate, the four WebP files, `SandFloor` and the §10 machinery all stay
+   put. The honest middle setting is the `opacity` on `.sand-floor__plate` below,
+   which is what is actually tuned for this page today. */
+/* ⛔ THE PHOTOGRAPH IS OFF (2026-08-03, Daniel's 2nd and 3rd reviews) ─────────
+   *"Around before the animation and after the animation, you didn't put just
+   the blue color background. It's still that image."* and then *"I want to have
+   the exact hexes that she mentioned so she will stop complaining."*
+
+   A photograph under the page is a tint over #264653, and #264653 is the whole
+   brief. Pnina asked for this picture full-bleed on 2026-08-02 and then asked
+   for the dark turquoise on 2026-08-03; the second instruction is the later one
+   and it names a hex.
+
+   ⚠️ ONE LINE, AND IT IS HER OWN PICTURE, SO IT IS MEANT TO BE EASY TO REVERSE.
+   Delete the rule below and the photograph comes back already graded, exactly
+   as it was — the plate, the portrait plate, the four WebP files, `SandFloor`
+   and the whole of §10 are untouched and nothing else references them. The
+   honest middle setting, if she wants a hint of it back, is the `opacity` on
+   `.sand-floor__plate` rather than a half-deleted layer. */
+.sand-floor {
+  display: none;
+}
+
 .sand-floor {
   position: fixed;
   inset: 0;
@@ -4860,12 +5658,62 @@ html[data-a11y-enhanced-contrast="true"] body::before {
    stretching its own edge bands. That is honest at full-bleed and soft if you
    go looking. Replace all four the moment a real wide/tall render arrives; the
    paths do not change. */
+/* ── AND IT STEPS BACK INTO THE SEA (dark-only pass, 2026-08-03) ──
+   ⛔ THE PHOTOGRAPH IS NOT DELETED AND MUST NOT BE. She asked for it full-bleed
+   and it is still full-bleed; what changed is that the page behind it is now
+   her dark turquoise rather than cream, and a warm sunset at full strength over
+   a navy canvas is a photograph COMPETING with the headline instead of a room
+   for it to live in.
+
+   Two declarations, no new element and no blend mode (`.sand-floor` is
+   `isolation: isolate`, so a `mix-blend-mode` here would have nothing to blend
+   with — the plate is the bottom layer inside its own stacking context). What
+   the navy tint is, is simply the canvas showing through:
+
+     filter: saturate(0.3)    takes the sunset's orange most of the way to grey,
+                              so what is left is the SHAPE of the picture — the
+                              horizon, the shell, the light on the water — and
+                              not its temperature.
+     brightness(0.55)         trims the sun. This number came DOWN from 0.9 on
+                              2026-08-03 after the page was measured on screen:
+                              at 0.9 the rendered hero was rgb(44,46,43), a mid
+                              grey-olive, and she asked for near-black.
+     opacity: 0.34            lets `--canvas` through at 66%, which is what
+                              makes the whole frame read navy. Compositing is
+                              doing the hue shift; there is no `hue-rotate`,
+                              because rotating a sunset is unpredictable and
+                              this is not.
+
+   MEASURED, on the worst pixel in the frame. The dark plates' brightest pixel
+   is rgb(78,67,55) (both files, sampled over all 3.7M/2.1M pixels — linear L
+   0.0591 portrait, 0.0571 desktop). Through the grade, over `--canvas`, it
+   lands at #151d1f, and the ink ladder on it:
+
+                              plate at 100%   plate as shipped
+       --foreground              8.98            15.97
+       --muted-foreground        5.69            10.11
+       --subtle-foreground       4.54             8.07
+       --gold / --heading-gold   4.24 ✗           7.54
+
+   Her Soft Gold at body size is the pair that fails at full strength, which is
+   the direct cost of the accent moving onto a warm colour; the grade buys it
+   back with room to spare. This is the dark half of the argument the paper veil
+   makes in light — see `--background` — and the two are one system: if light
+   mode ever comes back, this grade comes off in the same commit.
+
+   TO PUT HER PHOTOGRAPH BACK AT FULL STRENGTH: delete the two declarations
+   marked below and re-run the audit (method: docs/12 §J6). To take it FURTHER
+   back, lower the opacity; at 0 the page is the flat navy, which is the other
+   half of what she offered ("either the picture, or the dark turquoise"). */
 .sand-floor__plate {
   position: absolute;
   inset: 0;
   background-image: url("/images/bg-sunset.webp");
   background-size: cover;
   background-position: center;
+  /* ↓ the two dark-only declarations — see the note above */
+  opacity: 0.34;
+  filter: saturate(0.3) brightness(0.55);
 }
 
 /* A phone in portrait gets its OWN framing — a real 9:16 plate rather than a
@@ -4893,7 +5741,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   opacity: 1;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   /* No opacity and no blend mode here either — the dark plate is graded to sit on
      the dark canvas the way the light one is graded to sit on cream, and the veil
      over it inverts with the scheme. */
@@ -4957,6 +5805,28 @@ html[data-a11y-enhanced-contrast="true"] body::before {
      ?accent=gold    the bright metal takes the CTA.
      ?accent=reset   forget the stored choice (back to her Deep Ocean).
 
+   ⚠️ AS OF THE DARK-ONLY PASS (2026-08-03) EVERY ARM RENDERS ITS **DARK** CUT,
+   AND ONLY ITS DARK CUT. Each arm below is written twice — once bare, once
+   inside a `@media (prefers-color-scheme: dark)` block — and that media query
+   now matches on every device (banner at the top of this file). The two halves
+   have the same specificity and the dark half comes later, so it wins outright.
+   The bare halves are therefore UNREACHABLE, and they are kept rather than
+   deleted for exactly the reason the light `:root` values are: they are half of
+   the one-line revert. Do not "clean them up", and if you edit an arm, edit its
+   DARK half or nothing will change on screen.
+   Two consequences worth stating plainly:
+     · the DEFAULT accent is her Soft Gold now, not the Deep Ocean this section's
+       preamble was written around — the ocean became the SURFACE family. Every
+       arm here still takes the button back, because they all re-point
+       `--rose-deep` and `--cta-fill` is `var(--rose-deep)`;
+     · the FOOTER no longer follows them. It pins her Deep Ocean on itself (see
+       `footer:where(.bg-cta-fill)`), so the per-accent footer table in
+       site-footer.tsx describes a surface that no longer changes.
+   `?accent=peach` and `?accent=pink` are still meaningful comparisons — they are
+   whole families, and their dark cuts are real renderings. `?accent=sea` is the
+   most useful one on this page, because it puts the 0.17.0 turquoise button back
+   on the navy for a side-by-side with the gold.
+
    ⚠️ NONE OF THESE ARMS RESTORE THE OLD GOLD OR THE OLD SILVER-BLUE, and that
    is correct rather than an oversight. Her Soft Gold and her Mist Grey are not
    accent roles — they are the site's metal and its one cool note — so §11 may
@@ -4981,7 +5851,9 @@ html[data-a11y-enhanced-contrast="true"] body::before {
    ACCENT ROLES ONLY: the filled CTA (`--cta-*`), the colour of warm light on a
    panel (`--halo`), the small accent label (`--accent-ink`) and the highlighted
    headline line (`--headline-accent`). It may NOT touch the ink ladder, any
-   surface, `--brand`'s washes or the gold hairline family. An accent that
+   surface, `--brand`'s washes, the gold hairline family, or the four
+   `--heading-*` tokens — those are her four named heading colours and they are
+   identity, not an accent role. An accent that
    repaints the paragraphs is a hue-rotated screenshot, not a design.
 
    Every value below is measured against the WCAG 2.x formula on the surface it
@@ -5025,7 +5897,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   --cta-hot-hover-to: #227586;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   :root[data-accent="sea"] {
     --rose: #94e0e6;
     --rose-line: #7dcbd4;
@@ -5076,7 +5948,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   --cta-hot-hover-to: #af4e36;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   :root[data-accent="peach"] {
     --rose: #f2c0aa;
     --rose-line: #e09f85;
@@ -5133,7 +6005,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   --cta-hot-hover-to: #9a2362;
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   :root[data-accent="pink"] {
     --rose: #e9a3c6;
     --rose-line: #d98bb2;
@@ -5200,7 +6072,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   --cta-hot-edge-hover: color-mix(in srgb, #f0c440 80%, transparent);
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   :root[data-accent="amber"] {
     /* The dark brass, so this arm's halo keeps inverting with the scheme exactly
        as it did while it read `var(--gold)`. */
@@ -5305,7 +6177,7 @@ html[data-a11y-enhanced-contrast="true"] body::before {
   );
 }
 
-@media (prefers-color-scheme: dark) {
+@media (prefers-color-scheme: dark), (prefers-color-scheme: light), (prefers-color-scheme: no-preference) { /* DARK-ONLY — see the banner at the top of this file */
   /* Gold, lit. The dark brass is #ffd44f, pinned here for the same reason the
      light one is, so again only the button and the halo move: ink #1d140d
      measures 12.76:1 on the middle stop and 7.15:1 on the darkest one the hover
@@ -5362,4 +6234,309 @@ html[data-a11y-enhanced-contrast="true"] body::before {
       transparent 72%
     );
   }
+}
+
+/* ── 12. THE NEON AND THE RAYS ───────────────────────────────────────────────
+   The two pieces of furniture Pnina asked for by pointing at a dark Hebrew VSL
+   landing page (2026-08-03): a headline that GLOWS, and diagonal shafts of
+   light washing down from the top corners. Both live here rather than in the
+   markup so a component only has to name a class.
+
+   ⛔ NEITHER OF THEM MOVES, AND THAT IS NOT NEGOTIABLE.
+   CLAUDE.md rule 4: nothing on this site loops while she reads — no throb, no
+   pulse, no timed sheen, no sweep. "Neon" here is a STATIC glow that simply is
+   there, which is also the safest reading of the word: a light that breathes is
+   pressure furniture on a page written for women in distress, and the free-call
+   panel's one-time entrance is the only loud thing on the site that was ever
+   granted an exception. So this section declares no `@keyframes`, no
+   `animation`, no `transition`.
+   Consequently it also needs no reduced-motion gate — but if you ever add one,
+   CLAUDE.md rule 5 binds: gate it on `:root[data-a11y-reduce-motion="true"]`,
+   the site's own switch, and NEVER on `@media (prefers-reduced-motion)`. The OS
+   signal is not read anywhere on this site and an agent that reinstates it is
+   overruling the owner.
+
+   ── 12a. `.headline-neon` ──
+   Put it on a heading that already carries its own colour utility; this class
+   sets NOTHING but the glow, so it composes with `text-headline-accent`,
+   `text-heading-pearl`, `text-heading-oyster`, `text-heading-gold` or
+   `text-heading-mist` without arguing with any of them. Currently on the hero
+   h1 (`marketing-sections.tsx`).
+
+   The glow colour is `--neon-glow`, which defaults to `--halo` — her Soft Gold
+   — so the halo stays gold whichever of her four light colours the letters
+   take. Override it on the element if a heading ever wants its own light.
+
+   ⚠️ THE GLOW IS A HALO AROUND SOLID, HIGH-CONTRAST LETTERS. IT IS NEVER A
+   SUBSTITUTE FOR CONTRAST. Measured as if it were not there, which is how a
+   glow has to be judged:
+
+       letters `--headline-accent` (#c7a86d) on --canvas ......... 7.96:1
+       letters `--heading-pearl`   (#f8f7f4) on --canvas ........ 16.86:1
+       letters `--heading-oyster`  (#ddd4c7) on --canvas ........ 12.31:1
+       letters `--heading-mist`    (#a8adb2) on --canvas ......... 7.99:1
+
+   And measured WITH it, at the worst case the stack can produce: the four
+   layers below composite to a theoretical peak alpha of 0.39 in the sub-pixel
+   ring hugging the stroke (1 − 0.82·0.87·0.91·0.945). Her gold at 39% over the
+   canvas is #514c3b, on which the gold letters still measure 3.68:1 and pearl
+   letters 7.6:1. The h1 is 25.6px bold at its smallest, i.e. LARGE text, whose
+   floor is 3:1 — so even the peak clears, and a quarter of an em out the halo
+   is under 15% and the letters are back above 6:1. The first shadow deliberately
+   has a real blur radius rather than 0: a zero-blur layer would put its full
+   alpha flat against the stroke, which is the one arrangement that could take
+   a glow under the floor.
+   If you raise these alphas, re-measure that peak. */
+/* ── THE CORE WENT PEARL AND THE HALO GOT LOUDER (2026-08-03, 2nd review) ──
+   Daniel, looking at the built page: *"what about the neon in the main
+   header?"* — i.e. it was not reading as neon. Two things were spending it, and
+   the second one is arithmetic rather than taste:
+
+     1. the halo was at 18/13/9/5.5%, tuned against a near-black canvas that no
+        longer exists — the canvas went up seven points of lightness in the same
+        review so it would read as her turquoise, and a glow costs exactly the
+        headroom the background gains;
+     2. the letters were gold and the halo is gold. **Gold on gold cannot make a
+        neon.** A neon is a bright core with coloured light around it; when the
+        core and the light are the same colour the effect is a smudge, and the
+        contrast goes with it. Measured on the new canvas at the OLD alphas:
+        gold letters against the glow's own peak are 2.56:1 — UNDER the 3:1
+        large-text floor. There was no setting of the alphas that fixed that
+        while the core stayed gold.
+
+   So the class now sets BOTH halves, and the core defaults to her Pearl White:
+
+     --neon-ink   letters, default `--heading-pearl` #f8f7f4
+     --neon-glow  the light, default `--halo` (her Soft Gold)
+
+   That is her reference exactly — a white headline glowing gold on a dark
+   page — and it is the only combination that lets the glow get LOUDER while
+   getting SAFER. Measured, the glow at its theoretical peak alpha (0.36, the
+   sub-pixel ring against the stroke): pearl letters 4.41:1, against gold's 2.6.
+   Undisturbed the letters are 9.41:1 on the canvas.
+   ⚠️ THE ALPHAS TRACK THE CANVAS, so they came back DOWN from 24/17/11/6.5%
+   when the canvas landed on her #264653: a glow costs exactly the headroom the
+   background gains, and at those alphas the peak is 0.47, which on her page
+   puts pearl letters at 3.96 instead of 4.41. Re-measure this peak in the same
+   commit as any canvas move.
+
+   ⚠️ IT OVERRIDES A COLOUR UTILITY ON PURPOSE. The hero h1 carries
+   `text-headline-accent`; this class is unlayered and Tailwind's utilities are
+   in `@layer utilities`, so this wins. That is deliberate — "neon" is a
+   treatment, not a tint, and it has to own its core — but it means the utility
+   on the h1 is now decorative. TO PUT THE GOLD CORE BACK for one heading, set
+   `--neon-ink: var(--headline-accent)` on the element and take the alphas back
+   down to the 18/13/9/5.5% recorded above; do not do one without the other. */
+.headline-neon {
+  --neon-glow: var(--halo);
+  --neon-ink: var(--heading-pearl);
+  /* Two ways of saying the same thing, and BOTH are needed. The `color`
+     declaration covers a heading with no colour utility on it; the
+     `--headline-accent` re-point covers the hero h1, which carries
+     `text-headline-accent` — that utility resolves through the token, and a
+     custom property set on an element beats the one inherited from `:root`
+     regardless of layer or specificity. This is the same trick
+     `:where(.bg-cta-fill) { --ring: … }` uses further up, and it is the only
+     one that works reliably against Tailwind's utility layer. It is scoped to
+     this element, so the CTA's own `--headline-accent` is untouched. */
+  --headline-accent: var(--neon-ink);
+  color: var(--neon-ink);
+  text-shadow:
+    0 0 0.16em color-mix(in srgb, var(--neon-glow) 17%, transparent),
+    0 0 0.45em color-mix(in srgb, var(--neon-glow) 12%, transparent),
+    0 0 1.1em color-mix(in srgb, var(--neon-glow) 8%, transparent),
+    0 0 2.4em color-mix(in srgb, var(--neon-glow) 5%, transparent);
+}
+
+/* ── 12a-ii. `.text-neon-gold` — the same idea at INLINE size ──────────────
+   Daniel, 2026-08-03: *"can we also make 'watch this video until the end' line
+   neon gold?"* That line ("צפי בסרטון עד הסוף") is a bold run inside the hero
+   paragraph, so it needs the glow at a size where the 3:1 large-text allowance
+   is only just available — it is 20.8px bold on a phone and 27.5px from `sm`,
+   and bold ≥18.66px is large text.
+
+   ⚠️ IT USES `--gold-deep`, NOT HER SOFT GOLD, AND THAT IS THE WHOLE DESIGN OF
+   THIS CLASS. Gold letters inside a gold glow lose contrast to their own halo —
+   the same failure that sent the h1's core to Pearl White. Measured on her
+   canvas at the alphas below (peak 0.229):
+       letters #c7a86d (her Soft Gold) ....... 4.44 undisturbed → 2.80 at peak ✗
+       letters #d6ba85 (--gold-deep) ......... 5.39 undisturbed → 3.40 at peak ✓
+   So the readable end of her gold family carries the letters and her Soft Gold
+   carries the light. It still reads as gold — it is her hue at her saturation,
+   eight points of lightness up — and it is the only version that clears.
+   The alphas are deliberately about half the headline's: a glow scales with the
+   type it is on, and a body-size run cannot spend what a 72px headline can.
+
+   ⚠️ NEEDS ONE CLASS IN THE MARKUP. Add `text-neon-gold` to that `<strong>` in
+   `marketing-sections.tsx`; it composes with whatever else is on it, and it
+   sets its own colour for the reason above. */
+.text-neon-gold {
+  --neon-glow: var(--halo);
+  --neon-ink: var(--gold-deep);
+  --headline-accent: var(--neon-ink);
+  color: var(--neon-ink);
+  text-shadow:
+    0 0 0.14em color-mix(in srgb, var(--neon-glow) 10%, transparent),
+    0 0 0.4em color-mix(in srgb, var(--neon-glow) 7%, transparent),
+    0 0 0.95em color-mix(in srgb, var(--neon-glow) 5%, transparent),
+    0 0 2em color-mix(in srgb, var(--neon-glow) 3%, transparent);
+}
+
+/* A reader who asked for more contrast asked for exactly the thing a glow
+   spends. Same treatment as the paper grain in §4 and the photograph in §10. */
+@media (prefers-contrast: more) {
+  .headline-neon,
+  .text-neon-gold {
+    text-shadow: none;
+  }
+}
+
+html[data-a11y-enhanced-contrast="true"] :where(.headline-neon, .text-neon-gold) {
+  text-shadow: none;
+}
+
+/* ── 12b. `.hero-rays` ──
+   Two fans of light falling from the top corners. The class is PURELY the
+   picture: position, size and `aria-hidden` come from the call site
+   (`marketing-sections.tsx` hangs it on `absolute inset-x-0 top-0 h-[34rem]`),
+   so this can be dropped onto any band that wants the same light without
+   inheriting a layout.
+
+   WHY `repeating-conic-gradient` AND NOT A STRIPED LINEAR ONE: a linear
+   gradient at an angle gives PARALLEL bars. Light from a point does not do
+   that — it diverges, so the shafts have to get wider as they get further from
+   their source. A conic gradient whose centre is just outside the top corner is
+   literally that geometry, and it costs one declaration. No images, per the
+   brief; nothing here is fetched.
+
+   Each fan is then masked with a radial that starts at its own corner, so the
+   rays are brightest where they are born and gone before they reach the middle
+   of the page — which is both how light behaves and what keeps them out of the
+   headline's way. `--ray-x` is the only thing that differs between the two
+   pseudo-elements; they are physical left/right on purpose, so the picture is
+   symmetrical and does not flip with `dir`.
+
+   CONTRAST. The bands peak at 11% of `--halo`: her gold at 11% over the canvas
+   is #21271f, on which `--headline-accent` measures 6.6:1 and `--foreground`
+   14.4:1. Where a ray crosses the neon's own halo the two stack to ~0.45
+   composite alpha, at which the gold h1 is 3.1:1 — still over the 3:1 large-text
+   floor, and only reachable at the very top of the section, because the mask
+   has taken the rays to nothing by the time the headline starts.
+   ⚠️ These are the numbers that decide the alphas. Do not brighten the bands to
+   make the effect "read" — widen them, or raise `--ray-span`. */
+/* ⚠️ THE RAYS STAY ON. A `display: none` was added here and is reverted.
+   Daniel asked for this effect by name — *"she wants the neon to be in the
+   header, like neon where it is sparkling"*, and *"we are replicating the same
+   neon and the same stuff that is on this website"* (2026-08-03). It is the one
+   piece of the reference page he named twice.
+   The argument for removing it was that it is borrowed furniture and the only
+   thing keeping her #264653 off the screen in the hero. Both halves are true and
+   neither is the point: he asked for a lit hero, not a flat one, and the mask
+   already takes the rays to nothing before the headline starts.
+   If it does come off, the class, the geometry and the measured alphas below
+   should be kept exactly as they are, the way this note was written to. */
+.hero-rays {
+  overflow: hidden;
+}
+
+/* ── `?rays=off` — THE SECOND OF THE TWO VERSIONS PNINA IS CHOOSING BETWEEN ──
+   Daniel, 2026-08-03: *"give me two versions: one with the sun's beams, the
+   other without the sunbeams. I will send her both and she will choose."*
+   So both are the same build and the same URL with one parameter:
+       (nothing)      the beams, as shipped
+       ?rays=off      no beams, flat #264653
+       ?rays=on       the beams again, and clears the stored choice
+   Sticky per browser, stamped pre-paint by `eval-motion-script.tsx`, because
+   painting the beams and then removing them in front of her is worse than
+   either version.
+   The class, the conic geometry, the masks and every measured band alpha above
+   are untouched — this is one declaration, so whichever version she picks is a
+   one-line change and the other simply stops being reachable.
+   ⚠️ TEMPORARY. It goes when she decides, together with the `data-rays` half of
+   the pre-paint script and its localStorage key. */
+:root[data-rays="off"] .hero-rays {
+  display: none;
+}
+
+.hero-rays::before,
+.hero-rays::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  --ray-mask: radial-gradient(
+    120% 105% at var(--ray-x) 0%,
+    #000 0%,
+    rgba(0, 0, 0, 0.5) 32%,
+    transparent 76%
+  );
+  -webkit-mask-image: var(--ray-mask);
+  mask-image: var(--ray-mask);
+}
+
+.hero-rays::before {
+  --ray-x: 6%;
+  background: repeating-conic-gradient(
+    from 104deg at 6% -7%,
+    transparent 0deg 2.4deg,
+    color-mix(in srgb, var(--halo) 11%, transparent) 2.4deg 3.9deg,
+    transparent 3.9deg 8.2deg,
+    color-mix(in srgb, var(--halo) 5.5%, transparent) 8.2deg 9.5deg,
+    transparent 9.5deg 15.5deg
+  );
+}
+
+.hero-rays::after {
+  --ray-x: 94%;
+  background: repeating-conic-gradient(
+    from 188deg at 94% -7%,
+    transparent 0deg 2.4deg,
+    color-mix(in srgb, var(--halo) 11%, transparent) 2.4deg 3.9deg,
+    transparent 3.9deg 8.2deg,
+    color-mix(in srgb, var(--halo) 5.5%, transparent) 8.2deg 9.5deg,
+    transparent 9.5deg 15.5deg
+  );
+}
+
+@media (prefers-contrast: more) {
+  .hero-rays {
+    display: none;
+  }
+}
+
+html[data-a11y-enhanced-contrast="true"] .hero-rays {
+  display: none;
+}
+
+/* ── THE PANEL BREATHES, AND THIS ONE IS ALLOWED TO LOOP ──
+   Daniel, 2026-08-04, asked directly why the glow could not run forever the way
+   the one on his other landing page does. It can. A slow box-shadow breath says
+   "this panel is special"; it names no deadline, claims no scarcity and moves
+   no text, so it is not the pressure mechanic rule 4 is about. What stayed
+   banned is the thing that WAS: a struck price scaling up and down on a timer.
+
+   ⚠️ TWO CONSTRAINTS, BOTH HARD.
+   1. It animates `box-shadow` on a container that paints no text of its own,
+      and nothing inside it moves. The moment this starts moving type, it is a
+      different thing and rule 4 applies again.
+   2. NO `!important`, and it is gated on the accessibility panel's switch like
+      every other effect on this site (rule 5). The version this was ported from
+      `!important`s straight through reduced motion; that is exactly what rule 5
+      forbids, and obeying it costs nothing — a visitor who has asked for less
+      motion simply gets the still panel, which is the finished design anyway. */
+@keyframes offer-panel-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--gold) 26%, transparent),
+      0 10px 44px -14px color-mix(in srgb, var(--gold) 26%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--gold) 52%, transparent),
+      0 18px 64px -14px color-mix(in srgb, var(--gold) 44%, transparent);
+  }
+}
+
+:root:not([data-a11y-reduce-motion="true"]) .offer-free-panel {
+  animation: offer-panel-breathe 4.8s ease-in-out infinite;
 }

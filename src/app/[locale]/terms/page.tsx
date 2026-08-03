@@ -46,7 +46,6 @@ export default async function TermsPage({
         )}
       />
       <PageHero
-        eyebrow={t("heroEyebrow")}
         title={t("heroTitle")}
         description={t("heroDescription")}
       />

@@ -132,7 +132,6 @@ export function Testimonials({ showHeading = true }: { showHeading?: boolean }) 
         {showHeading ? (
           <Reveal className="text-center">
             <SectionHeading
-              eyebrow={t("eyebrow")}
               align="center"
               title={t("title")}
               description={t("description")}

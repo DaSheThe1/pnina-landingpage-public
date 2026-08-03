@@ -19,9 +19,20 @@
     as a dark ball — the brightest object in the reference photograph rendered
     as the darkest object in the mark. A fixed pale fill reads correctly against
     both canvases and keeps enough mass to survive at 16px, which an unfilled
-    outline does not. The gold tokens (--gold / --gold-deep) fail AA as text but
-    this is not text; keep it decorative or pair it with the wordmark, never use
-    it alone as a link.
+    outline does not. The gold tokens (`gold` / `gold-deep` in globals.css) fail
+    AA as text but this is not text; keep it decorative or pair it with the
+    wordmark, never use it alone as a link.
+
+    ⚠️ NO DOUBLE HYPHENS IN THIS COMMENT, EVER. Two hyphens in a row are
+    illegal inside an XML
+    comment, and an SVG loaded as an IMAGE (an `img` src, a CSS `mask-image` or
+    `background-image`) is parsed as strict XML rather than as HTML. This file
+    carried the CSS custom-property names with their leading dashes until
+    2026-08-03, which made it well-formed enough for the HTML parser (it is
+    inlined in scripts/og/og-card.html, where it always worked) and a hard parse
+    error everywhere else: Chromium rendered a broken-image icon for the `img`
+    case and an empty box for the mask case, with no console error either time.
+    Write the token names without the dashes.
   -->
   <g
     stroke="currentColor"

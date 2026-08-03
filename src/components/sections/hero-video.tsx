@@ -24,11 +24,38 @@ type FullscreenVideo = HTMLVideoElement & {
 const VIDEO_SRC = videoSrc("hero");
 const POSTER = posterSrc("hero");
 
-export function HeroVideo() {
+/**
+ * `caption` is the copy that sits INSIDE the frame, above the clip.
+ *
+ * Daniel asked for this three times before it landed (2026-08-02 and twice on
+ * 2026-08-03: *"the text needs to be inside the rectangle above the video"*),
+ * and it is exactly what the reference page Pnina sent does — the instruction
+ * and its footnote live on the dark card WITH the video, not floating on the
+ * page above it. It is passed in rather than rendered here because the strings
+ * are hero copy and belong to `HeroSection`; this component owns the frame, not
+ * the words.
+ *
+ * ⚠️ It sits inside the mount but OUTSIDE the `aspect-video` box, so it can
+ * never be covered by the clip, the letterbox fill, the unmute panel or the
+ * corner controls, and it does not change the video's own geometry. It DOES
+ * spend fold budget — it is real layout inside the frame — so `hero-fold.spec`
+ * is the check after any change to it.
+ */
+export function HeroVideo({ caption }: { caption?: React.ReactNode }) {
   const t = useTranslations("heroVideo");
   const videoRef = useRef<HTMLVideoElement>(null);
   const [ready, setReady] = useState(false);
   const [playing, setPlaying] = useState(false);
+  /**
+   * How far through the clip we are, 0-1, for the progress line under the frame
+   * (Daniel, 2026-08-03: *"it doesn't show a progress bar of the video playing
+   * at the bottom, like a filling white line showing video progress"*).
+   *
+   * Kept as a fraction rather than as seconds so the render is a pure `scaleX`
+   * and nothing has to know the duration. See the bar itself further down for
+   * why this is not a `<progress>` and not a scrubber.
+   */
+  const [progress, setProgress] = useState(0);
   // `started` = she has pressed "הפעלה עם קול". Same meaning, same name and the
   // same one-way latch as MessageVideo (components/ui/message-video.tsx): before
   // it the clip is a silent looping preview, after it the clip is the real thing
@@ -153,29 +180,49 @@ export function HeroVideo() {
     return () => cleanup?.();
   }, [siteMotionChoiceReduced, started]);
 
-  // Native controls only once she has pressed "הפעלה עם קול", or while
-  // fullscreen — silent and pre-play it stays a clean frame. Lifted verbatim
-  // from MessageVideo so the two players behave identically.
+  // ── NATIVE CONTROLS ARE A FULLSCREEN-ONLY THING NOW (Pnina, 2026-08-03) ──
+  // Until today this read `document.fullscreenElement === video || started`, so
+  // the moment she pressed "הפעלה עם קול" the browser's own control bar was
+  // painted across the bottom of the inline frame for good. Her brief is a
+  // player with no chrome on it — the frame is the clip and nothing else — and
+  // that bar is the largest piece of chrome the frame had.
   //
-  // `started`, not `started && !video.paused`: since the first press also opens
-  // fullscreen (see `playWithSound`), coming back OUT of fullscreen is now the
-  // ordinary path rather than a corner case, and a visitor who paused before
-  // leaving fullscreen would land on an inline frame with no controls at all
-  // and no way to resume. Exiting fullscreen must never take playback away from
-  // her, and that includes the means to restart it.
+  // It also actively fought the new tap contract. With native controls up,
+  // Chrome toggles play/pause on a click of the video ITSELF, so our own
+  // toggle would have fired second and cancelled it out; and iOS Safari does
+  // something different again (a tap shows/hides the bar instead of toggling
+  // playback), so "tap = play/pause" would simply not have been true on the
+  // phones this audience holds.
+  //
+  // So inline the clip carries no native UI at all, and everything a visitor
+  // needs is a real <button> of ours: a transparent full-frame play/pause
+  // control and one small fullscreen control in the corner. Fullscreen is the
+  // exception because there the frame has NO chrome of its own — a desktop
+  // browser expanding a controls-less <video> gives a black screen with no
+  // scrubber and no visible way out — so `enterFullscreen` switches them on for
+  // the duration and this listener switches them back off on the way out.
+  //
+  // THE OLD WARNING STILL HOLDS, it is just answered differently: coming out of
+  // fullscreen must never strand her on a frame with no way to resume. It
+  // cannot now, because the full-frame toggle button is mounted the whole time
+  // and does not depend on fullscreen state at all.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const onChange = () => {
-      video.controls = document.fullscreenElement === video || started;
+      const doc = document as Document & { webkitFullscreenElement?: Element };
+      video.controls =
+        document.fullscreenElement === video ||
+        doc.webkitFullscreenElement === video;
     };
+    onChange();
     document.addEventListener("fullscreenchange", onChange);
     document.addEventListener("webkitfullscreenchange", onChange);
     return () => {
       document.removeEventListener("fullscreenchange", onChange);
       document.removeEventListener("webkitfullscreenchange", onChange);
     };
-  }, [started]);
+  }, []);
 
   // Track real playback state rather than assuming it, so the control's label
   // is never a lie — the browser can pause the clip on its own (backgrounded
@@ -185,13 +232,42 @@ export function HeroVideo() {
     if (!video) return;
     const sync = () => setPlaying(!video.paused && !video.ended);
     sync();
+    /**
+     * The progress line's only input.
+     *
+     * `timeupdate` rather than a rAF loop on purpose: the browser fires it about
+     * 4-15 times a second, which is more than enough for a bar that is at most
+     * ~1100px wide (a rAF loop would re-render 60 times a second to move it a
+     * fraction of a pixel), and it stops firing by itself the moment the clip is
+     * paused, backgrounded or ended. So this costs nothing at rest and needs no
+     * cleanup of its own beyond the listener.
+     *
+     * `duration` is NaN until metadata lands and Infinity for a live stream, so
+     * it is guarded — without that the first event divides by NaN and the bar
+     * renders at `scaleX(NaN)`, which Chrome silently drops and Safari does not.
+     */
+    const onTime = () => {
+      const total = video.duration;
+      if (!Number.isFinite(total) || total <= 0) return;
+      setProgress(Math.min(1, Math.max(0, video.currentTime / total)));
+    };
+    onTime();
     video.addEventListener("play", sync);
     video.addEventListener("pause", sync);
     video.addEventListener("ended", sync);
+    video.addEventListener("timeupdate", onTime);
+    video.addEventListener("loadedmetadata", onTime);
+    // A seek (including the `currentTime = 0` restart inside `playWithSound`)
+    // moves the playhead without a `timeupdate`, so the bar would keep the old
+    // position until the next tick and visibly jump backwards.
+    video.addEventListener("seeked", onTime);
     return () => {
       video.removeEventListener("play", sync);
       video.removeEventListener("pause", sync);
       video.removeEventListener("ended", sync);
+      video.removeEventListener("timeupdate", onTime);
+      video.removeEventListener("loadedmetadata", onTime);
+      video.removeEventListener("seeked", onTime);
     };
   }, [ready]);
 
@@ -213,25 +289,47 @@ export function HeroVideo() {
    * iOS Safari has no `Element.requestFullscreen` on a <video> at all — the
    * native player is entered through `webkitEnterFullscreen`, which is tried
    * both as the fallback of a rejected promise and as the only option when the
-   * standard method is missing.
+   * standard method is missing. That path also hands the clip to the iOS native
+   * player, which brings its own controls and its own letterboxing, so the two
+   * extra things this function does for the desktop path are simply ignored
+   * there.
+   *
+   * IT NOW ALSO TURNS THE NATIVE CONTROLS ON, and turns them back off if the
+   * expand is refused. Inline the clip is deliberately bare (see the effect
+   * above); fullscreen without a control bar is a black screen with no scrubber
+   * and no obvious exit, so the bar is lent for the duration and taken back by
+   * the `fullscreenchange` listener. `controls` is set BEFORE the request and
+   * synchronously, because everything in this function has to stay inside the
+   * tap's transient activation.
    */
   function enterFullscreen() {
     const video = videoRef.current as FullscreenVideo | null;
     if (!video) return;
+    video.controls = true;
+    // Nothing expanded, so the borrowed control bar has to go back — otherwise
+    // a refused fullscreen would leave the inline frame wearing chrome forever.
+    const giveUp = () => {
+      video.controls = false;
+    };
     try {
       if (video.requestFullscreen) {
         void video.requestFullscreen().catch(() => {
           try {
-            video.webkitEnterFullscreen?.();
+            if (video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+            else giveUp();
           } catch {
             /* No fullscreen here. The clip still plays inline. */
+            giveUp();
           }
         });
+      } else if (video.webkitEnterFullscreen) {
+        video.webkitEnterFullscreen();
       } else {
-        video.webkitEnterFullscreen?.();
+        giveUp();
       }
     } catch {
       /* Same: fullscreen is a bonus, never a precondition. */
+      giveUp();
     }
   }
 
@@ -245,20 +343,27 @@ export function HeroVideo() {
    * so what she is saying — the whole point of the clip — was unreachable from
    * the home page.
    *
-   * This is MessageVideo's `playWithSound`, not a second state machine: same
-   * four mutations in the same order, same muted retry when a browser still
-   * refuses audio, same one-way `started` latch (the pill does not come back
-   * when the clip ends, and a second tap goes to fullscreen like any other tap
-   * on a started clip).
+   * This started as MessageVideo's `playWithSound` and still shares its shape:
+   * the same mutations in the same order, the same muted retry when a browser
+   * still refuses audio, and the same one-way `started` latch — the pill does
+   * not come back when the clip ends, and every tap after this one is a plain
+   * play/pause (`togglePlay`). The two files have diverged as of 2026-08-03
+   * though, because only the hero was rebuilt against Pnina's reference player:
+   * this one no longer expands and no longer turns the native controls on.
+   * /about is untouched. Do not "re-sync" them without her asking.
    *
-   * ── AND IT ALSO GOES FULLSCREEN (Daniel, 2026-07-31) ──
-   * *"Pressing on the video and the Hero Video won't make it full screen on the
-   * first press. It will just make the audio play. We want to also make it full
-   * screen."* So the ONE press does both. The order below is deliberate:
-   * playback is asked for first and fullscreen last, so that if the expand is
-   * refused — an embedded context, a desktop Safari quirk, a headless browser —
-   * she still gets the sound, which is the part that carries her meaning. The
-   * corner "מסך מלא" button is unchanged and still works on its own.
+   * ── AND IT NO LONGER GOES FULLSCREEN (Pnina, 2026-08-03) ──
+   * ⚠️ THIS REVERSES DANIEL'S 2026-07-31 CALL, and the client is the one who
+   * reversed it. He had asked for the first press to expand as well as unmute
+   * (*"We want to also make it full screen"*). Pnina, looking at the built page
+   * and at the reference player she wants copied, asked for the opposite in as
+   * many words: tapping the clip must NOT zoom and must NOT go fullscreen, it
+   * must just keep playing inline. Fullscreen stays possible — it has its own
+   * small button in the corner now — it is simply never automatic.
+   *
+   * So the press does exactly the four mutations plus `play()`, and nothing
+   * else. `video.controls = true` came out with the expand: inline the frame
+   * carries no native bar at all any more (see the effect above).
    */
   function playWithSound() {
     const video = videoRef.current;
@@ -272,7 +377,6 @@ export function HeroVideo() {
     userControlledRef.current = true;
     video.loop = false;
     video.muted = false;
-    video.controls = true;
     video.currentTime = 0;
     void video.play().catch(() => {
       // Some browsers still refuse audio without a more direct gesture. At
@@ -280,10 +384,20 @@ export function HeroVideo() {
       video.muted = true;
       void video.play();
     });
-    enterFullscreen();
     setStarted(true);
   }
 
+  /**
+   * Tap the frame = play/pause. The whole of it, and nothing else.
+   *
+   * This is what carries Pnina's first instruction, and it is deliberately the
+   * dullest function in the file: no unmuting, no seeking, no expanding, no
+   * latch. Tap once to pause, tap again to resume, on a clip that stays exactly
+   * where it is.
+   *
+   * `userControlledRef` is set for the same reason `playWithSound` sets it: a
+   * pause she asked for is hers, and the autoplay effect must not walk over it.
+   */
   function togglePlay() {
     const video = videoRef.current;
     if (!video) return;
@@ -330,10 +444,41 @@ export function HeroVideo() {
     // page website."* While the hero was a two-column grid this frame lived in a
     // 23rem track, which on a 1500px screen is about a fifth of the viewport —
     // a thumbnail. The hero is one centred column now (see the note in
-    // HeroSection), so the frame takes the column: 3xl from `sm`, 5xl from `lg`.
-    // The phone cap stays where it was, because there the fold is the
-    // constraint and 16:9 at full width is already 195px tall.
-    <div className="relative mx-auto w-full max-w-[20.5rem] sm:max-w-2xl lg:max-w-4xl">
+    // HeroSection), so the frame takes the column.
+    //
+    // ── AND THEN BIGGER AGAIN (Pnina, 2026-08-03) ──
+    // *"Almost all the way to the right and to the left and up and down."*
+    // The caps below are the answer, and the "up and down" half comes for free:
+    // the box is 16:9, so every pixel of width is 0.5625px of height. Measured
+    // frame sizes (the mount, so including its own padding), against a browser
+    // with a 10px scrollbar:
+    //
+    //                    was            now         frame w x h
+    //     390px      20.5rem cap     bleeds out     332x193 → 372x215
+    //     640px      2xl / 672       3xl / 768      582x335  (column-limited)
+    //     1024px     4xl / 896       5xl / 1024     966x551  (column-limited)
+    //     1440px     4xl / 896       no cap         1104x629
+    //
+    // ── THE PHONE ONE NEEDED A NEGATIVE MARGIN, AND THAT IS THE WHOLE TRICK ──
+    // Dropping the `20.5rem` cap alone bought FOUR PIXELS. 20.5rem is 328px and
+    // the hero column at 390px is 342px wide, so that cap was never what was
+    // holding the frame in — the column's own `px-6` was. So on a phone the
+    // frame steps OUT of that padding by 20px a side and runs to within 4px of
+    // the screen, which is what "almost all the way to the right and to the
+    // left" actually means on a 390px screen. `sm:mx-auto` puts it back inside
+    // the column everywhere else, where the copy needs its measure.
+    // This is safe against the horizontal-scroll test: it ends 4px INSIDE the
+    // section, so nothing is clipped and nothing overflows. Do not push it to a
+    // true full bleed — the frame has 2rem rounded corners and a shadow, and
+    // both want a little air to read as a frame rather than as a band.
+    //
+    // ⚠️ THE PHONE RUNG IS THE ONE WITH A HARD LIMIT ON IT. Everything in this
+    // hero is budgeted against an 844px fold (e2e/hero-fold.spec.ts, and the
+    // long note in HeroSection). This pass spends 22px of that budget; it fits
+    // because the headline and the form gave more than that back on the same
+    // day. Measured after: the submit button's bottom edge is at 818 of 844.
+    // If a future edit needs room, it does NOT come out of the spec's numbers.
+    <div className="relative -mx-3 sm:mx-auto sm:w-full sm:max-w-3xl lg:max-w-5xl xl:max-w-none">
       {/* Soft warm halo behind the frame. On a light canvas this is a wash, not
           a glow: it should be barely perceptible. */}
       <div
@@ -345,12 +490,34 @@ export function HeroVideo() {
         className="pointer-events-none absolute -inset-x-12 top-1/3 bottom-0 rounded-[3rem] bg-gold/15 blur-[80px]"
       />
 
-      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-2 shadow-[0_36px_80px_-40px_var(--shadow-strong)]">
+      {/* `p-1.5` on a phone rather than `p-2`: the mount is decoration and the
+          clip is the content, so on the one screen where every pixel of height
+          is spent against the fold the mount gives 4px of its 16 back. From
+          `sm` up there is no fold to fight and the wider bezel looks better. */}
+      <div className="ring-shine relative overflow-hidden rounded-[2rem] border border-foreground/[0.08] bg-surface-1 p-1.5 shadow-[0_36px_80px_-40px_var(--shadow-strong)] sm:p-2">
+        {/* The caption band. `px-4` so the copy is not flush with the bezel, and
+            a little more room under it than over it so it reads as belonging to
+            the clip below rather than floating in the middle of the card. */}
+        {caption ? (
+          <div className="px-4 pb-3 pt-2 text-center sm:pb-4 sm:pt-3">
+            {caption}
+          </div>
+        ) : null}
         {/* This used to carry `data-fab-avoid`, which made the floating WhatsApp
             button fade out whenever this frame was on screen. That is gone — see
             the header of floating-whatsapp.tsx. The collision it was avoiding is
             now solved by where the pause button sits (just below). */}
-        <div className="relative aspect-video overflow-hidden rounded-[1.6rem] bg-foreground">
+        {/* ⚠️ `bg-canvas`, NOT `bg-foreground`. This is the letterbox the clip
+            sits on, so it has to be DARK — and it was written as `bg-foreground`
+            back when the page was cream and the ink was near-black (#241c16),
+            where that read as "the darkest thing available". Going dark-only in
+            0.19.0 inverted `--foreground` to her Pearl White #f8f7f4, which
+            silently turned this into a NEAR-WHITE slab behind the video. It is
+            mostly hidden by the blurred fill in front of it, which is why it
+            survived review — but it flashes on a slow connection, and it is the
+            whole frame if the fill ever fails to decode. Never name an INK token
+            for a SURFACE; the two invert against each other by design. */}
+        <div className="relative aspect-video overflow-hidden rounded-[1.6rem] bg-canvas">
           {/* The branded poster panel sits underneath and shows whenever no
               video can play: no video supplied yet, a slow connection, or a
               blocked autoplay. It is designed to look deliberate rather than
@@ -384,10 +551,27 @@ export function HeroVideo() {
               // read as a recognisably smeared copy of the video, which at this
               // width is most of what you see. At 44px it reads as ambient
               // light off the clip, which is what it is for.
-              // Brightness is held just under 1 so the sharp clip in front is
-              // still the brighter thing, and saturation is up so the fill
-              // carries the frame's warmth out to the edges instead of greying.
-              className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-[44px] brightness-[0.82] saturate-[1.35]"
+              // ⚠️ BRIGHTNESS WENT 0.82 → 0.30 WHEN THE SITE WENT DARK-ONLY
+              // (0.19.0), and it is the single biggest visual fix in this file.
+              // 0.82 was tuned against a CREAM page, where "just under 1" made
+              // the sharp clip the brighter thing while the fill still sat
+              // comfortably on paper. On a near-black canvas that same value is
+              // a PALE GREY SLAB: this clip is a brightly lit indoor shot, the
+              // fill occupies ~68% of the frame's width at any size (fixed by
+              // the two aspect ratios, 9:16 inside 16:9), and at 0.82 it was by
+              // far the lightest object on the page — the opposite of the dark
+              // luxury look Pnina asked for, and it drowned the rays behind it.
+              // At 0.30 it reads as ambient light spilling off the clip into the
+              // dark, which is what it was always for.
+              // Saturation stays UP so the spill carries the frame's warmth
+              // rather than greying out, which matters more now, not less: at
+              // this brightness a desaturated fill would be indistinguishable
+              // from the canvas and the frame would lose its edges.
+              // The blur ladder is unchanged and its reasoning still holds:
+              // 26px → 44px when the frame became the hero's full width, and
+              // 44px → 56px from `lg` now that it runs to 1104px, because a
+              // bigger frame makes this fill bigger with it.
+              className="pointer-events-none absolute inset-0 h-full w-full scale-125 object-cover blur-[44px] brightness-[0.30] saturate-[1.45] lg:blur-[56px]"
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>
@@ -425,12 +609,12 @@ export function HeroVideo() {
               controlsList="nodownload noplaybackrate noremoteplayback"
               disablePictureInPicture
               onContextMenu={(event) => event.preventDefault()}
-              onClick={started ? expand : playWithSound}
-              // `cursor-pointer`, NOT `cursor-zoom-in`: the zoom cursor renders
-              // as a magnifying glass with a plus in it, which is a photo-viewer
-              // affordance and reads as "inspect this woman's face". A play/
-              // expand surface is a plain pointer. Same in message-video.tsx —
-              // keep the two matched.
+              // ── NO `onClick` ON THE <video> ANY MORE (2026-08-03) ──
+              // The tap is carried by a real, focusable, labelled <button> laid
+              // over this element instead (the tap target below). A bare
+              // click handler on a <video> is invisible to a keyboard and to a
+              // screen reader, and it was only tolerable while native controls
+              // came up beside it; they no longer do.
               //
               // ALWAYS VISIBLE — this is what lets `poster` actually paint. The
               // element used to sit at `opacity-0` until `ready`, which meant the
@@ -446,14 +630,69 @@ export function HeroVideo() {
               // head off and take the burnt-in captions with it. Swap it back to
               // `cover` (and delete the blurred backdrop above) the day her real
               // horizontal clip lands.
-              className="absolute inset-0 h-full w-full cursor-pointer object-contain"
+              className="absolute inset-0 h-full w-full object-contain"
             >
               <source src={VIDEO_SRC} type="video/mp4" />
             </video>
           ) : null}
 
+          {/* ── THE TAP TARGET (Pnina, 2026-08-03) ──
+              *Tap = play/pause.* One transparent sheet over the whole frame,
+              and it is a real <button> rather than a click handler on the
+              <video>, deliberately: with the native control bar gone (see the
+              controls effect above) a bare handler would have left this player
+              with no keyboard route and nothing for a screen reader to announce.
+              As a button it is tabbable, it takes Enter and Space for free, and
+              its accessible name is the same "השהיית/הפעלת הסרטון" string the
+              old corner control used, flipped by real playback state.
+
+              It is mounted only once `started`, because before that the
+              "הפעלה עם קול" sheet below owns the same rectangle and the first
+              tap has a different job. The two therefore never both exist, which
+              is what keeps the new toggle from fighting the unmute latch.
+
+              `cursor-pointer`, NOT `cursor-zoom-in` — the zoom cursor is a
+              magnifying glass with a plus in it, a photo-viewer affordance that
+              reads as "inspect this woman's face". It was already wrong when
+              this surface expanded the clip; now that it does not zoom at all
+              it would also be a lie. */}
+          {ready && started ? (
+            <button
+              type="button"
+              onClick={togglePlay}
+              aria-label={playing ? t("pause") : t("play")}
+              className="group/tap absolute inset-0 flex h-full w-full cursor-pointer items-center justify-center bg-transparent outline-none focus-visible:ring-3 focus-visible:ring-inset focus-visible:ring-white/70"
+            >
+              {/* ── THE RESUME AFFORDANCE (Daniel, 2026-08-03) ──
+                  *"if the video is stopped it should show the resume button in
+                  the middle of the video, like the triangle icon."*
+
+                  Without this, a paused clip was indistinguishable from a broken
+                  one: the whole frame is the tap target, so there was nothing on
+                  screen saying the video was merely paused or that tapping would
+                  resume it. A still frame with no affordance reads as "this
+                  stopped working", which on the one video the page is built
+                  around is expensive.
+
+                  It renders ONLY while paused — a triangle sitting on top of a
+                  playing clip would be the thing it is not. The disc is the same
+                  size and the same CTA pair as the "הפעלה עם קול" control this
+                  surface replaces after the first tap, so the affordance a
+                  visitor learned there is the affordance she finds here.
+                  `pointer-events-none` because the BUTTON is the whole frame;
+                  this is a picture of a control, not a second control, and
+                  putting a hit target inside a hit target only creates a dead
+                  ring where the two disagree. */}
+              {!playing ? (
+                <span className="pointer-events-none flex h-18 w-18 items-center justify-center rounded-full bg-cta-fill text-cta-ink shadow-[0_12px_44px_-6px_var(--cta-glow)] transition-transform duration-300 group-hover/tap:scale-110">
+                  <Play className="relative ms-1 h-7 w-7 fill-current" />
+                </span>
+              ) : null}
+            </button>
+          ) : null}
+
           {/* ── "הפעלה עם קול", the /about clip's control, now on the hero ──
-              Rendered BEFORE the two corner buttons on purpose: they are all
+              Rendered BEFORE the corner controls on purpose: they are all
               absolutely positioned, so DOM order is paint order and the corner
               controls have to stay reachable on top of this sheet.
 
@@ -467,7 +706,12 @@ export function HeroVideo() {
               the circle the way MessageVideo has one: this is the FIRST thing on
               the home page, and an endless pulse in a visitor's eyeline while she
               reads the hero is the mechanic CLAUDE.md rule 4 forbids (the same
-              class came off the floating WhatsApp button for the same reason). */}
+              class came off the floating WhatsApp button for the same reason).
+
+              Pnina's 2026-08-03 brief keeps this panel exactly as it is — it is
+              the one thing about the current player she wants copied FROM, not
+              changed: her reference shows the same large centred unmute over a
+              muted autoplaying clip. Same wording, same latch. */}
           {ready && !started ? (
             <button
               type="button"
@@ -475,7 +719,18 @@ export function HeroVideo() {
               aria-label={t("playWithSoundAria")}
               className="group absolute inset-0 flex flex-col items-center justify-center gap-4 bg-gradient-to-b from-black/10 via-black/20 to-black/35 transition-colors hover:from-black/20 hover:to-black/45"
             >
-              <span className="relative flex h-18 w-18 items-center justify-center rounded-full bg-brand-deep text-white shadow-[0_12px_44px_-6px_rgba(90,63,43,0.9)] transition-transform duration-300 group-hover:scale-110">
+              {/* The play disc wears the CTA PAIR, not `--brand-deep`.
+                  It was `bg-brand-deep text-white` with a hard-coded brown
+                  shadow, which was right on the cream page and wrong twice over
+                  after 0.19.0: `--brand-deep` reads as a muddy teal against the
+                  new navy, and the brown glow answered to a colour no longer on
+                  the page. Through `--cta-fill` / `--cta-ink` it is her Soft
+                  Gold with navy ink at a measured 8.35:1, and — the actual point
+                  — it becomes the SAME colour as the send button below it, so
+                  the two things the hero wants pressed look like each other.
+                  The glow is the halo token rather than a literal, so it follows
+                  any accent change instead of stranding a brown shadow again. */}
+              <span className="relative flex h-18 w-18 items-center justify-center rounded-full bg-cta-fill text-cta-ink shadow-[0_12px_44px_-6px_var(--cta-glow)] transition-transform duration-300 group-hover:scale-110">
                 <Play className="relative ms-1 h-7 w-7 fill-current" />
               </span>
               <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/55 px-4 py-1.5 text-sm font-medium text-white backdrop-blur">
@@ -485,58 +740,116 @@ export function HeroVideo() {
             </button>
           ) : null}
 
-          {ready ? (
-            <>
-              {/* WCAG 2.2.2: anything that moves for more than five seconds
-                  needs a way to stop it, and this clip is a minute long and
-                  starts on its own. Always visible — not a hover-reveal, which
-                  is unreachable on the phones most of these visitors are
-                  holding.
+          {/* ── THE TOP ROW IS GONE (Pnina, 2026-08-03) ──
+              It was a 44px pause square at `top-3 start-3` and a labelled
+              "מסך מלא" pill at `top-3 end-3` — together roughly 160px of chrome
+              spanning the frame. Her words through Daniel: they eat too much
+              space, take the row out. So:
+                • the pause button is REPLACED by the tap target above, which is
+                  the whole frame and costs no pixels at all;
+                • fullscreen becomes one small icon-only button, no label.
+              Against a frame that also just went from 332px wide to 372px on a
+              phone, this corner is about a fifth of what was here.
 
-                  ── BOTH CONTROLS LIVE ON THE TOP EDGE, AND THAT IS
-                  LOAD-BEARING (2026-07-30) ──
-                  They sat at `bottom-3 start-3` and `bottom-3 end-3` until
-                  Daniel's launch review. The site has TWO bottom-pinned floating
-                  buttons — WhatsApp at the viewport's bottom-inline-start,
-                  the accessibility launcher at bottom-inline-end — and at
-                  390x844 this clip's bottom corners collided with both: 12px
-                  into the WhatsApp button, and a measured 17x8px into the
-                  accessibility launcher. The old answer was to make the WhatsApp
-                  button hide itself whenever this clip was on screen, i.e. hide
-                  it at the top of the home page; Daniel asked for both floating
-                  buttons to simply always show.
-                  So the controls moved instead of the buttons. The top edge is
-                  the one place a bottom-pinned FAB can never reach, and on these
-                  9:16 clips it is the better edge anyway — the burned-in captions
-                  sit along the bottom.
-                  Keep both of these out of the bottom corners. */}
-              <button
-                type="button"
-                onClick={togglePlay}
-                aria-label={playing ? t("pause") : t("play")}
-                className="absolute top-3 start-3 inline-flex h-11 w-11 items-center justify-center rounded-lg border border-white/15 bg-black/60 text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
-              >
-                {playing ? (
-                  <Pause className="h-3.5 w-3.5 fill-current" />
-                ) : (
-                  <Play className="h-3.5 w-3.5 fill-current" />
-                )}
-              </button>
+              ── IT IS STILL ON THE TOP EDGE, AND THAT PART IS LOAD-BEARING ──
+              Fullscreen belongs in a bottom corner in every video player ever
+              made, and it cannot go in one here. The site has TWO viewport-fixed
+              floating buttons — WhatsApp at bottom-inline-start, the
+              accessibility launcher at bottom-inline-end — and as this frame
+              scrolls past them BOTH of its bottom corners pass underneath one.
+              That collision was measured at 390x844 in the 2026-07-30 review
+              (12px into the WhatsApp button, 17x8px into the launcher) and the
+              rule that came out of it is written into floating-whatsapp.tsx:
+              when a control collides with those corners, MOVE THE CONTROL. The
+              top edge is the one place a bottom-pinned FAB can never reach, and
+              on a 9:16 clip it is the better edge anyway — the burnt-in captions
+              run along the bottom.
+
+              ── AND THE PAUSE CONTROL SURVIVES IN ONE STATE ONLY ──
+              While the clip is still the silent looping preview, the tap target
+              is not mounted (the unmute sheet owns that rectangle), so a
+              pause-only twin sits beside the fullscreen button until she
+              presses play-with-sound, and then never again. That is WCAG 2.2.2:
+              motion that starts on its own and lasts more than five seconds
+              needs a way to stop it, and this clip is a minute long and
+              autoplays for everyone. It is always visible rather than a
+              hover-reveal, which is unreachable on the phones these visitors
+              hold.
+
+              40px, not the old 44px: WCAG 2.5.8 (AA) asks for 24px and this is
+              comfortably over it, while 44px (2.5.5, AAA) is what made the old
+              controls read as a bar. Icon-only, so no copy key is needed for
+              either — the aria-labels carry the names. */}
+          {ready ? (
+            <div className="absolute top-2 end-2 flex items-center gap-1.5 sm:top-3 sm:end-3">
+              {!started ? (
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  aria-label={playing ? t("pause") : t("play")}
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/70"
+                >
+                  {playing ? (
+                    <Pause className="h-3.5 w-3.5 fill-current" />
+                  ) : (
+                    <Play className="h-3.5 w-3.5 fill-current" />
+                  )}
+                </button>
+              ) : null}
 
               <button
                 type="button"
                 onClick={expand}
                 aria-label={t("fullscreenAria")}
-                // `top-3 end-3` — the opposite corner of the SAME (top) edge as
-                // the pause button. See the note above for why neither of these
-                // may sit at the bottom. h-11 matches the pause button; both
-                // were h-9 (36px), under the 44px touch minimum.
-                className="absolute top-3 end-3 inline-flex h-11 items-center gap-2 rounded-lg border border-white/15 bg-black/60 px-3 text-xs font-medium text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/75"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-black/50 text-white backdrop-blur transition-colors hover:border-white/30 hover:bg-black/70"
               >
-                <Maximize2 className="h-3.5 w-3.5" />
-                {t("fullscreen")}
+                <Maximize2 className="h-4 w-4" />
               </button>
-            </>
+            </div>
+          ) : null}
+
+          {/* ── THE PROGRESS LINE (Daniel, 2026-08-03) ──
+              *"currently it doesn't show a progress bar of the video playing at
+              the bottom, like a filling white line showing video progress."*
+
+              It is exactly that and nothing more: a hairline that fills left to
+              right as the clip plays. It exists because the native control bar
+              now only appears in fullscreen, so inline there was no way to tell
+              a one-minute clip from a ten-minute one, or to see that it was
+              nearly over. That matters here more than on a normal site — the
+              whole hero asks her to "צפי בסרטון עד הסוף", and an unknown
+              remaining length is a reason to stop watching.
+
+              ⚠️ IT IS AN INDICATOR, NOT A SCRUBBER, and that is deliberate.
+              `pointer-events-none`, no drag, no hit target. The entire frame is
+              one big play/pause button (Pnina's instruction), so a draggable
+              strip along its bottom edge would sit inside that button and steal
+              taps meant for it — on a phone, where the strip would be ~10px of
+              thumb reach from the frame's edge, that is a mis-tap machine.
+              Seeking lives in fullscreen, where the real controls are.
+
+              It renders only once she has started the clip: during the silent
+              looping preview the bar would be a sawtooth resetting every loop,
+              which reads as a glitch rather than as progress.
+
+              `scaleX` on a `transform`, not an animated `width` — width is a
+              layout property and animating it re-lays-out the frame 4-15 times a
+              second; a transform is composited. `origin-left` with an explicit
+              `dir="ltr"`: the document is RTL, so `origin-left` would otherwise
+              flip and the bar would drain from the wrong end.
+              No `transition` on the transform: `timeupdate` already arrives
+              smoothly, and easing between ticks makes the bar lag the picture. */}
+          {ready && started ? (
+            <div
+              dir="ltr"
+              aria-hidden
+              className="pointer-events-none absolute inset-x-0 bottom-0 h-[3px] bg-white/15"
+            >
+              <div
+                className="h-full origin-left bg-white/90"
+                style={{ transform: `scaleX(${progress})` }}
+              />
+            </div>
           ) : null}
 
           <div className="pointer-events-none absolute inset-0 rounded-[1.6rem] ring-1 ring-inset ring-white/10" />

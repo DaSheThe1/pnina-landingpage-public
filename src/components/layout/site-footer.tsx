@@ -47,50 +47,65 @@ export function SiteFooter() {
           is, `--cta-ink` is the ink that was measured on it.
 
           So EVERY glyph below is `--cta-ink`, at 100% or 85% and nothing
-          lighter. Measured (WCAG 2.x) on every fill the pair can resolve to,
-          fill / ink, then the ratio at 100% and at 85%:
+          lighter.
 
-            shipped, light    #264653 / #fff8f5    9.60   7.46
-            shipped, dark     #98cde1 / #081216   10.97   8.12
-            enhanced contrast #b8e6f8 / #040e12   14.59  10.43
-            ?accent=sea       #1e6876 / #fff8f5    6.07   4.88
-            ?accent=peach     #a04731 / #fff8f5    5.81   4.68
-            ?accent=pink      #8a1f58 / #fff8f5    8.27   6.38
-            ?accent=amber     #6b4f3a / #fff8f2    7.12   5.69
-            ?accent=gold      #f0c440 / #2f241c    9.12   6.42
+          ⚠️ ── AND IN 0.19.0 THIS SURFACE STOPPED MOVING. READ THIS BEFORE
+          RE-DERIVING ANY NUMBER HERE ──
+          The reasoning above is still WHY the markup says `bg-cta-fill`, and it
+          is still what protects the ink if the pin below is ever removed. But
+          the pair no longer resolves to eight different fills in this one
+          element. Two things changed at once:
 
-          The floor across all of them is 4.68, so 85% is the LAST rung: there
-          is deliberately no 70% tier in this footer. Hierarchy is carried by
-          size and weight instead, which is the right way round on a dark
-          surface anyway.
+            1. The site went DARK-ONLY (Pnina's brand book; Daniel, 2026-08-03:
+               it "stays the same no matter what the browser has"). There is no
+               light scheme to measure against any more.
+            2. The accent family and the surface family TRADED ROLES. The CTA is
+               now her Soft Gold and `--rose-deep` is `#c7a86d`, so
+               `bg-cta-fill` on its own would have painted a full-width GOLD
+               slab across the bottom of a near-black page — which is in neither
+               her brand book nor the reference she sent. globals.css therefore
+               pins the pair on this one element:
 
-          ── AFTER DARK THE FOOTER IS NOT NAVY, AND THAT IS NOT A BUG HERE ──
-          `--rose-deep` inverts to a lit sky-blue (#98cde1) in the dark scheme,
-          because it is the site's CTA colour and a deep fill carrying near-white
-          ink cannot also be a dark-scheme button. So a dark-scheme visitor gets
-          a light footer with near-black type — legible (10.97:1), and coherent
-          with the CTA it matches, but it is NOT her Deep Ocean. If she wants the
-          navy after dark too, that is one value in globals.css (a dark-scheme
-          fill that stays deep, with `--cta-ink` flipped back to near-white in
-          the same commit) and it belongs to whoever owns that file, not here.
+                   footer:where(.bg-cta-fill) {
+                     --cta-fill: var(--surface-3);   → her #264653
+                     --cta-ink:  var(--foreground);  → her Pearl White
+                   }
+
+          So the shipped footer is her Deep Ocean with Pearl White type at
+          9.41:1 (7.29 at the 85% rung), and it is the SAME on every device.
+          The old per-accent table that stood here is deleted rather than
+          corrected: it described a surface that no longer changes, and a table
+          of ratios nobody can reach is worse than none.
+
+          ⚠️ Two consequences, both easy to trip over:
+            - THE FOOTER NO LONGER FOLLOWS `?accent=`. That is deliberate, not a
+              bug in the switcher. Every other accent surface still does.
+            - Deleting that one rule in globals.css restores the gold footer, and
+              is exactly the lever to pull if Daniel decides he wants it after
+              all. It was a judgement call, not a measurement.
+
+          85% remains the LAST rung: hierarchy is carried by size and weight
+          instead, which is the right way round on a dark surface anyway.
 
           ── WHAT THIS COSTS, HONESTLY ──
           Two things went. The links were `--brand-accent` bronze (1.39:1 on the
           navy) and the WhatsApp row was `--whatsapp-ink` green (1.55:1); both
           are now `--cta-ink`. WhatsApp keeps its recognition through the glyph
-          and its green tile, not through green type. Its brand green does clear
-          4.5:1 on #264653 (5.08) — but only 3.21 under `?accent=sea` and less
-          on a light dark-scheme fill, so it is not usable as a token-safe value
-          here.
+          and its green tile, not through green type. Its brand green clears
+          4.5:1 on #264653 (5.08) but not on every fill the pair could resolve
+          to, so it is not usable as a token-safe value here.
 
-          ── AND ONE THING THIS FILE CANNOT FIX ──
-          `html[data-a11y-enhanced-contrast="true"] :focus-visible` in
-          globals.css draws `outline: 3px solid var(--ring)`, and `--ring`
-          follows `--brand-accent` (bronze), which measures 1.39:1 on the navy.
-          Inside this footer that outline is invisible for exactly the visitor
-          who asked for MORE contrast. It needs an answer in globals.css (an ink
-          that follows the surface, e.g. `--cta-ink` under a footer scope); a
-          utility class cannot outrank that selector without `!important`.
+          ── AND THE ONE THING THIS FILE COULD NOT FIX IS FIXED (0.18.0) ──
+          `html[data-a11y-enhanced-contrast="true"] :focus-visible` draws
+          `outline: 3px solid var(--ring)`, and `--ring` follows the gold accent
+          — which was invisible on this navy for exactly the visitor who asked
+          for MORE contrast. globals.css now carries
+          `:where(.bg-cta-fill) { --ring: var(--cta-ink) }`, so anything painted
+          with the CTA fill rings in the CTA ink, which is a legible pair by
+          construction rather than by luck. It fixes every ring inside this
+          element at once — the enhanced-contrast outline, the default
+          `focus-visible`, and any component resolving through the token — so do
+          not add a per-control ring colour here.
 
           ── THE FOOTER'S "WARM LIFT" IS GONE, AND THAT IS THE FIX (2026-07-30) ──
           There used to be a 120px-blurred `bg-brand/8` ellipse here, sitting at

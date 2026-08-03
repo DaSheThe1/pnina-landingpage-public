@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none" role="img" aria-label="פנינה פאף">
+  <!--
+    פנינה פאף — THE RING MARK, drawn from her own brand book.
+
+    ⚠️ THIS IS HER LOGO, NOT OURS. The brand book Pnina sent on 2026-08-02 shows
+    a designed mark: four hairline gold circles nested like ripples and tangent
+    near the bottom, one small gold dot riding the top of the outermost ring, and
+    a luminous pearl resting at the bottom centre. She uses it on her navy logo
+    card, on her business card and as her Instagram highlight frame.
+
+    We were never sent the source file. It is reproduced here as vector rather
+    than asked for, because the mark is five circles and a sphere — geometry, not
+    illustration — so a redraw is exact rather than approximate, crisp at every
+    size, and already on her palette. If she ever sends the original, replace
+    this file and nothing else changes: every call site points at the path.
+
+    ── HOW IT DIFFERS FROM `pearl-mark.svg`, AND WHY BOTH EXIST ──
+    `pearl-mark.svg` is OUR geometric scallop, built from a hinge point and a
+    41-degree fan. It predates her brand book and it is still the favicon,
+    because at 16-32px a shell reads as a recognisable silhouette and four
+    concentric hairlines collapse into a smudge. This mark is for DISPLAY sizes,
+    where the hairlines are the whole point of it.
+
+    COLOUR: the strokes are her Soft Gold #C7A86D verbatim, hard-coded rather
+    than `currentColor`, because unlike the scallop this mark has a fixed
+    relationship to her palette — the rings are gold and the pearl is pearl.
+    The pearl's gradient is a light source at upper-left, matching the
+    photograph the practice is named after.
+
+    The dot at the top is not decoration: in her book it is the pearl before it
+    has settled, which is the same story the site tells further down the page.
+  -->
+  <defs>
+    <radialGradient id="pearl-rings-sheen" cx="38%" cy="32%" r="72%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="55%" stop-color="#f3efe6" />
+      <stop offset="100%" stop-color="#cfc7b8" />
+    </radialGradient>
+  </defs>
+
+  <!-- The ripples. Each is offset a little further down and drawn a little
+       stronger, so the eye reads them as receding rather than as a target. -->
+  <g fill="none" stroke="#c7a86d">
+    <circle cx="50" cy="47" r="39" stroke-width="1.1" opacity="0.55" />
+    <circle cx="52" cy="54" r="32" stroke-width="1.2" opacity="0.7" />
+    <circle cx="49" cy="61" r="25" stroke-width="1.3" opacity="0.85" />
+    <circle cx="51" cy="68" r="18" stroke-width="1.4" />
+  </g>
+
+  <!-- The unsettled pearl, riding the top of the outermost ring. -->
+  <circle cx="50" cy="8" r="3.4" fill="#c7a86d" />
+
+  <!-- The pearl itself: the brightest object in the mark, as in the photograph. -->
+  <circle cx="50" cy="70" r="14" fill="url(#pearl-rings-sheen)" />
+</svg>

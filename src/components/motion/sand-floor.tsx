@@ -116,7 +116,29 @@ const PLATES = {
 } as const;
 
 const PORTRAIT_QUERY = "(max-width: 640px) and (orientation: portrait)";
-const DARK_QUERY = "(prefers-color-scheme: dark)";
+
+/**
+ * ⚠️ THE SITE IS DARK-ONLY AS OF 0.19.0, SO THIS LAYER IS TOO.
+ *
+ * This used to be `window.matchMedia("(prefers-color-scheme: dark)")`, and the
+ * comment on `PLATES` above still states the rule that made it necessary: the
+ * keys here mirror the two media queries in globals.css §10 EXACTLY, because if
+ * the two ever disagree the browser downloads one plate in order to display the
+ * other.
+ *
+ * That rule has not been repealed — it is being OBEYED. Pnina asked for the dark
+ * turquoise background and Daniel confirmed there is no light mode and no dark
+ * mode, that the site "stays the same no matter what the browser has"
+ * (2026-08-03), so §10 no longer branches on the OS setting and neither may
+ * this. Reading `prefers-color-scheme` here would mean a visitor whose phone is
+ * in light mode fetches the LIGHT plate and is shown the DARK page — the exact
+ * mismatch the `PLATES` comment warns about, just in the other direction.
+ *
+ * This is the same shape as the motion rule (CLAUDE.md rule 5): the device's
+ * preference is not an input to this site. If light mode ever comes back, this
+ * constant and the §10 queries change together, in one commit.
+ */
+const SCHEME = "dark" as const;
 
 /** Capped at 1.5 rather than the device's real ratio: this is an out-of-focus
  *  texture behind everything, and a 3× buffer on a phone is three times the fill
@@ -508,7 +530,6 @@ export function SandFloor() {
     };
 
     const portrait = window.matchMedia(PORTRAIT_QUERY);
-    const dark = window.matchMedia(DARK_QUERY);
 
     let sandTexture: WebGLTexture | null = null;
     let texWidth = 1;
@@ -600,7 +621,7 @@ export function SandFloor() {
       gl.uniform2f(draw.texel, 1 / field.w, 1 / field.h);
       const [cx, cy] = coverScale();
       gl.uniform2f(draw.coverScale, cx, cy);
-      const scheme = dark.matches ? "dark" : "light";
+      const scheme = SCHEME;
       gl.uniform1f(draw.freeSign, scheme === "dark" ? -1 : 1);
       gl.uniform2f(draw.relief, RELIEF_FREE[scheme], RELIEF_COST[scheme]);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
@@ -698,7 +719,7 @@ export function SandFloor() {
     };
 
     const loadTexture = () => {
-      const scheme = dark.matches ? "dark" : "light";
+      const scheme = SCHEME;
       const src = PLATES[scheme][portrait.matches ? "portrait" : "wide"];
       const image = new Image();
       image.decoding = "async";
@@ -766,7 +787,6 @@ export function SandFloor() {
     document.addEventListener("visibilitychange", onVisibility);
     canvas.addEventListener("webglcontextlost", onContextLost);
     portrait.addEventListener("change", onSchemeOrOrientation);
-    dark.addEventListener("change", onSchemeOrOrientation);
 
     return () => {
       disposed = true;
@@ -779,7 +799,6 @@ export function SandFloor() {
       document.removeEventListener("visibilitychange", onVisibility);
       canvas.removeEventListener("webglcontextlost", onContextLost);
       portrait.removeEventListener("change", onSchemeOrOrientation);
-      dark.removeEventListener("change", onSchemeOrOrientation);
       for (const f of fields) {
         gl.deleteTexture(f.texture);
         gl.deleteFramebuffer(f.fbo);

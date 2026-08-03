@@ -67,7 +67,6 @@ export default async function AccessibilityPage({
         )}
       />
       <PageHero
-        eyebrow={t("heroEyebrow")}
         title={t("heroTitle")}
         description={t("heroDescription")}
       />

@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { Plus } from "lucide-react";
 
 import { Reveal } from "@/components/ui/reveal";
-import { Eyebrow, SectionHeading } from "@/components/sections/marketing-sections";
+import { SectionHeading } from "@/components/sections/marketing-sections";
 import { cn } from "@/lib/utils";
 
 type FaqItem = { question: string; answer: string };
@@ -19,7 +19,6 @@ export function FaqSection() {
     <section className="bg-background px-6 py-14 sm:py-20">
       <div className="mx-auto max-w-3xl">
         <Reveal className="text-center">
-          <Eyebrow>{t("eyebrow")}</Eyebrow>
           <SectionHeading
             align="center"
             title={t("title")}

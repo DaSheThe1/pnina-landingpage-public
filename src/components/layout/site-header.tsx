@@ -133,29 +133,11 @@ export function SiteHeader() {
               </span>
             </Link>
 
-            {/* 44px while a thumb is the pointer, 36px from `lg` where the nav
-                appears and the pointer is a mouse. */}
-            <div className="hidden items-center gap-2 sm:flex">
-              {siteConfig.profiles.instagram ? (
-                <a
-                  href={siteConfig.profiles.instagram}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={t("instagram")}
-                  data-a11y-no-underline
-                  className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-foreground/12 bg-foreground/[0.03] text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent lg:h-9 lg:w-9"
-                >
-                  <InstagramIcon className="h-4.5 w-4.5" />
-                </a>
-              ) : null}
-              <WhatsAppLink
-                label={t("whatsapp")}
-                noUnderline
-                className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 text-whatsapp-ink transition-colors hover:border-[#25d366]/50 hover:bg-[#25d366]/15 lg:h-9 lg:w-9"
-              >
-                <WhatsAppIcon className="h-4.5 w-4.5" />
-              </WhatsAppLink>
-            </div>
+            {/* ⚠️ THE SOCIAL PAIR USED TO BE HERE TOO, `hidden sm:flex`, beside
+                the wordmark. It is gone from this side: as of 2026-08-04 the
+                same two icons are the inline-END cluster at EVERY width, which
+                is where the CTA used to be, so keeping a desktop-only second
+                copy would have put Instagram on the bar twice above 640px. */}
           </div>
 
           {/* ── HER TAGLINE, THE SECOND LINE OF HER OWN MASTHEAD ──
@@ -263,23 +245,42 @@ export function SiteHeader() {
           })}
         </nav>
 
-        {/* ── The inline-END cluster: the CTA, then the menu ── */}
+        {/* ── The inline-END cluster: her two links, then the menu ──
+            ⚠️ THE CTA LEFT THIS BAR ON 2026-08-04, AND IT WAS PNINA'S CALL.
+            "לשיחת היכרות" sat here at every width from 0.17.0 on, on the
+            reasoning that a 7,000px page needs something to tap. Two things
+            changed that. She reported never having noticed the button existed —
+            which is the only evidence that matters about a button — and the
+            page now carries a CTA after EVERY section (`SectionCta`), so the
+            job it was doing is done seven times lower down.
+            What takes its place is what she asked for: her Instagram and her
+            WhatsApp, as icons. The CTA is not gone, it moved into the menu
+            below, where the social row used to be. A straight swap.
+            ⚠️ Its DESIGN is the thing everyone liked and it is now the site's
+            standard: `LeadButton variant="brand"` — her Soft Gold with
+            `--cta-ink` on it — is what every `SectionCta` and both founder
+            buttons wear. Do not restyle that variant casually; it is no longer
+            one button. */}
         <div className="flex items-center gap-2">
-          {/* ON A PHONE TOO (Daniel, 2026-07-30). It carried
-              `hidden … sm:inline-flex`, so below 640px the bar had no CTA at
-              all and the page ran for two stretches of roughly 7,000px with
-              nothing to tap. It is the same button at every width, just tighter
-              below `sm`: `px-3` and no arrow, which is what makes it fit beside
-              the wordmark and the menu at 360px without wrapping. The label is
-              unchanged — this is her one promise and it does not get abbreviated
-              for a narrow screen. */}
-          <LeadButton
-            variant="brand"
-            className="h-11 rounded-lg px-3 sm:h-10 sm:px-4 [&_svg]:hidden sm:[&_svg]:block"
+          {siteConfig.profiles.instagram ? (
+            <a
+              href={siteConfig.profiles.instagram}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={t("instagram")}
+              data-a11y-no-underline
+              className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-foreground/12 bg-foreground/[0.03] text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent lg:h-9 lg:w-9"
+            >
+              <InstagramIcon className="h-4.5 w-4.5" />
+            </a>
+          ) : null}
+          <WhatsAppLink
+            label={t("whatsapp")}
+            noUnderline
+            className="a11y-compact-header-item inline-flex h-11 w-11 items-center justify-center rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 text-whatsapp-ink transition-colors hover:border-[#25d366]/50 hover:bg-[#25d366]/15 lg:h-9 lg:w-9"
           >
-            {t("cta")}
-            <ArrowRight data-icon="inline-end" />
-          </LeadButton>
+            <WhatsAppIcon className="h-4.5 w-4.5" />
+          </WhatsAppLink>
           <button
             type="button"
             aria-label={t("toggleMenu")}
@@ -339,6 +340,10 @@ export function SiteHeader() {
               {tNav(item.key)}
             </Link>
           ))}
+          {/* ⚠️ THIS IS WHERE THE CTA LIVES NOW, and the social row that used to
+              sit under it is gone — the same two links are on the bar itself at
+              every width. The swap is Pnina's (2026-08-04): the bar carries her
+              Instagram and her WhatsApp, the menu carries the one action. */}
           <LeadButton
             variant="brand"
             className="mt-2 h-11 rounded-lg px-4"
@@ -347,29 +352,6 @@ export function SiteHeader() {
             {t("cta")}
             <ArrowRight data-icon="inline-end" />
           </LeadButton>
-          <div className="flex gap-2">
-            <WhatsAppLink
-              onClick={() => setOpen(false)}
-              noUnderline
-              className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-[#25d366]/30 bg-[#25d366]/10 px-4 text-sm font-medium text-whatsapp-ink transition-colors hover:bg-[#25d366]/15"
-            >
-              <WhatsAppIcon className="h-4.5 w-4.5" />
-              {t("whatsapp")}
-            </WhatsAppLink>
-            {siteConfig.profiles.instagram ? (
-              <a
-                href={siteConfig.profiles.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                data-a11y-no-underline
-                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-foreground/12 bg-foreground/[0.03] px-4 text-sm font-medium text-foreground-soft transition-colors hover:border-brand/40 hover:text-brand-accent"
-              >
-                <InstagramIcon className="h-4.5 w-4.5" />
-                {t("instagram")}
-              </a>
-            ) : null}
-          </div>
         </nav>
       </div>
     </header>

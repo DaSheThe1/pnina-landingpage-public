@@ -41,17 +41,28 @@ export function BrandMark({
         width={size}
         height={size}
         priority
-        // "circle": the ring keeps a photographic mark from bleeding into the
-        // header background at 32px; without it the crop edge just dissolves.
+        // "circle": ⚠️ THE KEY STILL SAYS CIRCLE; THE SHAPE IS A ROUNDED SQUARE.
+        // Pnina, 2026-08-03: *"מעדיפה קווים ישרים"*, clarified by Daniel the
+        // next day as being about CIRCLES specifically rather than about the
+        // radius scale — *"where the image is, leave it like a square or
+        // rectangle instead of having it be a circle."* So `rounded-full`
+        // became `rounded-lg`, and nothing else about the radius system moved.
+        // The ring stays and still does its original job: it keeps a
+        // photographic mark from bleeding into the header background at 32px,
+        // where without it the crop edge just dissolves.
+        // The registry key is left as "circle" on purpose — renaming it would
+        // touch `src/content/media.ts`, this file and the `contain` branch for
+        // a value that means "the photograph treatment" either way. Read the
+        // shape, not the key; the same is true of the `--rose-*` tokens.
         // "contain": the opposite is required. A transparent cutout draws its
-        // own silhouette, so a circular crop would clip the dish and the ring
-        // would trace a hairline around empty air. No crop, no rounding, no
-        // ring, and `object-contain` so the whole shell fits the square box
-        // whatever its aspect ratio turns out to be.
+        // own silhouette, so any crop would clip the dish and the ring would
+        // trace a hairline around empty air. No crop, no rounding, no ring, and
+        // `object-contain` so the whole shell fits the square box whatever its
+        // aspect ratio turns out to be.
         className={cn(
           contain
             ? "object-contain"
-            : "rounded-full object-cover ring-1 ring-brand/30",
+            : "rounded-lg object-cover ring-1 ring-brand/30",
           className
         )}
         style={{ width: size, height: size }}
@@ -63,7 +74,7 @@ export function BrandMark({
     <span
       aria-hidden
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-full border border-brand/30 bg-brand-wash font-display text-brand-accent",
+        "inline-flex shrink-0 items-center justify-center rounded-lg border border-brand/30 bg-brand-wash font-display text-brand-accent",
         className
       )}
       style={{ width: size, height: size, fontSize: size * 0.52 }}

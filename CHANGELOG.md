@@ -12,6 +12,196 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.0] - 2026-08-04
+
+### Pnina's call: a price ladder, a CTA after every section, and her face
+
+**The offer**
+
+- **The price now tells a story: ₪690, then ₪490, then free.** Each of the first
+  two is crossed out with a gold X that draws itself as you reach it, with an
+  arrow leading down to the next, and the last step lands on "ללא עלות". The
+  panel it sits in now glows gently and keeps glowing.
+- **The two tracks left the home page.** צדפה and פנינה are on their own page at
+  `/offers`, which is not listed anywhere on the site and does not appear in
+  Google. Send the link to someone you are already speaking to. It now says how
+  many meetings each track includes: **4 in צדפה, 12 in פנינה**. No VAT line
+  anywhere, since you do not charge it.
+- The home page keeps only the free שיחת היכרות, which is what it is there to
+  sell.
+
+**The top of the page**
+
+- **The form at the top is a button.** Pressing it opens the same form as before.
+- **The header carries your Instagram and WhatsApp** instead of the button, and
+  the button moved into the menu.
+- Your second line breaks where you asked and is bigger; "(גם אם כבר החלטת…)" is
+  Pearl White instead of silver.
+
+**Down the page**
+
+- **A gold button after every section**, each with slightly different wording so
+  it does not read as the same nag seven times.
+- **The testimonials moved up**, to directly under the offer.
+- **Your new photo is in** — the one you sent on the call. Cropped to head and
+  shoulders in the "מי אני" section, where it now sits below the text rather
+  than beside it, and as a square in the header, no longer a circle.
+
+**The four steps**
+
+- **"שלב 1", "שלב 2" and the rest are gone** from the cards. The small
+  "שלב 1 מתוך 4" at the bottom stays.
+- The steps are short lines now, larger, centred, with no full stops, and each
+  line takes a different colour from your palette. The first line of step one is
+  bigger, bold and underlined.
+- **The background behind the steps in the animation is your Deep Ocean** instead
+  of black, at the same softness.
+
+**Colour**
+
+- **"למי הליווי מתאים" alternates cream and silver cards with dark text**, and
+  each heading now sits on one line with its icon.
+- **There is no black left on the site.** The dark text on gold buttons is your
+  Deep Ocean, deepened.
+- **The small labelled pills above every section are gone** — all 20 of them.
+
+**Wording**
+
+- The free-call sentence, the two bullets under it, and several lines in the
+  steps were tightened exactly as you asked on the call.
+
+### Still needed from Pnina
+
+- The three lines describing ₪690, ₪490 and free are a draft and need her yes.
+- How long a single מפגש runs.
+- The seven button labels should be read as a block.
+
+## [0.20.1] - 2026-08-03
+
+### The phone's browser bar is her colour now
+
+- **On a phone, the bar at the top of the browser was still painted the old
+  near-black.** The page itself was already Pnina's Deep Ocean, but the strip of
+  browser above it had been left on the colour we used before her hex arrived,
+  so the two met edge to edge and her turquoise looked washed out and lighter
+  than the swatch she sent. The bar now carries `#264653` exactly, so the page
+  runs to the top of the screen in one colour.
+- Re-measured and corrected the contrast notes for the form-field border, the
+  card hairline and the focus ring. The numbers written beside them described
+  the first dark version of the site, not the one that shipped. Nothing on
+  screen changed; the notes now match it.
+
+## [0.20.0] - 2026-08-03
+
+### Her review round: a bigger headline, the caption on the video, two versions to choose from
+
+- **Two versions of the hero, one build.** The page normally shows the light
+  beams across the top; adding `?rays=off` to the address shows it without them.
+  Same site, same everything else, one parameter apart, so Pnina can look at both
+  and pick. Whichever she chooses becomes the only one and the switch comes out.
+- **The headline is as big as it can be.** It went up about 13% on a phone, and
+  the way that was bought is worth knowing: the limit is not the screen height,
+  it is the line. She asked for exactly two lines, so the headline can only grow
+  until "את לא צריכה להסביר לי כלום" no longer fits on one. Narrowing the page
+  margins on a phone by 8px was worth more than anything else available, and past
+  that point the only way to go bigger is a shorter sentence.
+- **The send button is allowed below the first screen now**, which is what paid
+  for the headline. The name and phone boxes are still visible without scrolling,
+  so a woman opening the page still sees that there is a form and what it asks
+  for.
+- **"צפי בסרטון עד הסוף" and the line under it now sit inside the video's frame**,
+  on the card with the clip, the way the page she sent as a model does. The
+  sentence before them stays on the page above, because it is about her, not
+  about the video.
+- **"צפי בסרטון עד הסוף" glows gold now**, and the line above it is in her Oyster
+  Beige rather than another near-white, so the headline stays the loudest thing
+  on the screen and the two no longer read as one block.
+- The comma at the end of "…ונמאס לך להרגיש תקועה" is gone, since the two halves
+  of that sentence now live in different places.
+- **Her logo moved.** It was sitting in the empty band between the form and the
+  About section, off to one side, reading as a stray badge. It is now a
+  watermark behind the headline, which is where her own brand book puts it
+  relative to her name.
+- **The video shows a play triangle when it is paused**, so a stopped clip no
+  longer looks like a broken one, and **a white progress line fills along the
+  bottom** as it plays. That line matters here: the page asks her to watch to the
+  end, and not knowing how much is left is a reason to stop.
+- **The animation section is no longer darkened.** Her sunset plays at full
+  strength again.
+
+## [0.19.0] - 2026-08-03
+
+### The site goes dark, and the video gets out of its own way
+
+Pnina said the site did not speak luxury to her, and sent a dark landing page as
+her model. This is that version: her Deep Ocean as the background, her Soft Gold
+and Pearl White as the type, and a much bigger, much simpler video.
+
+- **Everything is dark now, for everyone.** There is no light version and no dark
+  version, and the site no longer looks at what your phone or laptop is set to.
+  A visitor whose phone is in light mode and one whose laptop is in dark mode see
+  exactly the same page.
+- **The background is her Deep Ocean, `#264653`, exactly as she wrote it in her
+  brand book.** She offered two options, the shell-and-pearl photograph or the
+  dark turquoise; this is the second one, and it is her literal colour rather
+  than something derived from it. Two earlier attempts made it much darker, to
+  match the near-black of the reference page she sent; both were wrong, because
+  what she actually named was a colour.
+  ⚠️ **This means her sunset photograph is currently switched off.** A picture
+  showing through the background changes the background, and her hex could not be
+  her hex with it there. She asked for that photograph full-bleed the day before
+  she asked for the turquoise, so this is worth her deciding rather than us: it
+  is one line to bring back, and the middle setting is to bring it back faint.
+- **The headline is Pearl White with a gold glow around it**, which is what the
+  page she sent actually does. Gold letters inside a gold glow turned out to be a
+  smudge rather than a neon; white letters let the glow get brighter and be
+  easier to read at the same time.
+- **The headings are her four light colours** (Pearl White, Oyster Beige, Soft
+  Gold, Mist Grey), exactly as she asked. The button is her Soft Gold.
+- **The headline glows,** and light falls across the top of the page from both
+  corners, like the page she sent. Nothing blinks, pulses or moves: it is simply
+  lit. That is deliberate and it is not going to change.
+- **The headline is two lines and the full stops are gone.** To fit two lines on
+  a phone it had to get smaller; on a desktop, where there is no first-screen
+  limit, it got noticeably bigger instead.
+- **"צפי בסרטון עד הסוף" is now large, gold and underlined**, with the rest of
+  the sentence quieter behind it.
+- **Her logo is in the bottom-left corner of the opening screen** — the nested
+  gold rings with the pearl, from her brand book. We were never sent the file, so
+  it was redrawn: the mark is circles and a sphere, so a redraw is exact rather
+  than an imitation. If she sends the original it drops straight in.
+- **The video is much bigger** — on a phone it now runs almost to both edges of
+  the screen, and on a desktop it is about a quarter wider than it was.
+- **Tapping the video pauses it. Tapping again resumes.** It no longer jumps to
+  full screen when you touch it, and the row of buttons across the top of the
+  frame is gone. Full screen is now one small button in the corner, for when she
+  wants it. The browser's own control bar appears only in full screen instead of
+  sitting across the video forever after the first tap.
+- The line "הפרטים נשמרים אצלי בלבד ולא מועברים לאף גורם" was taken **out of the
+  form on the front page only**, where it was costing first-screen space. It is
+  still on the contact page and in the popup, where there is room for it and
+  where it is worth saying.
+
+- **The pearl animation was a bright peach block in the middle of a dark page.**
+  Scrolling into it was like walking out of a dark room into full sun and back
+  again. It is now graded to sit in the page: her shell, her pearl and the light
+  on the water all still read, they are simply lit the way the rest of the page
+  is. Her actual video files are untouched, so the bright version is one line
+  away if she prefers it.
+
+**Deliberately not copied from her reference:** it opens with "מעל 2,000 הרשמות
+תוך 4 חודשים". This site carries no counters and no countdowns, and that has not
+changed. We took the look, not the pressure.
+
+**One thing that survived on purpose.** While the video is still playing silently
+on arrival, one small pause button sits in the corner. It disappears the moment
+she presses "הפעלה עם קול" and never comes back. A video that starts on its own
+has to be stoppable; that is an accessibility requirement, not a preference.
+
+**If she prefers the light version**, the tag `before-brandbook-0.17.3` is still
+the site as it was two rounds ago, and going back to light is about fifteen lines
+rather than a rebuild.
+
 ## [0.18.0] - 2026-08-03
 
 ### Pnina's brand book, on the site

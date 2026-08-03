@@ -335,18 +335,29 @@ export function ContactForm({
         )}
       </button>
 
-      {/* The one thing allowed below the fold in the compact hero: it is
-          reassurance about what happens to her details AFTER she sends them, so
-          it does not have to be read before the button is pressed. Still
-          rendered, still in the DOM, still announced in order. */}
-      <p
-        className={cn(
-          "text-center text-xs text-subtle-foreground",
-          compact ? "mt-2.5" : "mt-3"
-        )}
-      >
-        {t("simpleNote")}
-      </p>
+      {/* ── THE PRIVACY NOTE, AND WHY IT IS GONE FROM THE HERO ONLY ──
+          Daniel, 2026-08-03: *"we can completely remove the part in the form …
+          It's useless and takes just screen space."* Screen space is the
+          operative word, and it is only scarce in ONE place: the compact hero,
+          where the headline, the video and the whole form have to land above a
+          844px fold (see the `compact` note at the head of this file).
+
+          So it is dropped exactly there, and kept everywhere the same component
+          renders at full size — /contact, the lead popup, the closing CTA. On
+          those there is no fold pressure, and "your details stay with me and go
+          nowhere else" is not decoration for this audience: it is the answer to
+          the question a woman deciding whether to type her phone number is
+          actually asking. Removing a genuine reassurance to save 30px on a page
+          that has 30px to spare would be trading the wrong thing.
+
+          The string stays in messages/he.json either way. If the instruction
+          turns out to have meant "everywhere", this is one boolean, not a
+          re-translation. */}
+      {compact ? null : (
+        <p className="mt-3 text-center text-xs text-subtle-foreground">
+          {t("simpleNote")}
+        </p>
+      )}
     </form>
   );
 }

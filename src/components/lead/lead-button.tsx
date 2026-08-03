@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { VariantProps } from "class-variance-authority";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -17,6 +17,7 @@ export function LeadButton({
   size,
   onClick,
   source = "landing",
+  ...rest
 }: {
   children: ReactNode;
   className?: string;
@@ -26,7 +27,10 @@ export function LeadButton({
   onClick?: () => void;
   /** Tags the lead with which CTA produced it, so n8n can route the reply. */
   source?: LeadSource;
-}) {
+} & Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "className" | "children" | "type"
+>) {
   const { open } = useLeadDialog();
   return (
     <button
@@ -36,6 +40,10 @@ export function LeadButton({
         open(source);
       }}
       className={cn(buttonVariants({ variant, size }), className)}
+      // Lets a call site attach a test hook (`data-hero="cta"`, read by
+      // e2e/hero-fold.spec.ts) or an aria attribute without this component
+      // having to know about it.
+      {...rest}
     >
       {children}
     </button>

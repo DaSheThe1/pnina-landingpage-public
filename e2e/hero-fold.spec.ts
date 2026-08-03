@@ -15,23 +15,41 @@ import { expect, test } from "@playwright/test";
  * nothing else in the suite would notice until someone opened the site on a
  * phone. So this spec fails the build instead.
  *
+ * ── ⚠️ THE HERO HAS NO FORM ANY MORE, SO THE CONTRACT CHANGED (2026-08-03) ──
+ * This spec has been rewritten twice in two days and both times BY THE OWNER,
+ * so the history matters more than usual:
+ *
+ *   0.17.0  everything up to and including the submit button above the fold
+ *   0.20.0  Daniel relaxed it to the FIELDS, so the headline could grow:
+ *           *"the bottom of the send button… you can make it a little bit
+ *            downwards… the header itself needs to be bigger"*
+ *   0.21.0  Pnina replaced the whole form with a single button:
+ *           *"להחליף את השדות לכפתור"*
+ *
+ * There is no name field in the hero to measure any more. What replaces it is
+ * the thing the fields were standing in for all along — a visible way to act —
+ * so the spec now requires the HERO CTA above the fold, and that is a stricter
+ * guarantee than 0.20.0's, not a looser one: the button is the whole ask, where
+ * the fields were only the start of it.
+ *
+ * ⚠️ THIS IS NOT A LICENCE TO KEEP MOVING THE LINE. Both moves were made by the
+ * people who set it, for stated reasons, and each recorded here. If this spec
+ * fails, something in the hero has grown and the fix is to take it out — not to
+ * demote another element from the list below.
+ *
  * ── THE BUDGET ──
  * 390×844 is the iPhone 12/13/14/15 class and the modal phone for this
- * audience. Of that, 64px is the sticky header (`h-16`), leaving ~680px:
- *
- *     headline      ~91      objections   ~90
- *     video (16:9)  208      form        ~248
+ * audience. Of that, 64px is the sticky header (`h-16`), leaving ~680px.
  *
  * ── WHAT IS DELIBERATELY *NOT* ASSERTED ──
- * The privacy note under the submit button ("הפרטים נשמרים אצלי בלבד") is
- * allowed below the fold: it is reassurance about what happens AFTER she sends,
- * so it does not have to be read before the button is pressed.
+ * Anything inside the lead dialog. It does not exist until the button is
+ * pressed, and by then the fold is not what is on screen.
  *
  * ── AND WHAT DOES NOT FIT ──
- * A 375×667 iPhone SE. There the submit button lands just below the fold. That
- * is a knowingly accepted limit rather than an oversight, so the SE case is
- * asserted as a WEAKER guarantee below (headline + video + at least the first
- * field) — if someone later makes the SE fit completely, tighten it.
+ * A 375×667 iPhone SE. There the CTA lands just below the fold. That is a
+ * knowingly accepted limit rather than an oversight, so the SE case is asserted
+ * as a WEAKER guarantee below (headline + her sentence + the video) — if someone
+ * later makes the SE fit completely, tighten it.
  */
 
 /**
@@ -45,13 +63,40 @@ import { expect, test } from "@playwright/test";
  */
 const HERO = {
   headline: "h1",
+  /**
+   * Her sentence is split across the video frame's edge as of 0.19.0, so it is
+   * three hooks rather than two:
+   *   secondary-lead  "אם את מרגישה…" — the feeling, in the copy column, OUTSIDE
+   *                   the frame
+   *   secondary       "צפי בסרטון עד הסוף👇🏻" — the instruction, INSIDE the frame
+   *                   above the clip
+   *   secondary-note  her parenthetical, inside the frame under it
+   * All three are still required above the fold: the split moved them, it did
+   * not make any of them optional.
+   */
+  secondaryLead: '[data-hero="secondary-lead"]',
   secondary: '[data-hero="secondary"]',
   secondaryNote: '[data-hero="secondary-note"]',
   video: "section:has(h1) video",
-  nameField: 'section:has(h1) input[autocomplete="name"]',
-  phoneField: 'section:has(h1) input[autocomplete="tel"]',
-  submit: 'section:has(h1) button[type="submit"]',
+  /** The one thing to press. Addressed by `data-hero`, like the copy blocks,
+   *  so the spec survives the button changing variant or label again. */
+  cta: '[data-hero="cta"]',
 } as const;
+
+/**
+ * The lead dialog, and everything inside it.
+ *
+ * ⚠️ ALL THREE MUST BE SCOPED TO THE DIALOG. The page ALSO renders the final
+ * CTA's inline form, so a bare `input[autocomplete="name"]` matches two
+ * elements and Playwright's strict mode fails the test rather than picking one.
+ * That is the right behaviour and the reason these are written this way — a
+ * test that silently filled the wrong form would still pass and would be
+ * testing nothing.
+ */
+const DIALOG = '[role="dialog"]';
+const DIALOG_NAME = `${DIALOG} input[autocomplete="name"]`;
+const DIALOG_TEL = `${DIALOG} input[autocomplete="tel"]`;
+const DIALOG_SUBMIT = `${DIALOG} button[type="submit"]`;
 
 /**
  * Is the element wholly inside the first viewport? Measured against the
@@ -73,7 +118,7 @@ test.describe("the hero fits above the fold", () => {
     await page.goto("/");
     // The reveals animate on scroll-timeline; give layout a settled frame
     // rather than racing the first paint.
-    await page.locator(HERO.submit).waitFor({ state: "visible" });
+    await page.locator(HERO.cta).waitFor({ state: "visible" });
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     );
@@ -107,7 +152,7 @@ test.describe("the hero fits above the fold", () => {
   test("393×852 — the same, one size up", async ({ page }) => {
     await page.setViewportSize({ width: 393, height: 852 });
     await page.goto("/");
-    await page.locator(HERO.submit).waitFor({ state: "visible" });
+    await page.locator(HERO.cta).waitFor({ state: "visible" });
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     );
@@ -121,11 +166,11 @@ test.describe("the hero fits above the fold", () => {
   }) => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto("/");
-    await page.locator(HERO.submit).waitFor({ state: "visible" });
+    await page.locator(HERO.cta).waitFor({ state: "visible" });
     await page.evaluate(
       () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     );
-    for (const name of ["headline", "secondary", "video"] as const) {
+    for (const name of ["headline", "secondaryLead", "video"] as const) {
       expect(await bottomEdge(page, HERO[name]), `${name} bottom edge`).toBeLessThanOrEqual(667);
     }
   });
@@ -146,9 +191,14 @@ test.describe("the hero fits above the fold", () => {
       });
     });
 
-    await page.locator(HERO.nameField).fill("בדיקה");
-    await page.locator(HERO.phoneField).fill("0501234567");
-    await page.locator(HERO.submit).click();
+    // The hero is a button now, so the form is one press away. `source: "hero"`
+    // has to survive that indirection — the button passes it to the shared
+    // dialog — which is exactly what this test is for.
+    await page.locator(HERO.cta).click();
+    await page.locator(DIALOG_NAME).waitFor({ state: "visible" });
+    await page.locator(DIALOG_NAME).fill("בדיקה");
+    await page.locator(DIALOG_TEL).fill("0501234567");
+    await page.locator(DIALOG_SUBMIT).click();
 
     await expect.poll(() => posted).not.toBeNull();
     expect(posted!.source).toBe("hero");

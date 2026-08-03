@@ -3,7 +3,6 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Check } from "lucide-react";
 
 import {
-  Eyebrow,
   PageShell,
   SectionHeading,
 } from "@/components/sections/marketing-sections";
@@ -99,7 +98,6 @@ export default async function LecturesPage({
       />
 
       <PageHero
-        eyebrow={tPage("heroEyebrow")}
         title={tPage("heroTitle")}
         description={tPage("heroDescription")}
       >
@@ -148,7 +146,6 @@ export default async function LecturesPage({
           <Reveal delay={80}>
             <div>
               <SectionHeading
-                eyebrow={t("intro.eyebrow")}
                 title={t("intro.title")}
                 description={t("intro.description")}
               />
@@ -200,7 +197,6 @@ export default async function LecturesPage({
         <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-2">
           <Reveal>
             <div>
-              <Eyebrow>{t("audiences.eyebrow")}</Eyebrow>
               <h2 className="mt-5 text-[2.4rem] text-balance">
                 {t("audiences.title")}
               </h2>
@@ -220,7 +216,6 @@ export default async function LecturesPage({
 
           <Reveal delay={80}>
             <div className="rounded-2xl border border-foreground/[0.08] bg-surface-1 p-7 shadow-card">
-              <Eyebrow>{t("format.eyebrow")}</Eyebrow>
               <h2 className="mt-5 text-[2.0rem]">
                 {t("format.title")}
               </h2>
@@ -248,7 +243,6 @@ export default async function LecturesPage({
           <Reveal>
             <SectionHeading
               align="center"
-              eyebrow={t("topics.eyebrow")}
               title={t("topics.title")}
               description={t("topics.description")}
             />

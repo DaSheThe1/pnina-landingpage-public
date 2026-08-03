@@ -1,59 +1,76 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { Price } from "@/components/ui/price";
 import { prefersReducedMotion } from "@/lib/eval-flags";
 
 /**
- * The free call's value moment, and the page's conversion beat:
- * "שווי השיחה ₪490" — a gold hairline drawn toward it — "ללא עלות" — the button.
+ * The free call's value moment, and the page's conversion beat — as of 0.21.0 a
+ * three-rung PRICE LADDER:
+ *
+ *     המחיר הרגיל לשיחה אישית איתי      ₪690  ✕
+ *                    ↓
+ *     המחיר שקבעתי לנשים שמגיעות דרך האתר  ₪490  ✕
+ *                    ↓
+ *              היום, בשבילך
+ *                 ללא עלות
+ *                 [ button ]
  *
  * ── THIS IS THE ONE PLACE THE PAGE IS ALLOWED TO RAISE ITS VOICE ──
  * Everything else on this site whispers on purpose. Daniel's call (2026-07-29)
  * is that this single panel may be warm, gold, large and openly pleased with
  * itself, because what it is announcing is a gift and a gift may be announced.
- * That licence is LOCAL: it stops at the edge of this panel and does not travel
- * to the tracks below it, the process, or anything else.
+ * That licence is LOCAL: it stops at the edge of this panel.
  *
- * ── AND HERE IS WHERE IT STOPS ──
- * The ₪490 is her own framing of the introductory call ("שיחת היכרות במתנה
- * בשווי 490 ₪"), so the page may say what the call is worth and then say it
- * costs nothing. The word מתנה is HERS and it leads: since 2026-07-30 the
- * panel's own h3 is "שיחת היכרות במתנה" (offers.intro.title), so by the time a
- * reader reaches this anchor the thing has already been named a gift and the
- * ₪490 is supporting it rather than setting up a discount.
- * What this may NOT do is SELL that gap. Concretely, and these are
- * CLAUDE.md rule 4, not taste:
- *   - no strikethrough, no red, no "X" stamp, no "was/now", no % off;
- *   - no countdown, no capacity claim, no "only N left";
- *   - NOTHING LOOPS. Every loud thing here — the entrance, the shine across
- *     "ללא עלות", the button's sheen — happens exactly ONCE, on arrival, and
- *     then the panel is still. A pulse that repeats every few seconds is a
- *     heartbeat pointed at someone in distress; if you find yourself adding
- *     `infinite` to a keyframe in globals.css §9, the answer is no.
- * Loud once is enthusiasm. Loud forever is pressure.
+ * ── ⚠️ TWO OF THIS FILE'S OWN RULES WERE REVERSED, BY THE PEOPLE WHO SET THEM ──
+ * The paragraph that stood here forbade a strikethrough and forbade anything
+ * that loops, and both are now allowed. Neither was overruled by an agent:
+ *
+ * 1. **THE STRIKETHROUGH IS BACK, AND THE REASON THE BAN EXISTED IS GONE.**
+ *    AGENTS.md rule 4 banned struck-through prices because the ones the template
+ *    shipped were INVENTED — "the only ones that ever existed here were invented".
+ *    ₪690 and ₪490 are Pnina's own numbers, given on the 2026-08-03 call, and she
+ *    asked for the ladder herself after seeing the one on Daniel's other landing
+ *    page. A strikethrough on a number a person really charges is a disclosure;
+ *    the ban was about fiction, not about the line through the digits.
+ *    ⚠️ It still may not become a DISCOUNT: no red, no "%", no "היה/עכשיו", no
+ *    countdown, no capacity claim, no "נשארו N מקומות". The Yarin panel this was
+ *    ported from carries "ל-10 הראשונים החודש" and "נשארו מעט מקומות לחודש הזה";
+ *    NEITHER came across, and neither may.
+ *
+ * 2. **THE PANEL'S GLOW MAY LOOP. THE PRICES MAY NOT.** Daniel, 2026-08-04, asked
+ *    directly why the glow could not breathe forever the way Yarin's does. It can,
+ *    and it does: a slow box-shadow breath says "this panel is special", which is
+ *    not a pressure mechanic — nothing about it communicates scarcity or a
+ *    deadline. What did NOT come across is Yarin's `.price-pulse`, which scales
+ *    the struck prices up and down forever like a television ad. That one is the
+ *    thing rule 4 named, and pointing a repeating flash at a woman reading about
+ *    her own assault is where the line actually is.
+ *    So: the panel breathes; the numbers hold still; everything in the SEQUENCE
+ *    below (the rungs landing, the X stamps, the arrows drawing, the shine, the
+ *    button's bloom) still happens exactly ONCE per arrival.
+ *    ⚠️ And the glow is gated on the accessibility panel's switch like everything
+ *    else — see §9. Yarin's version `!important`s its way through reduced motion;
+ *    rule 5 forbids that here, and it costs nothing to obey.
  *
  * ── THE COMPOSITION ──
- * A diagonal, read in Hebrew's own direction. The value line sits at the inline
- * START (the RIGHT in Hebrew); the arrow leaves it and travels toward the
- * inline END, descending; "ללא עלות" sits at the inline END of the next line,
- * set in the display serif at the section's warmest readable gold and sized
- * just under the section's own h2 — the second-largest thing in the section,
- * which is exactly the weight the argument deserves. Then the button.
+ * A vertical descent rather than 0.17.x's single diagonal. Each rung is a label
+ * and a struck price; between rungs an arrow draws downward; the last step lands
+ * on "ללא עלות", set in the body face at a real 700 in the warmest gold that is
+ * legal for type, sized just under the section's own h2. Then the button.
  *
- * The stack is capped (16rem) so the diagonal keeps its proportions on a phone,
+ * ⚠️ THE OLD CURVING ARROW IS GONE ON PURPOSE. There used to be one long curve
+ * sweeping from the value line down to the gift. Pnina asked for it replaced by
+ * arrows BETWEEN the price steps ("instead of having that weird curving arrow…
+ * a nice arrow animation between each section of the price"), which is also what
+ * makes the ladder legible: the arrow is now the operator between two numbers
+ * rather than decoration beside one.
+ *
+ * The stack is capped (17rem) so the ladder keeps its proportions on a phone,
  * where the column is much wider than the 19rem it gets on a desktop. The
  * button is NOT capped: it spans the column.
- *
- * The SVG is authored LTR — it starts top-left and ends bottom-right — and
- * carries `data-icon="inline-end"`, which is this repo's existing convention
- * for "an inline glyph that points along the reading direction": one rule in
- * globals.css mirrors it under `[dir="rtl"]`. Mirroring flips the geometry and
- * the draw direction together, so in Hebrew it starts under the value at the
- * right and arrives at the left, arrowhead and all, with no second drawing to
- * keep in sync.
  *
  * ── HOW IT PLAYS, AND WHY THIS ONE IS NOT A view() TIMELINE ──
  * The rest of the motion system (globals.css §1, §2, §5, §6) is scroll-driven:
@@ -162,16 +179,24 @@ const BLANK_FRAMES_ARRIVED = 2;
  *  extra frames are slack for an observer that is merely late, not broken. */
 const BLANK_FRAMES_APPROACHING = 4;
 
+export type LadderRung = {
+  /** What the number IS. Without this a struck price is a number with a line
+   *  through it and no argument — see the TODO(client) note in `OffersSection`. */
+  label: string;
+  /** "₪690" / "₪490", already formatted with the sign. Hers, both of them. */
+  price: string;
+};
+
 export function FreeCallAnchor({
-  valueLabel,
-  valuePrice,
+  rungs,
+  freeLabel,
   free,
   children,
 }: {
-  /** offers.intro.valueLabel — "שווי השיחה". */
-  valueLabel: string;
-  /** offers.intro.valuePrice — "₪490". */
-  valuePrice: string;
+  /** offers.ladder.rungs — the struck rungs, in descending order. */
+  rungs: LadderRung[];
+  /** offers.ladder.freeLabel — "היום, בשבילך", the line above the payoff. */
+  freeLabel: string;
   /** offers.intro.free — "ללא עלות". */
   free: string;
   /** The section's one CTA. It lives inside the sequence so it can be the last
@@ -429,75 +454,119 @@ export function FreeCallAnchor({
       className="free-anchor"
       data-anchor={state === "static" ? undefined : state}
     >
-      <div className="max-w-[16rem]">
-        {/* A FLEX row, not "label, space, price". Assistant's word space is
-            4px at this size and the shekel sign has almost no left side
-            bearing, so "שווי השיחה ₪490" set as running text renders as
-            "שווי השיחה₪490" — the label and the number touch (Daniel,
-            2026-07-30). `gap-2` gives the price its own air and cannot be
-            collapsed by JSX whitespace handling the way a literal space can.
-            `items-baseline` keeps the two sitting on one line of type. */}
-        <p className="free-anchor__value flex items-baseline gap-2 text-base leading-relaxed text-muted-foreground">
-          <span>{valueLabel}</span>
-          <Price>{valuePrice}</Price>
-        </p>
-
-        {/* Decorative: the sentence is carried by the two lines of text either
-            side of it, and a screen reader reads "שווי השיחה ₪490" then
-            "ללא עלות" with nothing missing. */}
-        <svg
-          aria-hidden
-          focusable="false"
-          data-icon="inline-end"
-          className="free-anchor__arrow"
-          viewBox="0 0 110 56"
-          width={110}
-          height={56}
-        >
-          {/* ── The metal ──
-              A flat gold stroke is a gold-coloured line; a line that runs pale
-              → deep → pale along its length is a line made of METAL, and that
-              is the whole difference. Bright stops are safe here in a way they
-              are not in type: this arrow is decorative and aria-hidden, so it
-              is under no contrast obligation at all.
-              The id is global to the document, which is fine — this component
-              renders once per page — but do not copy the pattern to anything
-              that can appear twice without giving it a unique id.
-              globals.css §9 declares `stroke: var(--gold)` immediately before
-              `stroke: url(#free-anchor-metal)`, so a renderer that cannot
-              resolve the reference paints the bright gold rather than nothing. */}
+      <div className="free-anchor__ladder max-w-[17rem]">
+        {/* ── The metal, declared once for every arrow and every X below ──
+            A flat gold stroke is a gold-coloured line; a line that runs pale →
+            deep → pale along its length is a line made of METAL, and that is the
+            whole difference. Bright stops are safe here in a way they are not in
+            type: all of this is decorative and `aria-hidden`, so it is under no
+            contrast obligation at all.
+            The id is global to the document, which is fine — this component
+            renders once per page — but do not copy the pattern to anything that
+            can appear twice without giving it a unique id. globals.css §9
+            declares `stroke: var(--gold)` immediately before
+            `stroke: url(#free-anchor-metal)`, so a renderer that cannot resolve
+            the reference paints the bright gold rather than nothing. */}
+        <svg aria-hidden focusable="false" width={0} height={0} className="absolute">
           <defs>
-            <linearGradient
-              id="free-anchor-metal"
-              x1="0"
-              y1="0"
-              x2="1"
-              y2="1"
-            >
+            <linearGradient id="free-anchor-metal" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0%" stopColor="#ffd97a" />
               <stop offset="45%" stopColor="#d4a017" />
               <stop offset="100%" stopColor="#f6c84c" />
             </linearGradient>
           </defs>
-
-          {/* pathLength=1 normalises the curve so `stroke-dasharray: 1` is
-              exactly one full stroke and the draw is a plain 1 → 0 dashoffset,
-              independent of the rendered size. Deliberately no
-              `vector-effect="non-scaling-stroke"`: it resolves the dash pattern
-              in screen space instead of the normalised one and the arrow draws
-              as fragments (the same trap documented on the process spine). The
-              viewBox is authored 1:1 with the rendered box instead, so the
-              stroke width in globals.css is a real pixel width. */}
-          <path
-            className="free-anchor__line"
-            d="M 5 8 C 57 8 77 20 103 50"
-            pathLength={1}
-          />
-          <path
-            className="free-anchor__head"
-            d="M 88.5 44 L 103 50 L 99.1 34.8"
-          />
         </svg>
+
+        {rungs.map((rung, index) => (
+          <div
+            key={rung.price}
+            className="free-anchor__rung"
+            // Drives the per-rung animation delays in §9, so adding a third rung
+            // is a copy change and not a CSS change.
+            style={{ "--rung": index } as CSSProperties}
+          >
+            <p className="free-anchor__rung-label">{rung.label}</p>
+
+            {/* The price and its X share a positioning context so the strokes
+                are drawn across the digits rather than beside them. `w-fit` is
+                what keeps the X the width of the number instead of the column. */}
+            <p className="free-anchor__rung-price">
+              <span className="free-anchor__rung-figure">
+                <Price>{rung.price}</Price>
+                {/* Two strokes, corner to corner. `preserveAspectRatio="none"`
+                    plus `vector-effect="non-scaling-stroke"` lets the box
+                    stretch to whatever the number measures while the stroke
+                    stays 2px — the one place in this file where non-scaling IS
+                    correct, because these are straight lines with no dash
+                    pattern to resolve. */}
+                <svg
+                  aria-hidden
+                  focusable="false"
+                  viewBox="0 0 100 100"
+                  preserveAspectRatio="none"
+                  className="free-anchor__x"
+                >
+                  <line
+                    className="free-anchor__x-stroke"
+                    x1="3"
+                    y1="16"
+                    x2="97"
+                    y2="84"
+                    vectorEffect="non-scaling-stroke"
+                    pathLength={1}
+                  />
+                  <line
+                    className="free-anchor__x-stroke free-anchor__x-stroke--second"
+                    x1="97"
+                    y1="14"
+                    x2="4"
+                    y2="86"
+                    vectorEffect="non-scaling-stroke"
+                    pathLength={1}
+                  />
+                </svg>
+              </span>
+            </p>
+
+            {/* The operator between this rung and the next. Decorative: a screen
+                reader reads label, price, label, price, "ללא עלות" in order and
+                loses nothing. */}
+            <svg
+              aria-hidden
+              focusable="false"
+              className="free-anchor__step-arrow"
+              viewBox="0 0 24 44"
+              width={24}
+              height={44}
+            >
+              {/* ⚠️ NOT PERFECTLY VERTICAL, AND THAT IS A BUG FIX, NOT A DESIGN
+                  CHOICE. This was `M 12 2 L 12 34` and rendered NOTHING while
+                  the arrowhead beside it rendered fine.
+
+                  The cause is an SVG rule that is easy to lose a morning to: the
+                  stroke is painted from `#free-anchor-metal`, and a
+                  `<linearGradient>` defaults to `gradientUnits="objectBoundingBox"`.
+                  A perfectly vertical line has a bounding box of ZERO WIDTH, a
+                  gradient over a zero-area box is undefined, and the spec says
+                  the element is simply not rendered. The chevron below has both
+                  width and height, which is why only half the arrow appeared.
+
+                  Leaning the line by 0.8 units over 32 gives the box a real
+                  width. That is a 1.4° tilt on a 2px stroke — invisible — and it
+                  keeps the metal gradient, which is the whole point of the
+                  stroke. The alternative was `gradientUnits="userSpaceOnUse"`,
+                  which would have re-based the X strokes sharing this gradient
+                  as well.
+
+                  The path is 32 units long and globals.css §9 uses that number
+                  as the dash for the draw. Change one, change the other. */}
+              <path className="free-anchor__step-line" d="M 11.6 2 L 12.4 34" />
+              <path className="free-anchor__step-head" d="M 4.5 26 L 12 35.5 L 19.5 26" />
+            </svg>
+          </div>
+        ))}
+
+        <p className="free-anchor__free-label">{freeLabel}</p>
 
         {/* No `text-gold-deep` here on purpose: the colour is `.free-anchor__free`
             in globals.css §9, because the word is painted from a metallic

@@ -27,6 +27,7 @@ import { useEffect, useMemo, useRef } from "react";
 import { useTranslations } from "next-intl";
 
 import { prefersReducedMotion } from "@/lib/eval-flags";
+import { cn } from "@/lib/utils";
 
 const STATIONS = 4;
 const MOBILE_QUERY = "(max-width: 640px)";
@@ -55,7 +56,27 @@ const PROCESS_MEDIA = {
  * desktop overlay. These omissions only reduce how much of the pearl a 390px
  * viewport has to cover.
  */
-const MOBILE_OMITTED_LINES = new Set(["1:1", "2:3", "3:1"]);
+/* ⚠️ EMPTY SINCE 0.21.0, AND THAT IS THE POINT, NOT AN OVERSIGHT.
+   This used to drop three lines on a phone because the steps were dense
+   paragraphs and the card could not hold them. Pnina rewrote every step into
+   SHORT LINES on the 2026-08-03 call (*"שורות קצרות עם טקסט גדול יותר"*), so
+   the longest card is now eight fragments instead of five sentences and every
+   one of them fits. Dropping any of them would now be hiding her copy from the
+   view she cares most about.
+   Kept as a mechanism rather than deleted: if a future step outgrows the card
+   again, this is where a line is omitted, and `"step:line"` is the key. */
+const MOBILE_OMITTED_LINES = new Set<string>([]);
+
+/* Her four heading colours, cycled down a step's lines. All four are declared
+   verbatim from her brand book in globals.css and all four are measured against
+   `.scrub-copy`'s overlay; they are LARGE text here (18px+ bold or 16px+), so
+   the 3:1 floor applies rather than 4.5:1 and every one clears it. */
+const LINE_INKS = [
+  "text-heading-pearl",
+  "text-heading-oyster",
+  "text-heading-gold",
+  "text-heading-mist",
+] as const;
 
 type ProcessCopy = { title: string; lines: string[] };
 type TouchGesture = {
@@ -656,11 +677,9 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
 
       {/* The complete story remains in reading order, independent of media. */}
       <ol className="sr-only">
-        {steps.map((step, index) => (
+        {steps.map((step) => (
           <li key={step.title}>
-            <h3>
-              {t("stepLabel")} {index + 1}: {step.title}
-            </h3>
+            <h3>{step.title}</h3>
             {step.lines.map((line) => (
               <p key={line}>{line}</p>
             ))}
@@ -702,12 +721,21 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
               <div
                 key={step.title}
                 data-process-copy-step={index + 1}
-                className="scrub-copy__slide shrink-0 p-4 text-start sm:p-6"
+                className="scrub-copy__slide shrink-0 p-4 text-center sm:p-6"
                 dir="rtl"
               >
-                <span className="scrub-copy__step mb-1.5 block text-base font-bold">
-                  {t("stepLabel")} <span dir="ltr">{index + 1}</span>
-                </span>
+                {/* ── ⚠️ "שלב 1/2/3/4" IS GONE FROM THE CARDS (Pnina, 2026-08-03) ──
+                    *"להעיף את השלב 1"* — the numbered label above every title.
+                    Her titles already say where the reader is ("את עושה את הצעד
+                    הראשון", "מתחילות לצעוד יחד"), so the number was a second,
+                    duller way of saying the same thing.
+                    ⚠️ WHAT STAYS is the small "שלב N מתוך 4" progress line at the
+                    BOTTOM of the stage (`process.progress`) — Daniel was explicit
+                    about the difference on 2026-08-04: *"the thing at the bottom
+                    which says in small 'Step 1 of 4'… that one we are leaving."*
+                    That one is orientation inside a scroll-driven sequence, not
+                    a heading. `process.stepLabel` is deleted; do not reinstate
+                    it here to "restore symmetry". */}
                 <span
                   data-process-copy-title=""
                   className="mb-2 block text-xl font-bold leading-snug sm:text-2xl"
@@ -724,19 +752,37 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
                   )}
                 </span>
 
-                {step.lines.map((line, lineIndex) => (
-                  <p
-                    key={line}
-                    data-process-copy-line={lineIndex + 1}
-                    className={
-                      MOBILE_OMITTED_LINES.has(`${index}:${lineIndex}`)
-                        ? "mb-1.5 text-sm leading-relaxed max-sm:hidden sm:text-base"
-                        : "mb-1.5 text-sm leading-relaxed sm:text-base"
-                    }
-                  >
-                    {line}
-                  </p>
-                ))}
+                {/* ── HER LINES, AND THE FIRST ONE SHOUTS ──
+                    Three instructions from the 2026-08-03 call land here:
+                      · short lines, bigger type, centred;
+                      · the first line of step 1 *"needs to scream more"* —
+                        bigger, bolder, underlined (Daniel, 2026-08-04);
+                      · no full stop at the end of any line, which is done in
+                        `messages/he.json` rather than here.
+                    `LINE_INKS` cycles her four heading colours down the card so
+                    consecutive lines separate by COLOUR as well as by the break
+                    — her *"each text can have different colors"*. It starts at
+                    Pearl White so the loudest line is the brightest. */}
+                {step.lines.map((line, lineIndex) => {
+                  const loud = index === 0 && lineIndex === 0;
+                  return (
+                    <p
+                      key={line}
+                      data-process-copy-line={lineIndex + 1}
+                      className={cn(
+                        "mb-2 leading-snug",
+                        loud
+                          ? "text-lg font-bold underline decoration-from-font underline-offset-[0.22em] sm:text-2xl"
+                          : "text-base sm:text-lg",
+                        LINE_INKS[lineIndex % LINE_INKS.length],
+                        MOBILE_OMITTED_LINES.has(`${index}:${lineIndex}`) &&
+                          "max-sm:hidden"
+                      )}
+                    >
+                      {line}
+                    </p>
+                  );
+                })}
                 {index === STATIONS - 1 ? (
                   <p
                     data-process-copy-endpoint=""

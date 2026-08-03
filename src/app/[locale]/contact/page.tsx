@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { ContactForm } from "@/components/sections/contact-form";
-import { Eyebrow, PageShell } from "@/components/sections/marketing-sections";
+import { PageShell } from "@/components/sections/marketing-sections";
 import { PageHero } from "@/components/sections/page-hero";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Reveal } from "@/components/ui/reveal";
@@ -70,7 +70,6 @@ export default async function ContactPage({
         )}
       />
       <PageHero
-        eyebrow={t("heroEyebrow")}
         title={
           <>
             {t("heroTitleLead")}
@@ -98,7 +97,7 @@ export default async function ContactPage({
           <Reveal delay={120}>
             <aside className="flex flex-col gap-5">
               <div className="rounded-2xl border border-brand/25 bg-brand/[0.05] p-6">
-                <Eyebrow>{t("whatYouGetTitle")}</Eyebrow>
+                <h2 className="block text-sm font-semibold tracking-[0.04em] text-heading-gold">{t("whatYouGetTitle")}</h2>
                 <ul className="mt-5 space-y-3">
                   {whatYouGet.map((item) => (
                     <li

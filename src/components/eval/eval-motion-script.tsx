@@ -1,6 +1,6 @@
 /**
- * ⚠️ TEMPORARY — the pre-paint half of the `?motion=force` and `?accent=`
- * evaluation knobs.
+ * ⚠️ TEMPORARY — the pre-paint half of the `?motion=force`, `?accent=` and
+ * `?rays=` evaluation knobs.
  * Read the header of `src/lib/eval-flags.ts` first; it explains what this is
  * for, why it is allowed to persist, and when the whole thing gets deleted.
  *
@@ -29,6 +29,18 @@
  * cannot throw (whole body wrapped) and it cannot block: no network, no
  * layout read, no cookie.
  *
+ * `data-rays` is the third, and it exists for one specific job: Daniel is
+ * sending Pnina TWO versions of the hero to choose between, one with the light
+ * beams across the top and one without. `?rays=off` is the second of those and
+ * `?rays=on` (or `?rays=reset`) is the first, so both are the same build and the
+ * same URL with one parameter — no branch, no second deploy, and no risk of the
+ * two drifting apart while she decides. It is pre-paint for the same reason the
+ * accent is: the rays are the first thing painted at the top of the page, and
+ * drawing them and then removing them in front of her is worse than either
+ * version. ⚠️ It goes the moment she picks; whichever she picks becomes the
+ * default in `:root` and this key, its localStorage entry and the §12 rule that
+ * reads it all come out together.
+ *
  * The key names are duplicated from `EVAL_MOTION_KEY` / `EVAL_ACCENT_KEY` in
  * src/lib/eval-flags.ts ON PURPOSE — this source is stringified into the
  * document, so it cannot import. Change one, change the other. The accent list
@@ -54,6 +66,12 @@ try {
   var av = localStorage.getItem(ak);
   if (av === "amber" || av === "gold" || av === "pink" || av === "peach" || av === "sea")
     d.setAttribute("data-accent", av);
+
+  var rk = "pnina:eval-rays";
+  var r = q.get("rays");
+  if (r === "on" || r === "reset") localStorage.removeItem(rk);
+  else if (r === "off") localStorage.setItem(rk, "off");
+  if (localStorage.getItem(rk) === "off") d.setAttribute("data-rays", "off");
 } catch (e) {}
 `;
 

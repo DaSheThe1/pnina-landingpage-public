@@ -322,23 +322,46 @@ export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
 }
 
-// The "cream · gold · brown" design ships in both schemes and follows the
-// reader's OS/browser preference — there is no in-page toggle. Declaring both
-// tells the UA it may render form controls and scrollbars either way, and the
-// two `themeColor` entries keep the mobile browser chrome matching `--canvas`
-// in each scheme (see the DARK block at the bottom of globals.css). Change one
-// of these and you must change the matching `--canvas` in the same commit.
+// ── THE SITE IS DARK-ONLY, SO THIS DECLARES ONE SCHEME AND ONE COLOUR ──
+//
+// This used to be `"light dark"` with two media-conditional `themeColor`
+// entries, because the cream design shipped in both schemes and followed the
+// reader's OS preference. It no longer does. Pnina asked for the dark turquoise
+// background and Daniel confirmed there is no light mode and no dark mode, that
+// the site "stays the same no matter what the browser has" (2026-08-03).
+//
+// Both halves matter and they fail differently:
+//   `colorScheme: "dark"` tells the UA to render form controls, scrollbars and
+//   the like dark. Left at "light dark" a visitor on a light-mode device gets
+//   light native widgets — a white select menu, light scrollbars — dropped into
+//   a near-black page.
+//   `themeColor` is the one with a symptom you can see across the room: it
+//   tints the browser chrome on a phone, so the old pair would have put a CREAM
+//   toolbar directly above a navy page for anyone whose phone is in light mode.
+//
+// `#264653` is `--canvas` in globals.css — Pnina's own Deep Ocean hex, verbatim.
+// ⚠️ Change one and you must change the other in the same commit; that rule is
+// unchanged, only the count is.
+//
+// ⚠️ IT WAS WRONG FOR ONE RELEASE AND THE SYMPTOM WAS THE OBVIOUS ONE.
+// The dark-only pass first shipped `--canvas: #0b181d` (her hue at lightness
+// 8%), then raised the canvas to her literal hex — and this constant did not
+// follow. The result on a phone, which is the view that matters here, was a
+// near-BLACK browser toolbar sitting directly above her turquoise page: the two
+// meet edge to edge with no border between them, so the page reads as much
+// lighter than her colour precisely because the thing next to it is nine tenths
+// darker. Daniel saw it and said so ("the background itself is lighter than her
+// color", 2026-08-03). Nothing on the page had drifted — the canvas measures
+// #264653 exactly — the wrong colour was the browser's own chrome.
+// This is why the "change one, change the other" rule is written here twice.
 //
 // Note we do NOT set `darkreader-lock` here (the template did). Locking out a
 // user's own reading-comfort extension is the wrong trade on this site — brand
 // fidelity is worth less than someone being able to read the page the way they
 // need to. See AGENTS.md.
 export const viewport: Viewport = {
-  colorScheme: "light dark",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#fbf7f1" },
-    { media: "(prefers-color-scheme: dark)", color: "#1c1611" },
-  ],
+  colorScheme: "dark",
+  themeColor: "#264653",
 };
 
 // Per-locale root metadata. Hebrew (default) lives under /he and English under

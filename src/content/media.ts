@@ -95,36 +95,50 @@ export const media: Record<
    * where the low-resolution source shows.
    */
   logo: {
-    src: "/images/pnina-portrait.jpg",
+    src: "/images/pnina-mark.jpg",
     alt: "פנינה פאף",
     shape: "circle",
-    note: "תמונת הפנים שלה, בחיתוך עגול. פנינה ביקשה במפורש (2026-08-02) שבראש האתר יופיעו הפנים שלה ולא הצדפה. הצדפה והפנינה הגזורות (public/brand/pearl-shell.png) הן אייקון האתר בלשונית הדפדפן, ואפשר לשלב אותן במקום אחר בעמוד, רק לא כאן.",
+    note: "תמונת הפנים שלה בריבוע, בפינות מעוגלות. פנינה ביקשה במפורש (2026-08-02) שבראש האתר יופיעו הפנים שלה ולא הצדפה, וב-2026-08-03 ביקשה שהתמונה לא תהיה עיגול. הצדפה והפנינה הגזורות (public/brand/pearl-shell.png) הן אייקון האתר בלשונית הדפדפן, ואפשר לשלב אותן במקום אחר בעמוד, רק לא כאן.",
     width: 320,
     height: 320,
   },
   /**
-   * Portrait on the homepage founder section. Real photo, roughly 2:3 portrait.
+   * Portrait on the homepage founder section.
+   *
+   * ── ⚠️ 4:5, AND IT IS A REAL PHOTOGRAPH AT LAST (2026-08-03) ──
+   * Every portrait on this site used to be a 320px upscale of her 150px
+   * Instagram avatar. Pnina sent a real one on the 2026-08-03 call — 1200×1600,
+   * outdoors, natural light, a real smile, which is also exactly the photography
+   * direction her own brand book asks for. Both crops here are cut from that
+   * single file by `scripts/media/crop-portrait.mjs`:
+   *   pnina-portrait.jpg  900×1125 (4:5)  — this slot and /about
+   *   pnina-mark.jpg      320×320  (1:1)  — the header mark above
+   * The 4:5 is her instruction, not a default: *"תמונה מעל הראש עד הכתפיים או
+   * חזה"*. The original is a balcony selfie with a garden behind her, and a
+   * taller frame was mostly geraniums — Daniel asked for *"way less green
+   * space"*.
    */
   founderTeaser: {
-    src: "/images/pnina-about.jpg",
+    src: "/images/pnina-portrait.jpg",
     alt: "פנינה פאף",
-    note: "תמונה מלאה שלה. אפשר להחליף בכל תמונה אחרת ביחס דומה (לגובה).",
-    width: 854,
-    height: 1332,
+    note: "התמונה שלה מ-2026-08-03, בחיתוך 4:5 מהראש עד החזה. מקור: private-media/originals.",
+    width: 900,
+    height: 1125,
   },
   /**
-   * Avatar-sized crop used at the top of /about, beside the story.
+   * Crop used at the top of /about, beside the story.
    *
-   * ⚠️ This one is her Instagram profile picture: the ORIGINAL is 150×150 px and
-   * the file is a 320px upscale. It only holds up inside the round avatar frame
-   * (~10rem). Do not put it in a large rectangular panel.
+   * ⚠️ THE 150px WARNING THAT STOOD HERE IS RETIRED. This used to be a 320px
+   * upscale of her Instagram avatar, and the note said it only held up inside a
+   * small round frame. It is the real 900×1125 photograph now (see
+   * `founderTeaser`), so it can go in a large panel without apology.
    */
   aboutPortrait: {
     src: "/images/pnina-portrait.jpg",
     alt: "פנינה פאף",
-    note: "תמונת פרופיל בלבד (150px במקור). מתאימה רק לעיגול קטן.",
-    width: 320,
-    height: 320,
+    note: "התמונה שלה מ-2026-08-03, בחיתוך 4:5.",
+    width: 900,
+    height: 1125,
   },
   /** Portrait on /lectures, ideally her actually speaking. */
   lecturesPortrait: {
