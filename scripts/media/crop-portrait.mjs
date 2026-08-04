@@ -33,7 +33,14 @@ const OUT = "public/images";
  *  re-check these two numbers rather than assuming they travel. */
 const CROPS = [
   { name: "pnina-portrait.jpg", widthPct: 0.86, topPct: 0.02, ratio: 4 / 5, out: [900, 1125] },
-  { name: "pnina-mark.jpg", widthPct: 0.72, topPct: 0.06, ratio: 1, out: [320, 320] },
+  // ⚠️ WIDENED 0.72 -> 0.86 AND DROPPED 0.06 -> 0.10 (Daniel, 2026-08-04).
+  // The first cut framed the head so tightly that the square bottomed out at
+  // her mouth: *"you only can see from the teeth to the top of the face, you
+  // can't see the chin."* A square window on a phone selfie has to be WIDER
+  // than the face to contain it, because the face is taller than it is broad —
+  // the extra width buys the vertical room, and the lower top edge spends it
+  // downward rather than on more hair.
+  { name: "pnina-mark.jpg", widthPct: 0.86, topPct: 0.1, ratio: 1, out: [320, 320] },
 ];
 
 const image = sharp(SRC);

@@ -12,6 +12,12 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.4] - 2026-08-04
+
+- **The small photo of you in the header and footer is pulled back**, so the
+  whole face fits including the chin. It was cropped so tightly it stopped at
+  your mouth.
+
 ## [0.21.3] - 2026-08-04
 
 - **The prices are bigger and the pulse is bigger** — the numbers went up by
