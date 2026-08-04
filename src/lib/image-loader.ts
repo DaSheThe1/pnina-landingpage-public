@@ -27,13 +27,21 @@ export default function imageLoader({
   width: number;
   quality?: number;
 }): string {
-  const widths = imageVariants[src];
-  if (!widths || widths.length === 0) return src;
+  const entry = imageVariants[src];
+  if (!entry || entry.widths.length === 0) return src;
 
   // Smallest variant that still covers the requested width; the top rung when
   // nothing does (the source's own resolution — there is nothing sharper).
+  const { widths, v } = entry;
   const chosen = widths.find((w) => w >= width) ?? widths[widths.length - 1];
 
   const stem = src.replace(/^\/images\//, "").replace(/\.[^.]+$/, "");
-  return `/images/optimized/${stem}-${chosen}.webp`;
+  // ⚠️ `?v=` IS LOAD-BEARING, NOT DECORATION. An optimised variant keeps its
+  // filename when the source image is re-cropped, and these are served from
+  // Cloudflare with a four-hour `max-age` — so on 2026-08-04 a corrected
+  // portrait shipped and the edge kept serving the old bytes under the same
+  // URL. A query string is part of the cache key, so this makes a changed image
+  // a changed URL. The hash comes from the source file's contents; see the note
+  // in scripts/optimize-images.mjs.
+  return `/images/optimized/${stem}-${chosen}.webp?v=${v}`;
 }

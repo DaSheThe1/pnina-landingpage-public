@@ -327,11 +327,14 @@ export function posterSrc(key: VideoKey): string | undefined {
   const poster = videos[key].poster;
   if (!poster) return undefined;
 
-  const widths = imageVariants[poster];
-  if (!widths || widths.length === 0) return poster;
+  const entry = imageVariants[poster];
+  if (!entry || entry.widths.length === 0) return poster;
 
   const stem = poster.replace(/^\/images\//, "").replace(/\.[^.]+$/, "");
-  return `/images/optimized/${stem}-${widths[widths.length - 1]}.webp`;
+  // Same `?v=` contract as `image-loader.ts` — a poster is an optimised variant
+  // too, so it has the same stale-at-the-edge problem when its source changes
+  // without being renamed. Read the note there.
+  return `/images/optimized/${stem}-${entry.widths[entry.widths.length - 1]}.webp?v=${entry.v}`;
 }
 
 /**

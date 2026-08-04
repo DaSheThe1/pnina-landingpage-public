@@ -12,6 +12,14 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.5] - 2026-08-04
+
+- **Changed images now appear immediately instead of hours later.** The photo
+  crop in 0.21.4 deployed correctly but Cloudflare kept serving the old version
+  for up to four hours, because the file name had not changed. Every image now
+  carries a fingerprint of its own contents in the URL, so a re-crop is a new
+  URL and everyone sees it on their next visit.
+
 ## [0.21.4] - 2026-08-04
 
 - **The small photo of you in the header and footer is pulled back**, so the
