@@ -5,7 +5,6 @@ import {
   FinalCta,
   FounderTeaser,
   HeroSection,
-  MomentsSection,
   OffersSection,
   PageShell,
 } from "@/components/sections/marketing-sections";
@@ -21,7 +20,6 @@ import {
   webSiteSchema,
 } from "@/lib/seo";
 import { Testimonials } from "@/components/sections/testimonials";
-import { TrustBand } from "@/components/sections/trust-band";
 import { sectionIds } from "@/config/navigation";
 
 /**
@@ -109,7 +107,18 @@ export default async function Home({
           `ServicesTeaser` itself is kept (unmounted, like `QuoteReveal`) so the
           copy is one line away if it ever earns a place on /about — see
           docs/02-site-structure.md. */}
-      <SectionCta label="process" />
+      {/* ── THE CTA SITS IN THE GAP, NOT AGAINST THE ANIMATION (Pnina, 2026-08-04) ──
+          *"after the animation, make a little bit of buffer and space because it
+          looks ugly… move the call to action so it will be half between the
+          animation and half between the 'who is it for' section."*
+          The scrub ends flush against its own boundary surface, so a button
+          rendered straight after it sat on the seam with almost no air above it
+          while the section below had a full `py-12`. `spacing="loose"` gives
+          this one equal room on both sides instead.
+          ⚠️ It does NOT change the animation's own height — the scrub's `100lvh`
+          stage and its `400lvh` track are untouched, which is what she asked
+          for ("don't touch the widget height-wise"). */}
+      <SectionCta label="process" spacing="loose" />
       <section id={sectionIds.audience} className="scroll-mt-20">
         <AudienceSection />
       </section>
@@ -142,15 +151,31 @@ export default async function Home({
       <section id={sectionIds.testimonials} className="scroll-mt-20">
         <Testimonials />
       </section>
-      <SectionCta label="testimonials" />
-      <MomentsSection />
-      <SectionCta label="moments" />
-      {/* The pearl quote closes the proof, it does not introduce it (moved
-          2026-07-29, Daniel). Read directly after the messages other women
-          sent, "פנינה לא נוצרת למרות השכבות שלה" lands as the meaning of what
-          the reader has just been shown, rather than as a claim she is then
-          asked to verify. */}
-      <TrustBand />
+      {/* Pulled in tight against the quotes above it, at her request: the
+          messages ARE the argument, so the button belongs to them rather than
+          floating in its own band. */}
+      <SectionCta label="testimonials" spacing="tight" />
+      {/* ── ⚠️ TWO SECTIONS HIDDEN ON 2026-08-04, BY PNINA, NOT DELETED ──
+          `MomentsSection` ("מה הופך לאפשרי בתהליך הליווי", her five vignettes)
+          and `TrustBand` (the pearl quote above the FAQ) are both unmounted at
+          her request. She gave no reason for either beyond wanting them gone,
+          and the page does read faster without them — by that point it has
+          already made the argument twice, in her own story and in the messages
+          other women sent.
+
+          ⛔ THE CONTENT IS NOT DELETED and must not be. `moments.*` and the
+          trust band's copy stay in `messages/he.json`, both components stay in
+          the tree, and putting either back is uncommenting one line. The five
+          moments in particular took a consent decision to write (all five are
+          generalised on purpose — docs/04), and that work should not have to be
+          redone if she changes her mind.
+          They join `ServicesTeaser`, `QuoteReveal` and `PearlRevealSection`,
+          which are kept the same way and for the same reason. */}
+      {/* To bring either back: re-add the import and uncomment.
+          <MomentsSection />
+          <SectionCta label="moments" />
+          <TrustBand />
+      */}
       <section id={sectionIds.faq} className="scroll-mt-20">
         <FaqSection />
       </section>

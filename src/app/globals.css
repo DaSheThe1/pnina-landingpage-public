@@ -4705,8 +4705,16 @@ html[data-a11y-emphasize-links="true"]
 
    Every delay below is driven off `--rung`, the row index the component writes
    on each rung, so adding a third price is a copy change and not a CSS change. */
+/* ⚠️ THE WHOLE LADDER IS CENTRED (Pnina, 2026-08-04). Every `margin-inline-start:
+   auto` that used to park a line at the inline END is gone with it: the rungs,
+   the payoff and the note now share ONE axis, which is what she asked for
+   ("make everything centered… the text and the prices should be centered
+   horizontally"). `margin-inline: auto` on the ladder keeps that axis in the
+   middle of the column rather than in the middle of the panel. */
 .free-anchor__ladder {
   position: relative;
+  margin-inline: auto;
+  text-align: center;
 }
 
 .free-anchor__rung-label {
@@ -4774,8 +4782,7 @@ html[data-a11y-emphasize-links="true"]
    is redundant and none is hidden. */
 .free-anchor__step-arrow {
   display: block;
-  margin: 0.55rem 0 0.35rem;
-  margin-inline-start: 0.9rem;
+  margin: 0.55rem auto 0.35rem;
   overflow: visible;
   filter: drop-shadow(
     0 1px 5px color-mix(in srgb, var(--gold) 45%, transparent)
@@ -4812,11 +4819,8 @@ html[data-a11y-emphasize-links="true"]
   stroke-dashoffset: 0;
 }
 
-/* "היום, בשבילך" — the one line that turns the ladder into a sentence. It sits
-   with the payoff, not with the rungs, so it takes the payoff's alignment. */
+/* Her line above the payoff — the one that turns the ladder into a sentence. */
 .free-anchor__free-label {
-  width: fit-content;
-  margin-inline-start: auto;
   margin-top: 0.5rem;
   font-size: var(--text-sm);
   font-weight: 600;
@@ -4848,7 +4852,7 @@ html[data-a11y-emphasize-links="true"]
    Tailwind's utility sets. */
 .free-anchor__free {
   width: fit-content;
-  margin-inline-start: auto;
+  margin-inline: auto;
   position: relative;
   isolation: isolate;
   font-family:
@@ -6539,4 +6543,128 @@ html[data-a11y-enhanced-contrast="true"] .hero-rays {
 
 :root:not([data-a11y-reduce-motion="true"]) .offer-free-panel {
   animation: offer-panel-breathe 4.8s ease-in-out infinite;
+}
+
+/* ── HER CAPACITY LINE, UNDER THE PAYOFF ──
+   "ה4 הראשונות מקבלות את זה במתנה". Read the ⚠️ on `freeNote` in
+   free-call-anchor.tsx before touching it: this is the one sentence on the site
+   that AGENTS.md rule 4 would otherwise forbid, it ships because it is hers,
+   and it is only defensible for as long as it is TRUE. It is set quieter than
+   "ללא עלות" on purpose — it qualifies the gift, it does not shout it. */
+.free-anchor__free-note {
+  margin-top: 0.45rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--heading-oyster);
+}
+
+/* ── ⚠️ TWO THINGS IN THIS PANEL LOOP FOREVER, AND BOTH ARE DANIEL'S CALL ──
+   He asked for the prices to glow on 2026-08-04 after the one-shot version
+   shipped — *"I still don't see the prices glowing… make them glow by default
+   and accessibility can turn them off, but I don't see a reason why they
+   shouldn't glow"* — and in the same message for the arrows to *"appear and
+   disappear, like building itself over and over"*.
+
+   That is the second and third reversal of "nothing loops" in two days, and the
+   line it leaves is worth stating precisely, because it is not "anything goes":
+
+     ALLOWED   a light that breathes on something already on the page — the
+               panel's glow, the halo under a struck price, an arrow redrawing
+               the same path it already occupies.
+     STILL NOT gestures that MOVE or RESIZE type, and anything that counts.
+               Yarin's `.price-pulse` scales the number itself; nothing here
+               does, and nothing here may gain a timer or a "נשארו N".
+
+   Both obey `data-a11y-reduce-motion` through the `:root:not(...)` gate, and
+   neither carries `!important` (rule 5). A visitor who asks for less motion
+   gets the finished still panel, which is the design either way. */
+@keyframes free-anchor-price-glow {
+  0%,
+  100% {
+    text-shadow:
+      0 0 6px color-mix(in srgb, var(--gold) 22%, transparent),
+      0 0 18px color-mix(in srgb, var(--gold) 10%, transparent);
+  }
+  50% {
+    text-shadow:
+      0 0 10px color-mix(in srgb, var(--gold) 62%, transparent),
+      0 0 30px color-mix(in srgb, var(--gold) 34%, transparent);
+  }
+}
+
+/* The X breathes with the number it crosses, so the two read as one object
+   rather than as a glowing price with a static line over it. */
+@keyframes free-anchor-x-glow {
+  0%,
+  100% {
+    opacity: 0.82;
+    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gold) 25%, transparent));
+  }
+  50% {
+    opacity: 1;
+    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gold) 65%, transparent));
+  }
+}
+
+/* The arrow re-draws itself, pauses at full length, then clears and starts
+   again. The long tail at 100% is what makes it read as a repeating GESTURE
+   rather than as a flicker: it is drawn for most of the cycle and absent only
+   briefly. */
+@keyframes free-anchor-step-loop {
+  0% {
+    stroke-dasharray: 32;
+    stroke-dashoffset: 32;
+  }
+  35%,
+  85% {
+    stroke-dasharray: 32;
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dasharray: 32;
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes free-anchor-head-loop {
+  0%,
+  22% {
+    opacity: 0;
+  }
+  38%,
+  85% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ⚠️ SCOPED TO `static`, WHICH IS THE RESTING STATE. While the entrance
+   sequence is `playing` these must not run, or the loop and the one-shot fight
+   over the same properties and the ladder stutters on arrival. The component
+   lands on `static` as soon as the sequence finishes, so the loops take over
+   from the entrance rather than competing with it. */
+:root:not([data-a11y-reduce-motion="true"])
+  .free-anchor:not([data-anchor]) {
+  & .free-anchor__rung-price {
+    animation: free-anchor-price-glow 2.6s ease-in-out infinite;
+    animation-delay: calc(var(--rung) * 400ms);
+  }
+
+  & .free-anchor__x {
+    animation: free-anchor-x-glow 2.6s ease-in-out infinite;
+    animation-delay: calc(var(--rung) * 400ms);
+  }
+
+  & .free-anchor__step-line {
+    animation: free-anchor-step-loop 3.2s ease-in-out infinite;
+    animation-delay: calc(var(--rung) * 400ms);
+  }
+
+  & .free-anchor__step-head {
+    animation: free-anchor-head-loop 3.2s ease-in-out infinite;
+    animation-delay: calc(var(--rung) * 400ms);
+  }
 }

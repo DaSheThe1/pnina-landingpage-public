@@ -190,13 +190,28 @@ export type LadderRung = {
 export function FreeCallAnchor({
   rungs,
   freeLabel,
+  freeNote,
   free,
   children,
 }: {
   /** offers.ladder.rungs — the struck rungs, in descending order. */
   rungs: LadderRung[];
-  /** offers.ladder.freeLabel — "היום, בשבילך", the line above the payoff. */
+  /** offers.ladder.freeLabel — the line above the payoff, in her own words. */
   freeLabel: string;
+  /**
+   * offers.ladder.freeNote — the line UNDER "ללא עלות".
+   *
+   * ⚠️ THIS ONE IS A CAPACITY CLAIM AND IT HAS TO BE TRUE. She asked for
+   * "ה4 הראשונות מקבלות את זה במתנה" on 2026-08-04, and AGENTS.md rule 4
+   * otherwise forbids exactly this shape ("only 2 spots left"). Daniel relayed
+   * it as her wording, so it ships — but a number of free places is a promise
+   * to real people, and if she is not actually limiting it to four, the line is
+   * false on a page written for women in distress. Flagged to Daniel in the
+   * same session; it is his and hers to confirm.
+   * ⛔ It may not grow a counter, a countdown or a "נשארו N". A standing
+   * sentence is a fact about her practice; a ticking one is a pressure device.
+   */
+  freeNote: string;
   /** offers.intro.free — "ללא עלות". */
   free: string;
   /** The section's one CTA. It lives inside the sequence so it can be the last
@@ -576,6 +591,8 @@ export function FreeCallAnchor({
         <p className="free-anchor__free font-display leading-none">
           {free}
         </p>
+
+        <p className="free-anchor__free-note">{freeNote}</p>
       </div>
 
       <div className="free-anchor__cta mt-7">{children}</div>

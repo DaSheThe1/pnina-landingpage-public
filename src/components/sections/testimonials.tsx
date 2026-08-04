@@ -209,13 +209,21 @@ export function Testimonials({ showHeading = true }: { showHeading?: boolean }) 
           </div>
         ) : null}
 
-        {!testimonialsAreSamples ? (
-          <Reveal>
-            <p className="mt-10 text-center text-xs text-subtle-foreground">
-              {t("privacyNote")}
-            </p>
-          </Reveal>
-        ) : null}
+        {/* ⚠️ THE PRIVACY NOTE UNDER THE SHOTS IS GONE (Pnina, 2026-08-04) —
+            REMOVED AS A REPETITION, NOT AS A POLICY CHANGE. It read "ההודעות
+            מפורסמות באישור, בלי שמות מלאים ובלי פרטים מזהים", and the section's
+            own description four blocks above already says the same thing in her
+            shorter wording ("מפורסמות באישור ובאנונימיות"). Saying it twice on
+            one screen read as anxiety about the material rather than as care.
+
+            ⛔ THE CLAIM ITSELF IS STILL LOAD-BEARING AND STILL ON THE PAGE. If
+            `testimonials.description` ever stops carrying it, this note comes
+            back — docs/04-testimonials-policy.md requires the page to state the
+            consent basis exactly once, not zero times. `privacyNote` is kept in
+            `messages/he.json` for that reason.
+
+            The `samplesNotice` branch is untouched: if `testimonialsAreSamples`
+            ever flips back to true, that disclaimer still renders. */}
       </div>
     </section>
   );

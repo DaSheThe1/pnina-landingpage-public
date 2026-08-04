@@ -47,8 +47,28 @@ import { cn } from "@/lib/utils";
  * for it to be more interesting"*). ⚠️ Do not "fix" its punctuation and do not
  * move it to the top.
  */
+/**
+ * How much air the button gets, and why it is a prop rather than a constant.
+ *
+ * `normal` — the default: nothing above, a section's own padding below.
+ * `loose`  — equal room on BOTH sides. For the button after the process scrub,
+ *            which ends flush against its own boundary surface: rendered with
+ *            the default it sat on the seam with no air above it while the
+ *            section below had a full `py-12`, and Pnina called that out by
+ *            name (2026-08-04). This puts it halfway between the two.
+ * `tight`  — pulled up against the block above. For the button under the
+ *            testimonials, which belongs to the messages rather than floating
+ *            in a band of its own.
+ */
+const SPACING = {
+  normal: "pb-12 sm:pb-16",
+  loose: "pt-10 pb-14 sm:pt-14 sm:pb-20",
+  tight: "-mt-4 pb-12 sm:-mt-6 sm:pb-16",
+} as const;
+
 export function SectionCta({
   label,
+  spacing = "normal",
   className,
 }: {
   /** A key under `home.sectionCta`. */
@@ -59,12 +79,15 @@ export function SectionCta({
     | "testimonials"
     | "moments"
     | "faq";
+  spacing?: keyof typeof SPACING;
   className?: string;
 }) {
   const t = useTranslations("home.sectionCta");
 
   return (
-    <Reveal className={cn("flex justify-center px-6 pb-12 sm:pb-16", className)}>
+    <Reveal
+      className={cn("flex justify-center px-6", SPACING[spacing], className)}
+    >
       <LeadButton
         source="landing"
         variant="brand"

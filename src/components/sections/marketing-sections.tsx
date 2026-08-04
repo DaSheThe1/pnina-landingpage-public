@@ -853,12 +853,30 @@ export function ProcessSection() {
                           to land on their own, so each stays its own paragraph
                           rather than being reflowed into one block. */}
                       <div className="mt-3 space-y-2">
+                        {/* The `*…*` markers come from the same copy the scrub
+                            renders, so this reduced-motion / Save-Data card has
+                            to strip them too — otherwise a visitor who turned
+                            motion off reads literal asterisks. It keeps the
+                            emphasis rather than just deleting the markers: the
+                            two renderings should say the same thing with the
+                            same words weighted. */}
                         {step.lines.map((line) => (
                           <p
                             key={line}
                             className="text-sm leading-[1.75] text-muted-foreground"
                           >
-                            {line}
+                            {line.split(/\*([^*]+)\*/g).map((part, i) =>
+                              i % 2 === 1 ? (
+                                <strong
+                                  key={`${part}-${i}`}
+                                  className="font-semibold text-brand-accent"
+                                >
+                                  {part}
+                                </strong>
+                              ) : (
+                                part
+                              )
+                            )}
                           </p>
                         ))}
                       </div>
@@ -987,9 +1005,9 @@ type IntroCall = {
   label: string;
   title: string;
   free: string;
-  valueLabel: string;
-  valuePrice: string;
   body: string;
+  /** The last word of `body`, split out so it can carry emphasis — "היום". */
+  bodyEmphasis: string;
   includes: string[];
   cta: string;
 };
@@ -1224,6 +1242,7 @@ export function OffersSection() {
   const ladder = t.raw("ladder") as {
     rungs: LadderRung[];
     freeLabel: string;
+    freeNote: string;
   };
 
   return (
@@ -1249,28 +1268,50 @@ export function OffersSection() {
               className="pointer-events-none absolute -start-16 -top-20 h-56 w-56 rounded-full bg-gold/15 blur-[90px]"
             />
 
-            <div className="relative">
+            {/* ── EVERYTHING IN THIS PANEL IS CENTRED (Pnina, 2026-08-04) ──
+                *"make everything centered… the text and the prices should be
+                centered horizontally."* It was a left-aligned copy column with a
+                right-aligned price column beside it — two different axes inside
+                one rectangle, which is what made the panel read as busy. One
+                centred axis now, at every width. `items-center` on the grid does
+                the same for the two columns on `lg`. */}
+            <div className="relative text-center">
               <NodeLabel node={<ShellNode />}>{intro.label}</NodeLabel>
               <h3 className="font-display mt-2 text-[2.0rem] leading-tight text-foreground sm:text-[2.45rem]">
                 {intro.title}
               </h3>
-              <p className="mt-3 max-w-lg text-base leading-relaxed text-foreground-soft">
+              {/* ── "היום" IS THE WORD THAT MATTERS (Daniel, 2026-08-04) ──
+                  *"that long sentence… make the word 'today' more bold with an
+                  underline and maybe larger."* It is the whole promise of the
+                  sentence — she leaves a number and something happens the same
+                  day — and it was the last, quietest word in a long line.
+                  A separate key rather than rich-text plumbing: the sentence
+                  ends on it, so `body` + `bodyEmphasis` concatenate cleanly and
+                  she can still edit either half in `messages/he.json`. */}
+              <p className="mx-auto mt-3 max-w-lg text-base leading-relaxed text-foreground-soft">
                 {intro.body}
+                <strong className="text-[1.15em] font-bold text-heading-gold underline decoration-from-font underline-offset-[0.22em]">
+                  {intro.bodyEmphasis}
+                </strong>
               </p>
-              <OfferIncludes items={intro.includes} className="mt-4" />
+              <OfferIncludes
+                items={intro.includes}
+                className="mt-4 inline-block text-start"
+              />
             </div>
 
             {/* The price / action column. On lg it sits at the inline END with
                 a hairline between it and the copy; below that it is simply the
                 next block down, separated by the same hairline drawn on top. */}
-            <div className="relative mt-7 border-t border-gold/25 pt-6 lg:mt-0 lg:border-s lg:border-t-0 lg:ps-12 lg:pt-0">
-              {/* The value anchor: what the call is worth, then a hairline
-                  leading to what it costs. Said ONCE, in that order, and never
-                  as a struck-through number — read the header of
-                  `FreeCallAnchor` before changing anything about it. */}
+            <div className="relative mt-7 border-t border-gold/25 pt-6 text-center lg:mt-0 lg:border-s lg:border-t-0 lg:ps-12 lg:pt-0">
+              {/* The price ladder: ₪690 struck, ₪490 struck, then free. Read the
+                  header of `FreeCallAnchor` — it records that the strikethrough
+                  ban and the no-looping rule were both reversed here by the
+                  people who set them, and exactly how far each goes. */}
               <FreeCallAnchor
                 rungs={ladder.rungs}
                 freeLabel={ladder.freeLabel}
+                freeNote={ladder.freeNote}
                 free={intro.free}
               >
                 {/* The button is the sequence's last beat, which is why it is

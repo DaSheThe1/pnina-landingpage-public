@@ -12,6 +12,32 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.1] - 2026-08-04
+
+### Second pass on the same round
+
+- **The whole offer panel is centred**, text and prices together.
+- **The prices glow and the arrows redraw themselves, continuously.** Both stop
+  if a visitor turns on "הפחתת תנועה" in the accessibility panel.
+- **"היום" in the free-call sentence is bold, gold and underlined** — it is the
+  promise the sentence is making.
+- **New closing lines under "ללא עלות":** "בגלל שהגעת עד לכאן ואני יודעת כמה זה
+  חשוב" and "ה4 הראשונות מקבלות את זה במתנה". ⚠️ The second one says there are
+  four free places. It has to be true, and Pnina needs to confirm it — see the
+  note in the release summary.
+- **Space around the button after the animation.** It sat right on the seam; it
+  now has equal room above and below. The animation's own height is unchanged.
+- **The button under the testimonials moved up**, tight against the messages.
+- **Two sections hidden:** "מה הופך לאפשרי בתהליך הליווי" and the pearl quote
+  above the FAQ. Nothing was deleted — both are one line away from coming back.
+- **The repeated privacy line under the screenshots is gone.** The section still
+  states the consent basis once, in her shorter wording: "מפורסמות באישור
+  ובאנונימיות".
+- **The steps in the animation read better:** all lines are Pearl White now
+  rather than four colours (two of her palette colours were too dark over the
+  video), the sizes step down from the title instead of matching it, and single
+  words carry the emphasis — "שם" and "מספר טלפון" in step one, in gold.
+
 ## [0.21.0] - 2026-08-04
 
 ### Pnina's call: a price ladder, a CTA after every section, and her face

@@ -67,16 +67,72 @@ const PROCESS_MEDIA = {
    again, this is where a line is omitted, and `"step:line"` is the key. */
 const MOBILE_OMITTED_LINES = new Set<string>([]);
 
-/* Her four heading colours, cycled down a step's lines. All four are declared
-   verbatim from her brand book in globals.css and all four are measured against
-   `.scrub-copy`'s overlay; they are LARGE text here (18px+ bold or 16px+), so
-   the 3:1 floor applies rather than 4.5:1 and every one clears it. */
-const LINE_INKS = [
-  "text-heading-pearl",
-  "text-heading-oyster",
-  "text-heading-gold",
-  "text-heading-mist",
-] as const;
+/* ── ⚠️ THE DIM HALF OF HER PALETTE CAME OUT OF THIS LADDER (2026-08-04) ──
+   This cycled all four of her heading colours down a card — pearl, oyster,
+   gold, mist. Daniel liked the idea and not the result: *"those colors are not
+   bright enough for the user to actually see. They should be whiter."*
+
+   He is right about the two that went. This copy sits on a translucent overlay
+   over MOVING VIDEO, not on a flat panel, so the brightest frame behind a line
+   is what decides whether it reads — and `--heading-mist` (#a8adb2) and
+   `--heading-gold` (#c7a86d) are the two darkest values in her palette. On a
+   pale frame they sink into it.
+
+   So the body ladder is PEARL WHITE ONLY — her brightest value, and the only one
+   that holds on every frame the video can put behind it. COLOUR is no longer
+   what distinguishes a line; SIZE is (`LINE_SIZES`), and the one colour left in
+   play is the gold on the highlighted WORDS, which are two or three characters
+   long and can afford to be the darkest thing in the card.
+
+   ⚠️ Do not put `--heading-mist` or `--heading-oyster` back into this ladder.
+   Both were here, both are in her palette, and both were still too dark against
+   a lit frame. On the flat panels elsewhere on the site they are fine; over
+   moving video they are not. */
+const LINE_INKS = ["text-heading-pearl"] as const;
+
+/* ── SIZE IS THE HIERARCHY NOW ──
+   Daniel, same message: *"don't make the entire second sentence the same size
+   as the header. Make it a little bit smaller."* The loud first line of step one
+   was set at `sm:text-2xl`, which is exactly the step TITLE's size, so the card
+   had two headings and no body. Three rungs now, and the loud one sits a step
+   under the title rather than level with it. */
+const LINE_SIZES = {
+  loud: "text-base font-bold underline decoration-from-font underline-offset-[0.22em] sm:text-xl",
+  normal: "text-base sm:text-lg",
+  quiet: "text-sm sm:text-base",
+} as const;
+
+/**
+ * Split a line on `*…*` and set what is inside apart.
+ *
+ * Daniel asked for keywords rather than whole sentences to carry the weight —
+ * *"we can highlight the word 'name' and 'phone' and only"* — so the markers
+ * live in `messages/he.json` beside the words they mark, where Pnina can move
+ * them without touching a component.
+ *
+ * ⚠️ The marker is `*`, and it is safe here because no line of Hebrew copy on
+ * this site contains an asterisk. If one ever needs to, this needs a real
+ * escape rather than a second delimiter.
+ */
+function HighlightedLine({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/\*([^*]+)\*/g).map((part, i) =>
+        // Odd indices are the captured groups, i.e. what was inside the markers.
+        i % 2 === 1 ? (
+          <strong
+            key={`${part}-${i}`}
+            className="font-bold text-heading-gold [font-size:1.12em]"
+          >
+            {part}
+          </strong>
+        ) : (
+          part
+        )
+      )}
+    </>
+  );
+}
 
 type ProcessCopy = { title: string; lines: string[] };
 type TouchGesture = {
@@ -680,8 +736,11 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
         {steps.map((step) => (
           <li key={step.title}>
             <h3>{step.title}</h3>
+            {/* Markers stripped: a screen reader must never announce the
+                asterisks, and emphasis is carried by the visual rendering
+                above rather than by punctuation in the accessible copy. */}
             {step.lines.map((line) => (
-              <p key={line}>{line}</p>
+              <p key={line}>{line.replace(/\*/g, "")}</p>
             ))}
           </li>
         ))}
@@ -764,22 +823,29 @@ export function ProcessScrub({ enabled }: ProcessScrubProps) {
                     — her *"each text can have different colors"*. It starts at
                     Pearl White so the loudest line is the brightest. */}
                 {step.lines.map((line, lineIndex) => {
-                  const loud = index === 0 && lineIndex === 0;
+                  // The first line of the FIRST step is the page's instruction
+                  // — "leave a name and a number" — and is the one thing in the
+                  // whole animation that has to be read. Everything else in a
+                  // card is context for it.
+                  const size =
+                    index === 0 && lineIndex === 0
+                      ? LINE_SIZES.loud
+                      : lineIndex === 0
+                        ? LINE_SIZES.normal
+                        : LINE_SIZES.quiet;
                   return (
                     <p
                       key={line}
                       data-process-copy-line={lineIndex + 1}
                       className={cn(
                         "mb-2 leading-snug",
-                        loud
-                          ? "text-lg font-bold underline decoration-from-font underline-offset-[0.22em] sm:text-2xl"
-                          : "text-base sm:text-lg",
+                        size,
                         LINE_INKS[lineIndex % LINE_INKS.length],
                         MOBILE_OMITTED_LINES.has(`${index}:${lineIndex}`) &&
                           "max-sm:hidden"
                       )}
                     >
-                      {line}
+                      <HighlightedLine text={line} />
                     </p>
                   );
                 })}
