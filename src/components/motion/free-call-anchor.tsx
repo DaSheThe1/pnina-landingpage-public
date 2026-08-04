@@ -191,7 +191,6 @@ export function FreeCallAnchor({
   rungs,
   freeLabel,
   freeNote,
-  free,
   children,
 }: {
   /** offers.ladder.rungs — the struck rungs, in descending order. */
@@ -199,7 +198,15 @@ export function FreeCallAnchor({
   /** offers.ladder.freeLabel — the line above the payoff, in her own words. */
   freeLabel: string;
   /**
-   * offers.ladder.freeNote — the line UNDER "ללא עלות".
+   * offers.ladder.freeNote — THE PAYOFF ITSELF as of 2026-08-04.
+   *
+   * ⚠️ "ללא עלות" IS GONE, AND THIS LINE INHERITED ITS TREATMENT. Daniel:
+   * *"remove this word and make the text like the first four ones get it for
+   * free instead of that one… same styling like the one that we remove."* So
+   * the ladder no longer lands on two words plus a footnote — it lands on one
+   * sentence, set in the same big metal gold the two words used to wear.
+   * `offers.intro.free` was deleted in the same commit; do not re-add it as a
+   * second payoff line.
    *
    * ⚠️ THIS ONE IS A CAPACITY CLAIM AND IT HAS TO BE TRUE. She asked for
    * "ה4 הראשונות מקבלות את זה במתנה" on 2026-08-04, and AGENTS.md rule 4
@@ -212,8 +219,6 @@ export function FreeCallAnchor({
    * sentence is a fact about her practice; a ticking one is a pressure device.
    */
   freeNote: string;
-  /** offers.intro.free — "ללא עלות". */
-  free: string;
   /** The section's one CTA. It lives inside the sequence so it can be the last
    *  beat of it rather than a button that happens to sit underneath. */
   children: ReactNode;
@@ -262,10 +267,26 @@ export function FreeCallAnchor({
       if (next === current) return;
       current = next;
       setState(next);
+      if (settle !== undefined) {
+        clearTimeout(settle);
+        settle = undefined;
+      }
       if (next === "armed") {
         approached = false;
         watchArmed();
       } else stopWatchdog();
+      // Hand the panel back to its resting state once the entrance is over, so
+      // the looping rules can take it. Only from `playing`: `static` is already
+      // there, and `armed` must stay armed until it plays or the watchdog fires.
+      if (next === "playing") {
+        settle = setTimeout(() => {
+          settle = undefined;
+          if (current === "playing") {
+            current = "static";
+            setState("static");
+          }
+        }, SEQUENCE_MS);
+      }
     };
 
     // ── The watchdog (see "ARMED IS INVISIBLE" in the header) ──
@@ -409,6 +430,27 @@ export function FreeCallAnchor({
     // Arm the clock for the initial `armed` set above (`go` was not involved).
     watchArmed();
 
+    // ── THE SEQUENCE RETURNS TO `static` WHEN IT IS OVER ──
+    // ⚠️ THIS IS WHAT MAKES THE LOOPS RUN AT ALL, and its absence was a real
+    // bug: `playing` used to be terminal, so `data-anchor="playing"` stayed on
+    // the element forever and the looping rules in globals.css §9 — which are
+    // scoped to the resting state on purpose — never applied. Daniel saw
+    // exactly that: *"the prices are still not zooming… the arrow doesn't
+    // redraw itself continuously on static viewing, only when you scroll down
+    // and up."* Scrolling away and back re-armed and replayed the one-shot,
+    // which is the only motion he was seeing.
+    //
+    // So the entrance now hands over: it plays, and when the last beat has
+    // landed the panel goes back to `static`, where the glow and the redraw
+    // live. The two never overlap, which is what keeps them from fighting over
+    // `stroke-dashoffset` and `transform` on the same elements.
+    //
+    // The timeout is the sequence's own length plus a small margin. ⚠️ If a
+    // delay in §9's "PLAYING: the beats" table grows past this, grow this too —
+    // ending early would cut the entrance off mid-gesture.
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const SEQUENCE_MS = 3800;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -460,6 +502,7 @@ export function FreeCallAnchor({
       window.removeEventListener("scroll", onViewportChange);
       window.removeEventListener("resize", onViewportChange);
       stopWatchdog();
+      if (settle !== undefined) clearTimeout(settle);
     };
   }, []);
 
@@ -588,11 +631,11 @@ export function FreeCallAnchor({
             gradient with a solid `--gold-deep` fallback underneath it, and a
             utility class on the element would only obscure which of the two is
             actually in play. */}
-        <p className="free-anchor__free font-display leading-none">
-          {free}
-        </p>
-
-        <p className="free-anchor__free-note">{freeNote}</p>
+        {/* `.free-anchor__free` is the big metal-gold treatment; it used to
+            carry "ללא עלות" and now carries her sentence. Not `leading-none`
+            any more — this string wraps to two or three lines on a phone where
+            two words never did. */}
+        <p className="free-anchor__free font-display">{freeNote}</p>
       </div>
 
       <div className="free-anchor__cta mt-7">{children}</div>

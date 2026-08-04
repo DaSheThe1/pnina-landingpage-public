@@ -12,6 +12,22 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.2] - 2026-08-04
+
+### The motion actually runs now
+
+- **The prices pulse and the arrows redraw themselves, all the time** — not only
+  when you scroll past. The panel's entrance sequence used to never finish, so
+  the continuous part could never start. It hands over properly now.
+- **The numbers pulse, the arrows redraw, and nothing else moves.** The labels,
+  the sentence and the button are all still.
+- **That section scrolls smoothly again.** The glow was repainting a large
+  shadow on every frame; it fades a fixed one instead, which the browser handles
+  without work.
+- **"ללא עלות" is gone and "ה4 הראשונות מקבלות את זה במתנה" takes its place**, in
+  the same big gold.
+- **"את" is back** in "לספר את הסיפור שלך" in the first step.
+
 ## [0.21.1] - 2026-08-04
 
 ### Second pass on the same round

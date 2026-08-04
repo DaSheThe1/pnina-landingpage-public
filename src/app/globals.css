@@ -4872,7 +4872,18 @@ html[data-a11y-emphasize-links="true"]
   /* 2.3rem until the 0.14 type raise, which moved the whole display ladder up
      by at least 4px a tier. This word has to stay bigger than everything in the
      section but its h2, so it moves with them or it stops being the punchline. */
-  font-size: 2.6rem; /* 41.6px */
+  /* ⚠️ SIZED FOR A SENTENCE, NOT FOR TWO WORDS (2026-08-04). This was 2.6rem
+     when it carried "ללא עלות" — eight characters that never wrapped. It now
+     carries "ה4 הראשונות מקבלות את זה במתנה", which is thirty, and at 2.6rem
+     that set as four ragged lines on a 390px phone. 1.85rem keeps it the
+     biggest thing in the panel after the section's own h2 — which is the job
+     this treatment exists to do — while letting it break in two.
+     `text-wrap: balance` is what stops the break landing after "ה4". */
+  font-size: 1.6rem; /* 25.6px */
+  line-height: 1.18;
+  text-wrap: balance;
+  max-width: 15rem;
+  margin-inline: auto;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--gold-deep);
@@ -6527,36 +6538,44 @@ html[data-a11y-enhanced-contrast="true"] .hero-rays {
       `!important`s straight through reduced motion; that is exactly what rule 5
       forbids, and obeying it costs nothing — a visitor who has asked for less
       motion simply gets the still panel, which is the finished design anyway. */
+/* ── ⚠️ THE BREATH ANIMATES OPACITY, NOT `box-shadow`, AND THAT IS A
+   PERFORMANCE FIX, NOT A STYLE CHOICE ──
+   The first version animated `box-shadow` directly on the panel with a 44-64px
+   blur. That is a full REPAINT of a large blurred shadow on every frame, it
+   cannot be handed to the compositor, and on a phone it made the whole section
+   expensive to scroll past — Daniel: *"that section feels pretty laggy to
+   scroll to."*
+   The shadow is static now and lives on an `::after` that carries it at full
+   strength; only that layer's OPACITY breathes, which the compositor can do on
+   its own thread without touching layout or paint.
+   ⚠️ Do not put an animated `box-shadow`, `filter` or `blur` back on this
+   panel. If the glow needs to change shape, change the static shadow on
+   `::after` and let the opacity keep doing the moving. */
 @keyframes offer-panel-breathe {
   0%,
   100% {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--gold) 26%, transparent),
-      0 10px 44px -14px color-mix(in srgb, var(--gold) 26%, transparent);
+    opacity: 0.35;
   }
   50% {
-    box-shadow:
-      0 0 0 1px color-mix(in srgb, var(--gold) 52%, transparent),
-      0 18px 64px -14px color-mix(in srgb, var(--gold) 44%, transparent);
+    opacity: 1;
   }
 }
 
-:root:not([data-a11y-reduce-motion="true"]) .offer-free-panel {
-  animation: offer-panel-breathe 4.8s ease-in-out infinite;
+.offer-free-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.55;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--gold) 52%, transparent),
+    0 18px 64px -14px color-mix(in srgb, var(--gold) 44%, transparent);
 }
 
-/* ── HER CAPACITY LINE, UNDER THE PAYOFF ──
-   "ה4 הראשונות מקבלות את זה במתנה". Read the ⚠️ on `freeNote` in
-   free-call-anchor.tsx before touching it: this is the one sentence on the site
-   that AGENTS.md rule 4 would otherwise forbid, it ships because it is hers,
-   and it is only defensible for as long as it is TRUE. It is set quieter than
-   "ללא עלות" on purpose — it qualifies the gift, it does not shout it. */
-.free-anchor__free-note {
-  margin-top: 0.45rem;
-  font-size: var(--text-sm);
-  font-weight: 600;
-  line-height: 1.35;
-  color: var(--heading-oyster);
+:root:not([data-a11y-reduce-motion="true"]) .offer-free-panel::after {
+  animation: offer-panel-breathe 4.8s ease-in-out infinite;
+  will-change: opacity;
 }
 
 /* ── ⚠️ TWO THINGS IN THIS PANEL LOOP FOREVER, AND BOTH ARE DANIEL'S CALL ──
@@ -6579,38 +6598,35 @@ html[data-a11y-enhanced-contrast="true"] .hero-rays {
    Both obey `data-a11y-reduce-motion` through the `:root:not(...)` gate, and
    neither carries `!important` (rule 5). A visitor who asks for less motion
    gets the finished still panel, which is the design either way. */
-@keyframes free-anchor-price-glow {
+/* ── ⚠️ THE NUMBERS PULSE. THE TEXT DOES NOT. ──
+   Daniel, 2026-08-04, third time of asking and unambiguous: *"the numbers need
+   to pulse"*, and *"what needs to be redrawn continuously is just the arrows,
+   not all the text and the numbers."*
+
+   So this is a `transform: scale()` on the struck FIGURE only — not the label
+   above it, not the payoff, not the button. That is the thing this file used to
+   forbid by name, and it is here because the owner asked for it three separate
+   times after seeing the quieter versions; it is recorded as his in AGENTS.md
+   rule 4. The scale is small (1.06) and slow (2.4s): a heartbeat, not a
+   television flash.
+
+   `transform` and NOT `text-shadow` — the glow version this replaces repainted
+   the glyphs every frame, and this section already had a scroll cost. A
+   transform on an inline-block is a compositor job. The X rides along inside
+   the same box, so it scales with the number it crosses and needs no rule.
+
+   ⛔ Still not permitted: a counter, a countdown, a "נשארו N", or this pulse
+   spreading to anything that is not one of the two struck numbers. */
+@keyframes free-anchor-price-pulse {
   0%,
   100% {
-    text-shadow:
-      0 0 6px color-mix(in srgb, var(--gold) 22%, transparent),
-      0 0 18px color-mix(in srgb, var(--gold) 10%, transparent);
+    transform: scale(1);
   }
   50% {
-    text-shadow:
-      0 0 10px color-mix(in srgb, var(--gold) 62%, transparent),
-      0 0 30px color-mix(in srgb, var(--gold) 34%, transparent);
+    transform: scale(1.06);
   }
 }
 
-/* The X breathes with the number it crosses, so the two read as one object
-   rather than as a glowing price with a static line over it. */
-@keyframes free-anchor-x-glow {
-  0%,
-  100% {
-    opacity: 0.82;
-    filter: drop-shadow(0 0 3px color-mix(in srgb, var(--gold) 25%, transparent));
-  }
-  50% {
-    opacity: 1;
-    filter: drop-shadow(0 0 8px color-mix(in srgb, var(--gold) 65%, transparent));
-  }
-}
-
-/* The arrow re-draws itself, pauses at full length, then clears and starts
-   again. The long tail at 100% is what makes it read as a repeating GESTURE
-   rather than as a flicker: it is drawn for most of the cycle and absent only
-   briefly. */
 @keyframes free-anchor-step-loop {
   0% {
     stroke-dasharray: 32;
@@ -6641,21 +6657,30 @@ html[data-a11y-enhanced-contrast="true"] .hero-rays {
   }
 }
 
-/* ⚠️ SCOPED TO `static`, WHICH IS THE RESTING STATE. While the entrance
-   sequence is `playing` these must not run, or the loop and the one-shot fight
-   over the same properties and the ladder stutters on arrival. The component
-   lands on `static` as soon as the sequence finishes, so the loops take over
-   from the entrance rather than competing with it. */
-:root:not([data-a11y-reduce-motion="true"])
-  .free-anchor:not([data-anchor]) {
-  & .free-anchor__rung-price {
-    animation: free-anchor-price-glow 2.6s ease-in-out infinite;
-    animation-delay: calc(var(--rung) * 400ms);
-  }
+/* ── ⚠️ SCOPED TO THE RESTING STATE, AND THE COMPONENT NOW REACHES IT ──
+   These run only when `.free-anchor` carries NO `data-anchor` attribute, i.e.
+   `static`. While the entrance is `armed` or `playing` they must not, or the
+   one-shot and the loop fight over `stroke-dashoffset` and `transform` on the
+   same elements and the ladder stutters on arrival.
 
-  & .free-anchor__x {
-    animation: free-anchor-x-glow 2.6s ease-in-out infinite;
+   That scoping was correct and still produced nothing, because `playing` used
+   to be a TERMINAL state: the attribute stayed on the element forever and this
+   block never applied. Daniel saw exactly that — *"the arrow doesn't redraw
+   itself continuously on static viewing, only when you scroll down and up"* —
+   because scrolling away and back re-armed and replayed the one-shot, which was
+   the only motion there was. `free-call-anchor.tsx` now returns the panel to
+   `static` when the sequence finishes; read the `SEQUENCE_MS` note there. The
+   two are halves of one mechanism, so change either and check the other.
+
+   ⚠️ WHAT LOOPS AND WHAT DOES NOT, exactly as he specified:
+     · the two struck FIGURES pulse (scale);
+     · the two ARROWS redraw, head and all;
+     · nothing else — not the labels, not the payoff, not the button. */
+:root:not([data-a11y-reduce-motion="true"]) .free-anchor:not([data-anchor]) {
+  & .free-anchor__rung-figure {
+    animation: free-anchor-price-pulse 2.4s ease-in-out infinite;
     animation-delay: calc(var(--rung) * 400ms);
+    will-change: transform;
   }
 
   & .free-anchor__step-line {

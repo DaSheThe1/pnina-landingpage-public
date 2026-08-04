@@ -1004,7 +1004,6 @@ export function ServicesTeaser() {
 type IntroCall = {
   label: string;
   title: string;
-  free: string;
   body: string;
   /** The last word of `body`, split out so it can carry emphasis — "היום". */
   bodyEmphasis: string;
@@ -1312,7 +1311,6 @@ export function OffersSection() {
                 rungs={ladder.rungs}
                 freeLabel={ladder.freeLabel}
                 freeNote={ladder.freeNote}
-                free={intro.free}
               >
                 {/* The button is the sequence's last beat, which is why it is
                     passed IN rather than rendered after. `.cta-hot` layers a
