@@ -12,6 +12,14 @@ see `AGENTS.md` for the bump rules.
 > animation was written against a third number, 0.9.0, which never shipped on
 > its own — it lands here as part of 0.13.0.
 
+## [0.21.3] - 2026-08-04
+
+- **The prices are bigger and the pulse is bigger** — the numbers went up by
+  about a third and they now visibly zoom rather than just technically move.
+- **"ה4 הראשונות מקבלות את זה במתנה" breaks where you want it**, on three short
+  lines, instead of wrapping wherever the column happened to end. The breaks
+  live in `messages/he.json`, so moving one is a one-line edit.
+
 ## [0.21.2] - 2026-08-04
 
 ### The motion actually runs now

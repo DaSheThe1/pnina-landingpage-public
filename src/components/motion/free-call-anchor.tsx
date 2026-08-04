@@ -208,6 +208,13 @@ export function FreeCallAnchor({
    * `offers.intro.free` was deleted in the same commit; do not re-add it as a
    * second payoff line.
    *
+   * ── ⚠️ AN ARRAY, BECAUSE THE BREAKS ARE HERS TO SET ──
+   * It was one string and wrapped wherever the column ended, which Daniel read
+   * as *"taking too many lines for no reason"* — the ragged break, not the line
+   * count, was the problem. It is short deliberate lines now, the same shape as
+   * the process steps, so moving a break is a one-key edit in
+   * `messages/he.json` rather than a CSS width guess.
+   *
    * ⚠️ THIS ONE IS A CAPACITY CLAIM AND IT HAS TO BE TRUE. She asked for
    * "ה4 הראשונות מקבלות את זה במתנה" on 2026-08-04, and AGENTS.md rule 4
    * otherwise forbids exactly this shape ("only 2 spots left"). Daniel relayed
@@ -218,7 +225,7 @@ export function FreeCallAnchor({
    * ⛔ It may not grow a counter, a countdown or a "נשארו N". A standing
    * sentence is a fact about her practice; a ticking one is a pressure device.
    */
-  freeNote: string;
+  freeNote: string[];
   /** The section's one CTA. It lives inside the sequence so it can be the last
    *  beat of it rather than a button that happens to sit underneath. */
   children: ReactNode;
@@ -632,10 +639,17 @@ export function FreeCallAnchor({
             utility class on the element would only obscure which of the two is
             actually in play. */}
         {/* `.free-anchor__free` is the big metal-gold treatment; it used to
-            carry "ללא עלות" and now carries her sentence. Not `leading-none`
-            any more — this string wraps to two or three lines on a phone where
-            two words never did. */}
-        <p className="free-anchor__free font-display">{freeNote}</p>
+            carry "ללא עלות" and now carries her sentence, broken where she
+            wants it. One <p> with block spans rather than three <p>s: the
+            metal gradient is painted per element, so three of them would band
+            three times instead of running once across the whole phrase. */}
+        <p className="free-anchor__free font-display">
+          {freeNote.map((line) => (
+            <span key={line} className="block">
+              {line}
+            </span>
+          ))}
+        </p>
       </div>
 
       <div className="free-anchor__cta mt-7">{children}</div>

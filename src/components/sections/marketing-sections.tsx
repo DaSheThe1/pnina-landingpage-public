@@ -1241,7 +1241,7 @@ export function OffersSection() {
   const ladder = t.raw("ladder") as {
     rungs: LadderRung[];
     freeLabel: string;
-    freeNote: string;
+    freeNote: string[];
   };
 
   return (

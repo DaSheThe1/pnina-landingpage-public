@@ -4727,10 +4727,17 @@ html[data-a11y-emphasize-links="true"]
    zero, not a headline: `--foreground-soft` rather than the gold, no display
    face, and nowhere near the size of "ללא עלות" underneath it. A struck price
    set large is a discount being sold. */
+/* ⚠️ 1.5rem → 2.1rem (Daniel, 2026-08-04): *"the font of the prices themselves
+   [should be] larger."* The rung LABEL above each number is unchanged and stays
+   at `--text-sm`, which is what keeps the ladder reading as "here is what this
+   is, and here is the number" rather than as two headings.
+   Still nowhere near "ה4 הראשונות" below it — the payoff has to stay the
+   largest thing in the panel, or the page is selling the struck price instead
+   of the free call. */
 .free-anchor__rung-price {
   margin-top: 0.15rem;
   padding-bottom: 0.1em;
-  font-size: 1.5rem;
+  font-size: 2.1rem;
   font-weight: 600;
   line-height: 1.1;
   color: var(--foreground-soft);
@@ -4879,11 +4886,12 @@ html[data-a11y-emphasize-links="true"]
      biggest thing in the panel after the section's own h2 — which is the job
      this treatment exists to do — while letting it break in two.
      `text-wrap: balance` is what stops the break landing after "ה4". */
-  font-size: 1.6rem; /* 25.6px */
-  line-height: 1.18;
-  text-wrap: balance;
-  max-width: 15rem;
-  margin-inline: auto;
+  /* ⚠️ NO `max-width` AND NO `text-wrap: balance` ANY MORE. Both existed to
+     tame a single long string that wrapped on its own; the copy is three
+     deliberate lines now (see `freeNote` in free-call-anchor.tsx), so a width
+     cap could only fight her breaks and produce a fourth. */
+  font-size: 1.75rem; /* 28px */
+  line-height: 1.16;
   font-weight: 700;
   letter-spacing: -0.015em;
   color: var(--gold-deep);
@@ -6617,13 +6625,21 @@ html[data-a11y-enhanced-contrast="true"] .hero-rays {
 
    ⛔ Still not permitted: a counter, a countdown, a "נשארו N", or this pulse
    spreading to anything that is not one of the two struck numbers. */
+/* ⚠️ 1.06 → 1.16, asked for directly: *"make the Zoom bigger."* At 1.06 the
+   pulse was measurable and not visible. 1.16 on a 2.1rem number is about 5px of
+   travel at the extremes, which reads clearly without the number colliding with
+   the label above it — `transform` does not affect layout, so nothing below
+   moves either way.
+   ⛔ This is the ceiling. Past ~1.2 a struck price on a page about sexual
+   assault stops reading as a disclosure and starts reading as a used-car
+   advert, which is the thing rule 4 is actually about. */
 @keyframes free-anchor-price-pulse {
   0%,
   100% {
     transform: scale(1);
   }
   50% {
-    transform: scale(1.06);
+    transform: scale(1.16);
   }
 }
 
